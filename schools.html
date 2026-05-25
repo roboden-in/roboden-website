@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For Schools — Roboden</title>
+<link rel="icon" type="image/png" href="images/roboden-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --p:#6d28d9;--pl:#7c3aed;--p3:#5b21b6;
+  --pa:rgba(109,40,217,0.18);--pa2:rgba(109,40,217,0.08);
+  --bg:#07070c;--bg2:#0a0912;--bg3:#0d0b18;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#fff;--muted:rgba(255,255,255,0.52);--muted2:rgba(255,255,255,0.78);
+  --accent:#a78bfa;--accent2:#c4b5fd;
+  --mono:'DM Mono',monospace;--sans:'Sora',sans-serif;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;cursor:none;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--p);border-radius:2px;}
+
+/* CURSOR */
+#cursor{position:fixed;width:10px;height:10px;border-radius:50%;background:#7c3aed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:screen;}
+#cursor-ring{position:fixed;width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(124,58,237,0.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);will-change:transform;}
+#stars-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+#mouse-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.55;}
+
+/* KEYFRAMES */
+@keyframes slideDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes shineMove{0%{background-position:200% center}100%{background-position:-200% center}}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(36px);transition:opacity .85s cubic-bezier(.22,1,.36,1),transform .85s cubic-bezier(.22,1,.36,1);}
+.reveal.on{opacity:1;transform:none;}
+.rl{opacity:0;transform:translateX(-36px);transition:opacity .85s cubic-bezier(.22,1,.36,1),transform .85s cubic-bezier(.22,1,.36,1);}
+.rr{opacity:0;transform:translateX(36px);transition:opacity .85s cubic-bezier(.22,1,.36,1),transform .85s cubic-bezier(.22,1,.36,1);}
+.rl.on,.rr.on{opacity:1;transform:none;}
+.stg>*{opacity:0;transform:translateY(24px);transition:opacity .6s cubic-bezier(.22,1,.36,1),transform .6s cubic-bezier(.22,1,.36,1);}
+.stg.on>*:nth-child(1){opacity:1;transform:none;transition-delay:0s}
+.stg.on>*:nth-child(2){opacity:1;transform:none;transition-delay:.1s}
+.stg.on>*:nth-child(3){opacity:1;transform:none;transition-delay:.2s}
+.stg.on>*:nth-child(4){opacity:1;transform:none;transition-delay:.3s}
+.stg.on>*:nth-child(5){opacity:1;transform:none;transition-delay:.4s}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 52px;height:82px;position:sticky;top:0;z-index:9001;background:rgba(7,7,12,0.9);backdrop-filter:blur(28px);border-bottom:1px solid var(--border);animation:slideDown .7s cubic-bezier(.22,1,.36,1) both .1s;}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;}
+.logo-img{width:80px;height:80px;object-fit:contain;}
+.logo-name{font-size:1.18rem;font-weight:800;letter-spacing:-0.02em;}
+.nav-links{display:flex;align-items:center;gap:6px;list-style:none;}
+.nav-links>li{position:relative;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:0.875rem;font-weight:500;padding:8px 14px;border-radius:8px;display:flex;align-items:center;gap:4px;transition:color .2s,background .2s;cursor:none;white-space:nowrap;}
+.nav-links a:hover{color:#fff;background:rgba(255,255,255,0.05);}
+.nav-links a.active{color:var(--accent);}
+.drop-arrow{transition:transform .3s;}
+.nav-links li:hover .drop-arrow{transform:rotate(180deg);}
+.dropdown{position:absolute;top:100%;left:0;min-width:230px;background:rgba(10,9,18,0.98);border:1px solid var(--border2);border-top:none;border-radius:0 0 14px 14px;padding:8px;opacity:0;pointer-events:none;transform:scaleY(0);transform-origin:top center;transition:opacity .25s ease,transform .3s cubic-bezier(.22,1,.36,1);backdrop-filter:blur(24px);}
+.nav-links li:hover .dropdown{opacity:1;pointer-events:all;transform:scaleY(1);}
+.dropdown a{flex-direction:column;align-items:flex-start;gap:2px;padding:10px 14px;border-radius:9px;font-size:.84rem;}
+.dropdown a strong{color:#fff;font-weight:600;}
+.dropdown a span{font-size:.75rem;color:var(--muted);}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.btn-nav{background:transparent;color:#fff;border:1.5px solid var(--pl);border-radius:999px;padding:9px 22px;font-size:.85rem;font-weight:600;font-family:var(--sans);cursor:none;transition:background .2s,box-shadow .2s;}
+.btn-nav:hover{background:rgba(124,58,237,.18);box-shadow:0 0 20px rgba(109,40,217,.3);}
+.hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;background:none;border:none;cursor:none;padding:6px;}
+.hamburger span{display:block;width:22px;height:2px;background:#fff;border-radius:2px;transition:transform .3s,opacity .3s;}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+.mobile-menu{display:none;position:fixed;inset:0;background:rgba(7,7,12,.98);backdrop-filter:blur(20px);padding:80px 28px 32px;flex-direction:column;gap:4px;z-index:9000;transform:translateY(-105%);transition:transform .38s cubic-bezier(.4,0,.2,1);}
+.mobile-menu.open{transform:none;display:flex;}
+.mobile-menu a{color:var(--muted);text-decoration:none;font-size:1.05rem;font-weight:500;padding:14px 0;border-bottom:1px solid var(--border);display:block;}
+.mobile-menu a:hover{color:#fff;}
+.mob-cta{margin-top:20px;background:var(--p);color:#fff;border:none;border-radius:999px;padding:14px;font-size:.97rem;font-weight:700;font-family:var(--sans);cursor:none;width:100%;}
+
+/* SHARED */
+.pill{display:inline-flex;align-items:center;gap:7px;background:rgba(109,40,217,.1);border:1px solid rgba(109,40,217,.24);border-radius:999px;padding:5px 16px;font-size:.72rem;font-weight:700;color:var(--accent);letter-spacing:.09em;text-transform:uppercase;margin-bottom:20px;}
+.pill-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+.shine-text{display:inline-block;background:linear-gradient(90deg,#7c3aed 0%,#c084fc 20%,#ffffff 40%,#c084fc 60%,#7c3aed 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shineMove 4s linear infinite;}
+section{position:relative;z-index:1;padding:100px 52px;}
+.container{max-width:1160px;margin:0 auto;}
+.section-title{font-size:clamp(1.9rem,3vw,2.75rem);font-weight:800;line-height:1.1;letter-spacing:-.03em;margin-bottom:14px;}
+.section-sub{font-size:.97rem;color:var(--muted);line-height:1.78;max-width:560px;}
+.center{text-align:center;display:flex;flex-direction:column;align-items:center;}
+
+/* HERO */
+.hero{min-height:56vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 52px 60px;position:relative;z-index:1;overflow:hidden;}
+.hero-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:700px;height:320px;border-radius:50%;background:radial-gradient(ellipse,rgba(109,40,217,.16) 0%,transparent 70%);filter:blur(70px);pointer-events:none;}
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(109,40,217,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(109,40,217,.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0;}
+.hero h1{position:relative;z-index:2;font-size:clamp(2.4rem,5vw,4rem);font-weight:900;line-height:1.06;letter-spacing:-.04em;margin-bottom:18px;animation:fadeUp .7s cubic-bezier(.22,1,.36,1) both .3s;}
+.hero p{position:relative;z-index:2;font-size:1rem;color:var(--muted);max-width:620px;line-height:1.8;animation:fadeUp .7s cubic-bezier(.22,1,.36,1) both .5s;}
+.hero .pill{animation:fadeUp .7s cubic-bezier(.22,1,.36,1) both .15s;}
+
+/* PROGRAM TOGGLE */
+.toggle-wrap{position:relative;z-index:2;display:flex;gap:4px;background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:14px;padding:4px;margin-top:36px;animation:fadeUp .7s cubic-bezier(.22,1,.36,1) both .65s;}
+.tog{background:none;border:none;border-radius:10px;padding:11px 32px;font-size:.875rem;font-weight:600;font-family:var(--sans);color:var(--muted);cursor:none;transition:background .2s,color .2s;}
+.tog.active{background:var(--p);color:#fff;box-shadow:0 4px 20px rgba(109,40,217,.4);}
+
+/* PANELS */
+.panel{display:none;animation:fadeUp .5s cubic-bezier(.22,1,.36,1) both;}
+.panel.active{display:block;}
+
+/* ── ROBOTICS PANEL ── */
+.how-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:56px;max-width:1160px;margin-left:auto;margin-right:auto;}
+.how-card{background:var(--bg2);border:1px solid var(--border2);border-radius:22px;padding:40px;position:relative;overflow:hidden;transition:border-color .25s,transform .2s;}
+.how-card:hover{border-color:rgba(109,40,217,.45);transform:translateY(-4px);}
+.how-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--p),transparent);opacity:0;transition:opacity .3s;}
+.how-card:hover::before{opacity:1;}
+.hc-num{font-family:var(--mono);font-size:.68rem;color:rgba(167,139,250,.3);letter-spacing:.1em;margin-bottom:14px;}
+.hc-icon{width:46px;height:46px;border-radius:12px;background:var(--pa);display:flex;align-items:center;justify-content:center;margin-bottom:18px;}
+.hc-title{font-size:1rem;font-weight:800;margin-bottom:10px;letter-spacing:-.01em;}
+.hc-desc{font-size:.86rem;color:var(--muted);line-height:1.78;}
+
+/* WORKSHOP DETAILS */
+.detail-inner{max-width:1160px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;}
+.detail-left h2{font-size:clamp(1.7rem,2.8vw,2.4rem);font-weight:900;line-height:1.1;letter-spacing:-.03em;margin-bottom:16px;}
+.detail-left p{font-size:.93rem;color:var(--muted);line-height:1.82;margin-bottom:28px;}
+.detail-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;}
+.dtag{background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:8px;padding:5px 13px;font-size:.74rem;color:var(--muted2);font-family:var(--mono);}
+.highlight-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.highlight-row svg{width:16px;height:16px;color:var(--accent);flex-shrink:0;}
+.highlight-row span{font-size:.88rem;color:var(--muted2);line-height:1.6;}
+.detail-right{display:flex;flex-direction:column;gap:14px;}
+.project-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:22px 24px;display:flex;align-items:center;gap:16px;transition:border-color .2s,background .2s;}
+.project-card:hover{border-color:rgba(109,40,217,.4);background:rgba(109,40,217,.05);}
+.pc-num{font-family:var(--mono);font-size:.65rem;color:rgba(167,139,250,.4);width:28px;flex-shrink:0;}
+.pc-icon{width:38px;height:38px;border-radius:9px;background:var(--pa);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pc-label{font-size:.88rem;font-weight:600;}
+.pc-sub{font-size:.75rem;color:var(--muted);margin-top:3px;}
+.cert-box{background:rgba(109,40,217,.07);border:1px solid rgba(109,40,217,.25);border-radius:16px;padding:22px 24px;display:flex;align-items:center;gap:14px;margin-top:4px;}
+.cert-box svg{width:28px;height:28px;color:var(--accent);flex-shrink:0;}
+.cert-box div{font-size:.88rem;color:var(--muted2);line-height:1.6;}
+.cert-box strong{color:#fff;display:block;margin-bottom:3px;}
+
+/* ── STEAM PANEL ── */
+.steam-intro{max-width:1160px;margin:56px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;}
+.steam-text h2{font-size:clamp(1.7rem,2.8vw,2.4rem);font-weight:900;line-height:1.1;letter-spacing:-.03em;margin-bottom:16px;}
+.steam-text p{font-size:.93rem;color:var(--muted);line-height:1.82;margin-bottom:16px;}
+.steam-text p:last-of-type{margin-bottom:0;}
+.steam-visual{display:flex;flex-direction:column;gap:14px;}
+.sv-card{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:24px;display:flex;gap:16px;align-items:flex-start;transition:border-color .2s,background .2s;}
+.sv-card:hover{border-color:rgba(109,40,217,.4);background:rgba(109,40,217,.05);}
+.sv-icon{width:40px;height:40px;border-radius:10px;background:var(--pa);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.sv-title{font-size:.92rem;font-weight:700;margin-bottom:6px;}
+.sv-desc{font-size:.82rem;color:var(--muted);line-height:1.7;}
+
+/* STEAM FEATURES GRID */
+.steam-features{max-width:1160px;margin:56px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:22px;overflow:hidden;}
+.sf{background:var(--bg2);padding:36px 30px;transition:background .2s;position:relative;}
+.sf:hover{background:var(--bg3);}
+.sf::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--p),transparent);opacity:0;transition:opacity .3s;}
+.sf:hover::before{opacity:1;}
+.sf-icon{width:42px;height:42px;border-radius:11px;background:var(--pa);display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+.sf-title{font-size:.95rem;font-weight:700;margin-bottom:8px;}
+.sf-desc{font-size:.82rem;color:var(--muted);line-height:1.72;}
+
+/* BOTTOM CTA */
+.bottom-cta{padding:80px 52px;position:relative;}
+.bottom-inner{max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:32px;background:rgba(109,40,217,.06);border:1px solid rgba(109,40,217,.22);border-radius:24px;padding:48px 52px;}
+.bottom-inner h2{font-size:clamp(1.6rem,2.5vw,2.2rem);font-weight:900;letter-spacing:-.03em;margin-bottom:10px;}
+.bottom-inner p{font-size:.92rem;color:var(--muted);line-height:1.75;max-width:520px;}
+.btn-contact{display:inline-flex;align-items:center;gap:8px;background:transparent;color:rgba(255,255,255,.8);border:1.5px solid rgba(255,255,255,.18);border-radius:999px;padding:14px 32px;font-size:.95rem;font-weight:600;font-family:var(--sans);cursor:none;text-decoration:none;white-space:nowrap;transition:color .3s,border-color .3s,box-shadow .3s,transform .25s;flex-shrink:0;}
+.btn-contact:hover{color:#fff;border-color:var(--accent);box-shadow:0 0 18px rgba(167,139,250,.35),inset 0 0 18px rgba(109,40,217,.12);transform:translateY(-2px);}
+
+/* FOOTER */
+footer{position:relative;z-index:1;background:var(--bg2);border-top:1px solid var(--border);padding:64px 52px 36px;}
+.footer-top{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:48px;max-width:1160px;margin:0 auto 52px;}
+.footer-desc{font-size:.84rem;color:var(--muted);line-height:1.75;max-width:260px;margin:14px 0 20px;}
+.fc-link{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--muted);text-decoration:none;margin-bottom:8px;transition:color .2s;}
+.fc-link:hover{color:var(--accent);}
+.fc-link svg{width:15px;height:15px;flex-shrink:0;}
+.foot-col h4{font-size:.73rem;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:18px;}
+.foot-col ul{list-style:none;display:flex;flex-direction:column;gap:10px;}
+.foot-col a{font-size:.84rem;color:var(--muted);text-decoration:none;transition:color .2s;}
+.foot-col a:hover{color:#fff;}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:28px;max-width:1160px;margin:0 auto;}
+.footer-copy{font-size:.78rem;color:var(--muted);}
+.social-row{display:flex;gap:10px;}
+.soc-btn{width:36px;height:36px;border-radius:9px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:none;background:none;transition:border-color .2s,background .2s;}
+.soc-btn:hover{border-color:var(--p);background:var(--pa2);}
+.soc-btn svg{width:15px;height:15px;color:var(--muted);}
+.soc-btn:hover svg{color:var(--accent);}
+
+/* CORNER */
+.corner{position:fixed;bottom:34px;right:16px;z-index:9000;}
+.corner-btn{display:flex;align-items:center;gap:8px;background:rgba(109,40,217,.9);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:12px 18px;font-size:.9rem;font-weight:600;font-family:var(--sans);text-decoration:none;backdrop-filter:blur(10px);box-shadow:0 10px 30px rgba(109,40,217,.35);transition:transform .25s,background .25s,box-shadow .25s;cursor:none;}
+.corner-btn:hover{transform:translateY(-2px);background:#8b5cf6;box-shadow:0 14px 40px rgba(109,40,217,.5);}
+
+/* RESPONSIVE */
+@media(min-width:641px) and (max-width:1024px){
+  nav{padding:0 28px;}
+  section,.hero,.bottom-cta{padding:72px 40px;}
+  .how-grid{grid-template-columns:1fr 1fr;}
+  .detail-inner,.steam-intro{grid-template-columns:1fr;gap:40px;}
+  .steam-features{grid-template-columns:1fr 1fr;}
+  .bottom-inner{flex-direction:column;align-items:flex-start;padding:36px 40px;}
+  .footer-top{grid-template-columns:1fr 1fr;}
+  footer{padding:48px 40px 28px;}
+}
+@media(max-width:640px){
+  nav{padding:0 20px;}
+  .nav-links,.nav-right>.btn-nav{display:none;}
+  .hamburger{display:flex;}
+  section,.hero,.bottom-cta{padding:60px 20px;}
+  .how-grid{grid-template-columns:1fr;}
+  .detail-inner,.steam-intro{grid-template-columns:1fr;gap:36px;}
+  .steam-features{grid-template-columns:1fr;}
+  .toggle-wrap{width:100%;}
+  .tog{flex:1;}
+  .bottom-inner{flex-direction:column;align-items:flex-start;padding:28px 24px;gap:24px;}
+  .footer-top{grid-template-columns:1fr;}
+  footer{padding:40px 20px 24px;}
+  .footer-bottom{flex-direction:column;gap:16px;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="stars-canvas"></canvas>
+<canvas id="mouse-canvas"></canvas>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="logo">
+    <img src="images/roboden-logo.png" alt="Roboden Logo" class="logo-img" onerror="this.style.display='none'">
+    <span class="logo-name">ROBODEN</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="schools.html" class="active">For Schools</a></li>
+    <li><a href="colleges.html">For Colleges</a></li>
+    <li>
+      <a href="index.html#programs">Online Training <svg class="drop-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
+      <div class="dropdown">
+        <a href="index.html#programs"><strong>For School Students</strong><span>Robotics &amp; STEAM fundamentals</span></a>
+        <a href="index.html#programs"><strong>For College Students</strong><span>Bare metal, firmware &amp; C</span></a>
+      </div>
+    </li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="btn-nav" onclick="window.open('https://wa.me/916281849683?text=Hi%21+I%27m+interested+in+Roboden+training.','_blank')">Chat on WhatsApp</button>
+    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html">Home</a>
+  <a href="schools.html">For Schools</a>
+  <a href="colleges.html">For Colleges</a>
+  <a href="index.html#programs">Online – School Students</a>
+  <a href="index.html#programs">Online – College Students</a>
+  <a href="about.html">About</a>
+  <a href="contact.html">Contact</a>
+  <button class="mob-cta" onclick="window.open('https://wa.me/916281849683','_blank')">Chat on WhatsApp</button>
+</div>
+
+<main>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="grid-bg" aria-hidden="true"></div>
+  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="pill"><span class="pill-dot"></span>For Schools</div>
+  <h1>Bring Real Technology<br>into Your <span class="shine-text">Classrooms</span></h1>
+  <p>Roboden partners with schools to deliver hands-on robotics workshops and full STEAM lab setups — turning curious students into confident builders.</p>
+  <div class="toggle-wrap">
+    <button class="tog active" onclick="switchPanel('robotics',this)">Robotics Workshop</button>
+    <button class="tog" onclick="switchPanel('steam',this)">STEAM Lab Setup</button>
+  </div>
+</section>
+
+<!-- ══════════════════════════════
+     ROBOTICS PANEL
+══════════════════════════════ -->
+<div class="panel active" id="panel-robotics">
+
+  <!-- HOW IT WORKS -->
+  <section style="padding-top:0;">
+    <div class="container">
+      <div class="center reveal">
+        <div class="pill"><span class="pill-dot"></span>How It Works</div>
+        <h2 class="section-title">Simple. Practical. Effective.</h2>
+        <p class="section-sub">We handle everything — you just open your doors. Here's how a Roboden robotics workshop happens at your school.</p>
+      </div>
+      <div class="how-grid stg">
+        <div class="how-card">
+          <div class="hc-num">STEP 01</div>
+          <div class="hc-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          </div>
+          <div class="hc-title">Free Introductory Workshop</div>
+          <div class="hc-desc">We visit your school and conduct a free robotics demonstration session for students. It's hands-on, exciting, and designed to spark curiosity — at zero cost to the school.</div>
+        </div>
+        <div class="how-card">
+          <div class="hc-num">STEP 02</div>
+          <div class="hc-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="hc-title">Student Registration</div>
+          <div class="hc-desc">Interested students register for the full workshop program. We coordinate directly with the school to plan batch sizes, scheduling, and venue within your campus.</div>
+        </div>
+        <div class="how-card">
+          <div class="hc-num">STEP 03</div>
+          <div class="hc-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </div>
+          <div class="hc-title">Full Robotics Workshop</div>
+          <div class="hc-desc">We conduct the complete workshop at your school. Our trainer brings all hardware kits. Students build real projects from scratch — circuits, code, sensors, and actuators.</div>
+        </div>
+        <div class="how-card">
+          <div class="hc-num">STEP 04</div>
+          <div class="hc-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+          </div>
+          <div class="hc-title">Certification</div>
+          <div class="hc-desc">Every student who completes the workshop receives an official Roboden certificate — a recognition of their practical achievement and engineering skills.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<!-- WORKSHOP DETAILS -->
+<section style="padding-top:0;">
+  <div class="detail-inner">
+    <div class="detail-left rl">
+      <div class="pill"><span class="pill-dot"></span>Workshop Details</div>
+      <h2>What Happens Inside the Workshop</h2>
+      <p>Students don't just watch — they build, connect, program, test, and debug real hardware from day one. We teach everything from scratch. No prior knowledge needed.</p>
+
+      <div style="margin-top:32px;display:flex;flex-direction:column;gap:20px;">
+        <div style="display:flex;gap:18px;align-items:flex-start;">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(109,40,217,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          </div>
+          <div>
+            <div style="font-size:.92rem;font-weight:700;margin-bottom:5px;">Who Can Join</div>
+            <div style="font-size:.86rem;color:var(--muted);line-height:1.72;">Open to students from Grade 5 to Grade 10. No prior knowledge of electronics or programming required — we start from absolute zero.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:18px;align-items:flex-start;">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(109,40,217,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>
+          </div>
+          <div>
+            <div style="font-size:.92rem;font-weight:700;margin-bottom:5px;">Hardware Kits</div>
+            <div style="font-size:.86rem;color:var(--muted);line-height:1.72;">We bring all kits to your school. Students work with real microcontrollers, sensors, and actuators — the school needs to provide nothing.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:18px;align-items:flex-start;">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(109,40,217,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </div>
+          <div>
+            <div style="font-size:.92rem;font-weight:700;margin-bottom:5px;">What They Learn</div>
+            <div style="font-size:.86rem;color:var(--muted);line-height:1.72;">Circuit connections, programming logic, sensor interfacing, output testing, and debugging — all hands-on. Students also get their first exposure to a real programming language.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:18px;align-items:flex-start;">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(109,40,217,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+          </div>
+          <div>
+            <div style="font-size:.92rem;font-weight:700;margin-bottom:5px;">Certification</div>
+            <div style="font-size:.86rem;color:var(--muted);line-height:1.72;">Every student receives an official Roboden certificate on completing the workshop — a recognition of their real engineering work.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="rr" style="display:flex;flex-direction:column;gap:16px;">
+      <div style="font-family:var(--mono);font-size:.68rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">What Students Build</div>
+
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:32px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--p),transparent);"></div>
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border);">
+          <div style="width:52px;height:52px;border-radius:14px;background:var(--pa);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>
+          </div>
+          <div>
+            <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;">8 Mini Projects</div>
+            <div style="font-size:.82rem;color:var(--muted);margin-top:3px;">Sensors · LEDs · Motors · Displays · Buzzers</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="width:52px;height:52px;border-radius:14px;background:rgba(167,139,250,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div>
+            <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;">1 Major Project</div>
+            <div style="font-size:.82rem;color:var(--muted);margin-top:3px;">A complete working system combining all concepts</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:rgba(109,40,217,.07);border:1px solid rgba(109,40,217,.22);border-radius:16px;padding:24px 26px;display:flex;gap:16px;align-items:center;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+        <div>
+          <div style="font-size:.92rem;font-weight:700;margin-bottom:4px;">Roboden Certificate</div>
+          <div style="font-size:.83rem;color:var(--muted);line-height:1.65;">Issued to every student who completes the workshop. A real achievement, not just a participation trophy.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<!-- ══════════════════════════════
+     STEAM PANEL
+══════════════════════════════ -->
+<div class="panel" id="panel-steam">
+
+  <section style="padding-top:0;">
+    <div class="steam-intro container">
+      <div class="steam-text rl">
+        <div class="pill"><span class="pill-dot"></span>STEAM Lab Setup</div>
+        <h2>A Lab That Makes Students Love Coming to School</h2>
+        <p>Roboden helps schools establish a fully equipped, modern STEAM lab at a very low budget — with everything your institution needs to deliver 21st-century skills. When students love what they do in school, they love school itself. That's exactly what our STEAM lab creates.</p>
+        <p>From Grade 1 to Grade 10, every student gets access to hands-on lab practicals in a structured, enjoyable way. We don't just install equipment — we stay with you through the entire academic year.</p>
+      </div>
+      <div class="steam-visual rr">
+        <div class="sv-card">
+          <div class="sv-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+          <div><div class="sv-title">Lab Setup</div><div class="sv-desc">We design and install a complete STEAM lab with modern, age-appropriate equipment suited to your school's space and budget.</div></div>
+        </div>
+        <div class="sv-card">
+          <div class="sv-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div><div class="sv-title">Trainer Support</div><div class="sv-desc">A dedicated Roboden trainer is provided to your school throughout the academic year — not just for setup.</div></div>
+        </div>
+        <div class="sv-card">
+          <div class="sv-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+          <div><div class="sv-title">Curriculum Support</div><div class="sv-desc">We provide our own Roboden curriculum — carefully designed to deliver practical, 21st-century ready skills at every grade level.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0;">
+    <div class="container">
+      <div class="center reveal" style="margin-bottom:0;">
+        <div class="pill"><span class="pill-dot"></span>What's Included</div>
+        <h2 class="section-title">Everything Your School Needs</h2>
+        <p class="section-sub">The Roboden STEAM lab is a complete, end-to-end solution — not just equipment in a room.</p>
+      </div>
+    </div>
+    <div class="steam-features stg" style="margin-top:48px;">
+      <div class="sf">
+        <div class="sf-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg></div>
+        <div class="sf-title">Modern Equipment</div>
+        <div class="sf-desc">All required hardware, kits, tools, and lab infrastructure set up with the latest technology — within your budget.</div>
+      </div>
+      <div class="sf">
+        <div class="sf-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+        <div class="sf-title">Roboden Curriculum</div>
+        <div class="sf-desc">A structured, grade-wise curriculum for Grade 1–10 with hands-on lab practicals designed for enjoyable, meaningful learning.</div>
+      </div>
+      <div class="sf">
+        <div class="sf-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <div class="sf-title">Dedicated Trainer</div>
+        <div class="sf-desc">Our trainer visits your school regularly throughout the academic year — ensuring students get continuous, guided learning support.</div>
+      </div>
+      <div class="sf">
+        <div class="sf-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+        <div class="sf-title">21st Century Skills</div>
+        <div class="sf-desc">Critical thinking, creativity, collaboration, and problem-solving — built into every practical session from day one.</div>
+      </div>
+      <div class="sf">
+        <div class="sf-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+        <div class="sf-title">Students Love It</div>
+        <div class="sf-desc">Enjoyable, project-based sessions that make students excited to come to school. Learning feels like building, not studying.</div>
+      </div>
+      <div class="sf">
+        <div class="sf-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="sf-title">Low Budget Setup</div>
+        <div class="sf-desc">We work with your school's budget to deliver maximum value — because every school deserves access to quality STEAM education.</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- BOTTOM CTA -->
+<div class="bottom-cta">
+  <div class="bottom-inner reveal">
+    <div>
+      <h2>Interested in Partnering with Roboden?</h2>
+      <p>Whether you want to conduct a workshop or set up a STEAM lab — reach out and we'll plan everything together. The first workshop is always free.</p>
+    </div>
+    <a href="contact.html" class="btn-contact">
+      Get in Touch
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+</div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div>
+      <a href="#" class="logo" style="margin-bottom:0;">
+        <img src="images/roboden-logo.png" alt="Roboden" style="width:32px;height:32px;object-fit:contain;" onerror="this.style.display='none'">
+        <span class="logo-name">ROBODEN</span>
+      </a>
+      <p class="footer-desc">Galaxy garden, oppisite to bharat petrol bunk, South Avenue, Gottigere, Bengaluru, Karnataka, 560083.</p>
+      <a href="https://wa.me/916281849683" target="_blank" rel="noopener noreferrer" class="fc-link">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        +91 62818 49683
+      </a>
+      <a href="mailto:hello@roboden.in" class="fc-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        roboden.in@gmail.com
+      </a>
+    </div>
+    <div class="foot-col"><h4>Quick Links</h4><ul><li><a href="#">Home</a></li><li><a href="about.html">About Roboden</a></li><li><a href="#programs">All Programs</a></li><li><a href="contact.html">Contact</a></li></ul></div>
+    <div class="foot-col"><h4>Programs</h4><ul><li><a href="#programs">Junior Robotics</a></li><li><a href="#programs">STEAM Workshops</a></li><li><a href="#programs">Python Programming</a></li><li><a href="#programs">Bare Metal Embedded</a></li><li><a href="#programs">Embedded Firmware</a></li></ul></div>
+    <div class="foot-col"><h4>For Institutions</h4><ul><li><a href="schools.html">School Workshops</a></li><li><a href="colleges.html">College Workshops</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2026 Roboden · MSME Registered · Govt. of India · All rights reserved.</span>
+    <div class="social-row">
+      <button class="soc-btn" aria-label="Instagram" onclick="window.open('https://www.instagram.com/roboden.in/','_blank')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></button>
+      <button class="soc-btn" aria-label="Facebook" onclick="window.open('https://www.facebook.com/profile.php?id=61572330205551','_blank')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></button>
+      <button class="soc-btn" aria-label="YouTube" onclick="window.open('https://www.youtube.com/@roboden000','_blank')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg></button>
+      <button class="soc-btn" aria-label="LinkedIn" onclick="window.open('https://www.linkedin.com/company/roboden/about/','_blank')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></button>
+      <button class="soc-btn" aria-label="WhatsApp" onclick="window.open('https://wa.me/916281849683','_blank')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></button>
+    </div>
+  </div>
+</footer>
+
+<!-- CORNER -->
+<div class="corner">
+  <a class="corner-btn" href="https://wa.me/916281849683?text=Hi%21+I%27m+interested+in+Roboden." target="_blank" rel="noopener noreferrer">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    WhatsApp ↗
+  </a>
+</div>
+
+<script>
+/* CURSOR */
+const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+let rx=innerWidth/2,ry=innerHeight/2;
+document.addEventListener('mousemove',e=>{cur.style.left=e.clientX+'px';cur.style.top=e.clientY+'px';});
+function animRing(){rx+=(parseFloat(cur.style.left||innerWidth/2)-rx)*.12;ry+=(parseFloat(cur.style.top||innerHeight/2)-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing);}animRing();
+
+/* HAMBURGER */
+const ham=document.getElementById('hamburger'),isMob2=document.getElementById('mobileMenu');
+ham.addEventListener('click',()=>{isMob2.classList.toggle('open');ham.classList.toggle('open');});
+isMob2.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{isMob2.classList.remove('open');ham.classList.remove('open');}));
+
+/* PANEL TOGGLE */
+function switchPanel(id,btn){
+  document.querySelectorAll('.tog').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+id).classList.add('active');
+  // re-trigger scroll reveal for newly visible elements
+  document.querySelectorAll('#panel-'+id+' .reveal, #panel-'+id+' .rl, #panel-'+id+' .rr, #panel-'+id+' .stg').forEach(el=>{
+    el.classList.remove('on');
+    setTimeout(()=>obs.observe(el),50);
+  });
+}
+
+/* SCROLL REVEAL */
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');obs.unobserve(e.target);}});},{threshold:.1});
+document.querySelectorAll('.reveal,.rl,.rr,.stg').forEach(el=>obs.observe(el));
+
+/* STARS */
+const sc=document.getElementById('stars-canvas');
+const sctx=sc.getContext('2d');
+let stars=[];
+function resizeSC(){sc.width=innerWidth;sc.height=innerHeight;}
+function mkStars(){stars=Array.from({length:300},()=>{const spd=Math.random()*.16+.03,ang=Math.random()*Math.PI*2;return{x:Math.random()*sc.width,y:Math.random()*sc.height,r:Math.random()*1.3+.1,base:Math.random()*.5+.08,twSpd:Math.random()*.4+.05,twPh:Math.random()*Math.PI*2,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd};});}
+function updateStars(dt){stars.forEach(s=>{s.x+=s.vx*dt*60;s.y+=s.vy*dt*60;if(s.x<-2)s.x=sc.width+2;if(s.x>sc.width+2)s.x=-2;if(s.y<-2)s.y=sc.height+2;if(s.y>sc.height+2)s.y=-2;});}
+function drawStars(t){sctx.clearRect(0,0,sc.width,sc.height);stars.forEach(s=>{const a=s.base*(.45+.55*Math.sin(t*s.twSpd+s.twPh));sctx.beginPath();sctx.arc(s.x,s.y,s.r,0,Math.PI*2);sctx.fillStyle=`rgba(255,255,255,${a})`;sctx.fill();});}
+window.addEventListener('resize',()=>{resizeSC();mkStars();});resizeSC();mkStars();
+
+/* MOUSE GLOW */
+const mc=document.getElementById('mouse-canvas');
+const mctx=mc.getContext('2d');
+mc.width=innerWidth;mc.height=innerHeight;
+window.addEventListener('resize',()=>{mc.width=innerWidth;mc.height=innerHeight;});
+let gx=innerWidth/2,gy=innerHeight/2,tgX=gx,tgY=gy;
+document.addEventListener('mousemove',e=>{tgX=e.clientX;tgY=e.clientY;});
+function drawGlow(){gx+=(tgX-gx)*.06;gy+=(tgY-gy)*.06;mctx.clearRect(0,0,mc.width,mc.height);const g=mctx.createRadialGradient(gx,gy,0,gx,gy,400);g.addColorStop(0,'rgba(109,40,217,0.06)');g.addColorStop(1,'rgba(109,40,217,0)');mctx.beginPath();mctx.arc(gx,gy,400,0,Math.PI*2);mctx.fillStyle=g;mctx.fill();requestAnimationFrame(drawGlow);}drawGlow();
+
+/* MAIN LOOP */
+let prev=0;
+function loop(ts){const dt=Math.min((ts-prev)/1000,.05);prev=ts;updateStars(dt);drawStars(ts/1000);requestAnimationFrame(loop);}requestAnimationFrame(loop);
+</script>
+</body>
+</html>
