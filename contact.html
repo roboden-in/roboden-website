@@ -174,8 +174,8 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:28
     <li>
       <a href="index.html#programs">Online Training <svg class="drop-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
       <div class="dropdown">
-        <a href="index.html#programs"><strong>For School Students</strong><span>Robotics &amp; STEAM fundamentals</span></a>
-        <a href="index.html#programs"><strong>For College Students</strong><span>Bare metal, firmware &amp; C</span></a>
+        <a href="online-training.html" onclick="switchTab('school')"><strong>For School Students</strong><span>Robotics &amp; Python courses</span></a>
+        <a href="online-training.html" onclick="switchTab('college')"><strong>For College Students</strong><span>Bare metal &amp; C programming</span></a>
       </div>
     </li>
     <li><a href="about.html">About</a></li>
@@ -190,8 +190,8 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:28
   <a href="index.html">Home</a>
   <a href="schools.html">For Schools</a>
   <a href="colleges.html">For Colleges</a>
-  <a href="index.html#programs">Online – School Students</a>
-  <a href="index.html#programs">Online – College Students</a>
+  <a href="online-training.html" onclick="switchTab('school')">Online – School Students</a>
+  <a href="online-training.html" onclick="switchTab('college')">Online – College Students</a>
   <a href="about.html">About</a>
   <a href="contact.html">Contact</a>
   <button class="mob-cta" onclick="window.open('https://wa.me/916281849683','_blank')">Book Free Demo on WhatsApp</button>
@@ -222,13 +222,13 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:28
           </div>
         </a>
         <!-- Email -->
-        <a class="cm" href="mailto:roboden.in@gmail.com">
+        <a class="cm" href="mailto:hello@roboden.in">
           <div class="cm-icon" style="background:rgba(109,40,217,.15);">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           </div>
           <div>
             <div class="cm-label">Email</div>
-            <div class="cm-value">roboden.in@gmail.com</div>
+            <div class="cm-value">hello@roboden.in</div>
           </div>
         </a>
         <!-- Location -->
@@ -352,7 +352,7 @@ async function handleSubmit() {
   btn.textContent = 'Sending...';
   btn.disabled = true;
 
-  const res = await fetch('https://formspree.io/f/xjgzovrz', { // ← paste your ID here
+  const res = await fetch('https://formspree.io/f/xojbkjoo', { // ← paste your ID here
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: JSON.stringify({ name, email, location, type, message })

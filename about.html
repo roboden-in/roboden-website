@@ -294,8 +294,8 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:64px 52p
     <li>
       <a href="index.html#programs">Online Training <svg class="drop-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
       <div class="dropdown">
-        <a href="index.html#programs"><strong>For School Students</strong><span>Robotics &amp; STEAM fundamentals</span></a>
-        <a href="index.html#programs"><strong>For College Students</strong><span>Bare metal &amp; C</span></a>
+        <a href="online-training.html" onclick="switchTab('school')"><strong>For School Students</strong><span>Robotics &amp; Python courses</span></a>
+        <a href="online-training.html" onclick="switchTab('college')"><strong>For College Students</strong><span>Bare metal &amp; C programming</span></a>
       </div>
     </li>
     <li><a href="about.html" class="active">About</a></li>
@@ -310,8 +310,8 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:64px 52p
   <a href="index.html">Home</a>
   <a href="schools.html">For Schools</a>
   <a href="colleges.html">For Colleges</a>
-  <a href="index.html#programs">Online – School Students</a>
-  <a href="index.html#programs">Online – College Students</a>
+  <a href="online-training.html" onclick="switchTab('school')">Online – School Students</a>
+  <a href="online-training.html" onclick="switchTab('college')">Online – College Students</a>
   <a href="about.html">About</a>
   <a href="contact.html">Contact</a>
   <button class="mob-cta" onclick="window.open('https://wa.me/916281849683','_blank')">Chat on WhatsApp</button>
@@ -576,7 +576,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:64px 52p
 <footer>
   <div class="footer-top">
     <div>
-      <a href="index.html" class="logo" style="margin-bottom:0;">
+      <a href="#" class="logo" style="margin-bottom:0;">
         <img src="images/roboden-logo.png" alt="Roboden" style="width:32px;height:32px;object-fit:contain;" onerror="this.style.display='none'">
         <span class="logo-name">ROBODEN</span>
       </a>
@@ -587,11 +587,11 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:64px 52p
       </a>
       <a href="mailto:hello@roboden.in" class="fc-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        roboden.in@gmail.com
+        hello@roboden.in
       </a>
     </div>
-    <div class="foot-col"><h4>Quick Links</h4><ul><li><a href="index.html">Home</a></li><li><a href="about.html">About Roboden</a></li><li><a href="index.html#programs">All Programs</a></li><li><a href="contact.html">Contact</a></li></ul></div>
-    <div class="foot-col"><h4>Programs</h4><ul><li><a href="index.html#programs">Junior Robotics</a></li><li><a href="index.html#programs">STEAM Workshops</a></li><li><a href="index.html#programs">Python Programming</a></li><li><a href="index.html#programs">Bare Metal Embedded</a></li><li><a href="index.html#programs">Embedded Firmware</a></li></ul></div>
+    <div class="foot-col"><h4>Quick Links</h4><ul><li><a href="#">Home</a></li><li><a href="about.html">About Roboden</a></li><li><a href="contact.html">Contact</a></li></ul></div>
+    <div class="foot-col"><h4>Programs</h4><ul><li><a href="online-training.html" onclick="switchTab('school')">Junior Robotics</a></li><li><a href="online-training.html" onclick="switchTab('school')">Python Programming</a></li><li><a href="online-training.html" onclick="switchTab('college')">Bare Metal Embedded</a></li><li><a href="online-training.html" onclick="switchTab('college')">Embedded Firmware</a></li></ul></div>
     <div class="foot-col"><h4>For Institutions</h4><ul><li><a href="schools.html">School Workshops</a></li><li><a href="colleges.html">College Workshops</a></li></ul></div>
   </div>
   <div class="footer-bottom">
