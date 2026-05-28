@@ -274,7 +274,7 @@ footer{position:relative;z-index:1;background:var(--bg2);border-top:1px solid va
 </section>
 
 <!-- SCHOOL PANEL -->
-<section style="padding-top:0;" id="school">
+<section style="padding-top:0;" id="sec-school">
   <div class="panel active" id="panel-school">
     <div class="center reveal" style="margin-bottom:48px;">
       <div class="pill"><span class="pill-dot"></span>School Students</div>
@@ -342,7 +342,7 @@ footer{position:relative;z-index:1;background:var(--bg2);border-top:1px solid va
 </section>
 
 <!-- COLLEGE PANEL -->
-<section style="padding-top:0;" id="college">
+<section style="padding-top:0;" id="sec-college">
   <div class="panel" id="panel-college">
     <div class="center reveal" style="margin-bottom:48px;">
       <div class="pill"><span class="pill-dot"></span>College Students</div>
@@ -580,6 +580,8 @@ document.querySelectorAll('.reveal,.stg').forEach(el=>obs.observe(el));
 window.addEventListener('DOMContentLoaded', () => {
   if(window.location.hash === '#college') {
     switchTab('college');
+  } else {
+    switchTab('school');
   }
 });
 
