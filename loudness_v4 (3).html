@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sound Power Challenge — Roboden</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/hk-modular" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --p:#6d28d9;--pl:#7c3aed;--p3:#5b21b6;
+  --pa:rgba(109,40,217,0.18);--pa2:rgba(109,40,217,0.08);
+  --bg:#07070c;--bg2:#0a0912;--bg3:#0d0b18;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#fff;--muted:rgba(255,255,255,0.52);--muted2:rgba(255,255,255,0.78);
+  --accent:#a78bfa;--accent2:#c4b5fd;
+  --mono:'DM Mono',monospace;
+  --sans:'Sora',sans-serif;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;cursor:none;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--p);border-radius:2px;}
+
+/* CURSOR */
+#cursor{position:fixed;width:10px;height:10px;border-radius:50%;background:#7c3aed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s;mix-blend-mode:screen;}
+#cursor-ring{position:fixed;width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(124,58,237,0.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);will-change:transform;}
+
+/* BG */
+#stars-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+#mouse-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.55;}
+
+/* NAV */
+nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 52px;height:80px;position:sticky;top:0;z-index:9001;
+  background:rgba(7,7,12,0.9);backdrop-filter:blur(28px);
+  border-bottom:1px solid var(--border);
+}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff;}
+.logo-img{width:80px;height:80px;object-fit:contain;border-radius:10px;}
+.logo-text{display:flex;flex-direction:column;gap:1px;}
+.logo-name{font-size:1.45rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1;font-family:'HK Modular',var(--sans);}
+.logo-tagline{font-size:.62rem;font-weight:500;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;}
+.nav-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(109,40,217,.1);border:1px solid rgba(109,40,217,.24);border-radius:999px;padding:5px 16px;font-size:.72rem;font-weight:700;color:var(--accent);letter-spacing:.09em;text-transform:uppercase;}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 1.8s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* LAYOUT */
+main{position:relative;z-index:1;min-height:calc(100vh - 80px);display:flex;flex-direction:column;align-items:center;padding:56px 24px 80px;}
+
+/* PAGE TITLE */
+.event-pill{display:inline-flex;align-items:center;gap:7px;background:rgba(109,40,217,.1);border:1px solid rgba(109,40,217,.24);border-radius:999px;padding:5px 16px;font-size:.72rem;font-weight:700;color:var(--accent);letter-spacing:.09em;text-transform:uppercase;margin-bottom:24px;}
+.pill-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 1.8s ease-in-out infinite;}
+.page-title{font-size:clamp(2rem,5vw,3.6rem);font-weight:900;letter-spacing:-.04em;line-height:1.05;text-align:center;margin-bottom:10px;}
+.shine-text{display:inline-block;background:linear-gradient(90deg,#7c3aed 0%,#c084fc 25%,#ffffff 50%,#c084fc 75%,#7c3aed 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shineMove 4s linear infinite;}
+@keyframes shineMove{0%{background-position:200% center}100%{background-position:-200% center}}
+.page-sub{font-size:.95rem;color:var(--muted);margin-bottom:44px;text-align:center;}
+
+/* CARD GRID */
+.card-grid{display:grid;grid-template-columns:300px 1fr;gap:20px;width:100%;max-width:1060px;}
+@media(max-width:860px){.card-grid{grid-template-columns:1fr;}}
+@media(max-width:640px){
+  nav{padding:0 20px;height:68px;}
+  .logo-img{width:52px;height:52px;}
+  main{padding:40px 16px 60px;}
+  .page-title{font-size:clamp(1.6rem,7vw,2.4rem);}
+  .page-sub{font-size:.88rem;}
+  .card{padding:20px;}
+  .btn-connect,.btn-start{width:100%;}
+  .btn-row{flex-direction:column;}
+  .modal{padding:24px 18px;}
+}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:28px;position:relative;overflow:hidden;}
+.card::after{content:'';position:absolute;bottom:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:rgba(109,40,217,.07);filter:blur(24px);pointer-events:none;}
+.card-title{font-size:.7rem;font-weight:700;font-family:var(--mono);color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+.card-title::before{content:'';width:3px;height:12px;background:var(--accent);border-radius:2px;flex-shrink:0;}
+
+/* LEADERBOARD */
+.leaderboard-card{display:flex;flex-direction:column;gap:0;}
+.lb-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);}
+.lb-row:last-child{border-bottom:none;}
+.lb-badge{font-size:1.1rem;width:26px;text-align:center;flex-shrink:0;}
+.lb-name{font-size:.88rem;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lb-score{font-size:.88rem;font-weight:700;font-family:var(--mono);color:var(--accent2);}
+.lb-empty{font-size:.82rem;color:var(--muted);font-style:italic;text-align:center;padding:12px 0;}
+.champion-banner{margin-top:20px;background:rgba(109,40,217,.1);border:1px solid rgba(109,40,217,.28);border-radius:12px;padding:14px 16px;text-align:center;}
+.champion-label{font-size:.62rem;font-weight:700;font-family:var(--mono);color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;}
+.champion-name{font-size:1rem;font-weight:800;}
+.champion-score{font-size:.78rem;color:var(--muted);margin-top:2px;font-family:var(--mono);}
+
+/* RESET BUTTON */
+.btn-reset{display:inline-flex;align-items:center;gap:6px;background:transparent;color:rgba(255,80,80,.7);border:1px solid rgba(255,80,80,.25);border-radius:999px;padding:8px 18px;font-size:.75rem;font-weight:600;font-family:var(--sans);cursor:none;margin-top:16px;width:100%;justify-content:center;transition:background .2s,border-color .2s,color .2s;}
+.btn-reset:hover{background:rgba(255,60,60,.08);border-color:rgba(255,80,80,.5);color:rgba(255,100,100,1);}
+
+/* GAME CARD */
+.game-card{display:flex;flex-direction:column;gap:22px;}
+
+/* INPUT */
+.input-group{display:flex;flex-direction:column;gap:8px;}
+.input-label{font-size:.7rem;font-weight:700;font-family:var(--mono);color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
+.name-input{background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:12px;padding:14px 18px;font-size:.95rem;font-weight:600;font-family:var(--sans);color:#fff;width:100%;outline:none;transition:border-color .2s,box-shadow .2s;}
+.name-input::placeholder{color:var(--muted);}
+.name-input:focus{border-color:rgba(109,40,217,.6);box-shadow:0 0 0 3px rgba(109,40,217,.12);}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+
+/* Connect button — dull when disconnected, theme color when connected */
+.btn-connect{
+  display:inline-flex;align-items:center;gap:8px;
+  background:transparent;
+  color:var(--muted);
+  border:1.5px solid var(--border2);
+  border-radius:999px;padding:10px 20px;
+  font-size:.82rem;font-weight:600;font-family:var(--sans);cursor:none;
+  transition:background .25s,border-color .25s,color .25s,box-shadow .25s;
+}
+.btn-connect:hover:not(:disabled){background:rgba(255,255,255,.04);border-color:var(--border2);color:var(--muted2);}
+.btn-connect.connected{
+  background:rgba(109,40,217,.18);
+  border-color:rgba(109,40,217,.6);
+  color:var(--accent2);
+  box-shadow:0 0 16px rgba(109,40,217,.25);
+  cursor:not-allowed;
+}
+.btn-connect:disabled{cursor:not-allowed;}
+
+.btn-start{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--p);color:#fff;border:none;border-radius:999px;
+  padding:14px 32px;font-size:.95rem;font-weight:700;font-family:var(--sans);cursor:none;
+  transition:background .2s,box-shadow .2s,transform .15s;
+  box-shadow:0 4px 24px rgba(109,40,217,.35);flex:1;justify-content:center;
+}
+.btn-start:hover:not(:disabled){background:var(--pl);box-shadow:0 6px 32px rgba(109,40,217,.5);transform:translateY(-2px);}
+.btn-start:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+.btn-retry{
+  display:none;align-items:center;gap:8px;
+  background:transparent;color:var(--accent2);
+  border:1.5px solid rgba(109,40,217,.45);border-radius:999px;
+  padding:14px 28px;font-size:.92rem;font-weight:700;font-family:var(--sans);cursor:none;
+  transition:background .2s,border-color .2s,transform .15s;
+}
+.btn-retry.show{display:inline-flex;}
+.btn-retry:hover{background:var(--pa);border-color:rgba(109,40,217,.7);transform:translateY(-2px);}
+
+/* TIMER */
+.timer-display{text-align:center;}
+.timer-number{font-size:clamp(3rem,8vw,5.5rem);font-weight:900;letter-spacing:-.05em;line-height:1;font-family:var(--mono);}
+.timer-ready{color:var(--muted);}
+.timer-active{color:#fff;}
+.timer-done{color:var(--accent);}
+
+/* METER */
+.meter-wrap{display:flex;flex-direction:column;gap:8px;}
+.meter-labels{display:flex;justify-content:space-between;font-size:.62rem;font-family:var(--mono);color:var(--muted);letter-spacing:.06em;}
+.meter-track{width:100%;height:52px;background:rgba(255,255,255,.04);border-radius:999px;overflow:hidden;border:1px solid var(--border);}
+.meter-fill{height:100%;width:0%;border-radius:999px;transition:width .08s ease,background .12s ease;}
+
+/* RESULT */
+.result-block{text-align:center;display:none;}
+.result-block.show{display:block;}
+.result-number{font-size:clamp(4rem,10vw,6.5rem);font-weight:900;letter-spacing:-.06em;font-family:var(--mono);background:linear-gradient(135deg,#fff 0%,var(--accent) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.result-compliment{font-size:1.05rem;font-weight:600;color:#ffd700;margin-top:14px;}
+.result-comparison{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:rgba(109,40,217,.15);border:1px solid rgba(109,40,217,.35);border-radius:999px;padding:7px 20px;font-size:.82rem;font-weight:700;color:#fff;}
+
+/* MODAL OVERLAY */
+.modal-overlay{
+  display:none;position:fixed;inset:0;z-index:9500;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(6px);
+  align-items:center;justify-content:center;
+}
+.modal-overlay.show{display:flex;}
+.modal{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:20px;padding:36px 32px;width:min(340px,calc(100vw - 32px));
+  display:flex;flex-direction:column;gap:18px;
+  box-shadow:0 24px 60px rgba(0,0,0,.5);
+}
+.modal-title{font-size:.72rem;font-weight:700;font-family:var(--mono);color:var(--accent);letter-spacing:.1em;text-transform:uppercase;}
+.modal-desc{font-size:.88rem;color:var(--muted);line-height:1.6;}
+.modal-input{background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;font-size:.9rem;font-family:var(--sans);color:#fff;width:100%;outline:none;transition:border-color .2s,box-shadow .2s;}
+.modal-input:focus{border-color:rgba(109,40,217,.6);box-shadow:0 0 0 3px rgba(109,40,217,.12);}
+.modal-error{font-size:.78rem;color:#f87171;display:none;}
+.modal-error.show{display:block;}
+.modal-btns{display:flex;gap:10px;}
+.modal-cancel{flex:1;background:transparent;border:1px solid var(--border2);border-radius:999px;padding:10px;font-size:.85rem;font-weight:600;font-family:var(--sans);color:var(--muted2);cursor:none;transition:background .2s;}
+.modal-cancel:hover{background:rgba(255,255,255,.04);}
+.modal-confirm{flex:1;background:rgba(220,38,38,.85);border:none;border-radius:999px;padding:10px;font-size:.85rem;font-weight:700;font-family:var(--sans);color:#fff;cursor:none;transition:background .2s;}
+.modal-confirm:hover{background:rgba(220,38,38,1);}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="stars-canvas"></canvas>
+<canvas id="mouse-canvas"></canvas>
+
+<!-- PASSWORD MODAL -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal">
+    <div class="modal-title">Reset Scores</div>
+    <div class="modal-desc">Enter the admin password to clear the leaderboard.</div>
+    <input class="modal-input" type="password" id="resetPassword" placeholder="Password" autocomplete="off">
+    <div class="modal-error" id="resetError">Incorrect password. Try again.</div>
+    <div class="modal-btns">
+      <button class="modal-cancel" id="resetCancel">Cancel</button>
+      <button class="modal-confirm" id="resetConfirm">Reset</button>
+    </div>
+  </div>
+</div>
+
+<nav>
+  <a class="logo" href="#">
+    <!-- Replace src with your actual logo path e.g. images/roboden-logo.png -->
+    <img class="logo-img" src="images/roboden-logo.png" alt="Roboden"
+         onerror="this.style.display='none'">
+    <div class="logo-text">
+      <img src="images/roboden-text.png" alt="ROBODEN" style="height:25px;width:auto;object-fit:contain;">
+      <span class="logo-tagline">Think • Build • Innovate</span>
+    </div>
+  </a>
+  <div class="nav-badge">
+    <span class="badge-dot"></span>
+    Live Event
+  </div>
+</nav>
+
+<main>
+  <h1 class="page-title">
+    <span class="shine-text">Sound Power</span> Challenge
+  </h1>
+  <p class="page-sub">Shout your loudest — win chocolate</p>
+
+  <div class="card-grid">
+
+    <!-- LEADERBOARD -->
+    <div class="card leaderboard-card">
+      <div class="card-title">Hall of Fame</div>
+      <div id="topScores"></div>
+      <div id="champion"></div>
+      <button class="btn-reset" id="resetBtn">Reset Scores</button>
+    </div>
+
+    <!-- GAME -->
+    <div class="card game-card">
+
+      <div class="btn-row" style="justify-content:flex-end;">
+        <button class="btn-connect" id="connectBtn">Connect Arduino</button>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label" for="playerName">Your Name</label>
+        <input class="name-input" type="text" id="playerName" placeholder="Enter your name" maxlength="20" autocomplete="off">
+      </div>
+
+      <div class="timer-display">
+        <div class="timer-number timer-ready" id="timer">Ready</div>
+      </div>
+
+      <div class="meter-wrap">
+        <div class="meter-labels"><span>SILENT</span><span>LOUD</span><span>MAX</span></div>
+        <div class="meter-track">
+          <div class="meter-fill" id="meter"></div>
+        </div>
+      </div>
+
+      <div class="result-block" id="resultBlock">
+        <div class="result-number" id="resultNumber"></div>
+        <div class="result-compliment" id="compliment"></div>
+        <div id="comparison"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-retry" id="retryBtn">Try Again</button>
+        <button class="btn-start" id="startBtn">Shout &amp; Win Chocolate</button>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script>
+// ── DIFFICULTY ─────────────────────────────────────────
+// Raise this value to make the game harder.
+// With Arduino map(0,512,0,1000), a full shout peaks ~400-600.
+// Setting ceiling to 800 means only truly loud shouts fill the bar.
+const METER_CEILING = 800;
+
+// Score thresholds for compliment tiers (out of METER_CEILING)
+const T_LOW  = METER_CEILING * 0.25;  // 0   – 25%
+const T_MID  = METER_CEILING * 0.55;  // 25% – 55%
+const T_HIGH = METER_CEILING * 0.80;  // 55% – 80%
+                                       // 80%+  = beast
+
+const RESET_PASSWORD = "roboden2025";
+
+// ── STATE ──────────────────────────────────────────────
+let port, reader;
+let currentValue = 0;
+let isRunning    = false;
+let isConnected  = false;
+let lastPlayerName = ""; // remembers name for retry
+
+// Compliments by score tier (out of 250 max)
+// low < 60  |  mid 60–140  |  high 140–200  |  beast > 200
+const complimentTiers = {
+  low: [
+    "😴 Was that a yawn or a shout?",
+    "🐭 Even the Arduino felt nothing...",
+    "🍃 A gentle breeze made more noise.",
+    "📻 Please blow into the microphone.",
+    "🫥 The sensor is asking if you're okay.",
+  ],
+  mid: [
+    "🐸 Solid! A frog would be proud.",
+    "📢 Getting there — lungs warming up!",
+    "🎺 Not bad, not great, but definitely... something.",
+    "🌊 Medium waves detected. Surfer impressed.",
+    "🧃 That's the energy of someone finishing a juice box.",
+  ],
+  high: [
+    "🔥 Now THAT is a shout!",
+    "🦁 The lions in the zoo just looked up.",
+    "📣 Neighbours filed a noise complaint. Congrats.",
+    "🚨 Emergency services briefly confused.",
+    "⚡ Local birds have evacuated the area.",
+  ],
+  beast: [
+    "🌋 You just woke up a dormant volcano.",
+    "🛸 NASA picked that up on the deep space array.",
+    "💥 The Arduino is filing for emotional damages.",
+    "👂 Three people in Finland heard that.",
+    "🤖 Roboden engineers are concerned. Well done.",
+  ]
+};
+
+// ── SERIAL ─────────────────────────────────────────────
+async function connectArduino() {
+  if (isConnected) return;
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 9600 });
+    const decoder = new TextDecoderStream();
+    port.readable.pipeTo(decoder.writable);
+    reader = decoder.readable.getReader();
+    isConnected = true;
+    const btn = document.getElementById("connectBtn");
+    btn.textContent = "Arduino Connected";
+    btn.classList.add("connected");
+    btn.disabled = true;
+    readSerial();
+  } catch(err) {
+    if (err.name !== "NotFoundError")
+      alert("Connection failed: " + err.message);
+  }
+}
+
+async function readSerial() {
+  let buffer = '';
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += value;
+      let lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (let line of lines) {
+        line = line.trim();
+        if (!/^\d+$/.test(line)) continue;
+        const n = parseInt(line);
+        if (!isNaN(n)) currentValue = n;
+      }
+    }
+  } catch(err) {
+    console.warn("Serial error:", err);
+    isConnected = false;
+    currentValue = 0;
+    const btn = document.getElementById("connectBtn");
+    btn.textContent = "Reconnect Arduino";
+    btn.classList.remove("connected");
+    btn.disabled = false;
+  }
+}
+
+// ── SCORES ─────────────────────────────────────────────
+function loadValidScores() {
+  let scores = JSON.parse(localStorage.getItem("topScores") || "[]");
+  scores = scores.filter(s =>
+    s && typeof s.name === "string" && s.name.trim() !== "" &&
+    s.name !== "undefined" && typeof s.score === "number" && !isNaN(s.score)
+  );
+  localStorage.setItem("topScores", JSON.stringify(scores));
+  return scores;
+}
+
+function updateTopScores(name, score) {
+  let scores = loadValidScores();
+  scores.push({ name, score });
+  scores.sort((a, b) => b.score - a.score);
+  scores = scores.slice(0, 3);
+  localStorage.setItem("topScores", JSON.stringify(scores));
+  displayTopScores();
+}
+
+function displayTopScores() {
+  const badges = ["👑", "🥈", "🥉"];
+  const scores = loadValidScores();
+  let html = "";
+  scores.forEach((item, i) => {
+    html += `
+      <div class="lb-row">
+        <span class="lb-badge">${badges[i]}</span>
+        <span class="lb-name">${item.name}</span>
+        <span class="lb-score">${item.score}</span>
+      </div>`;
+  });
+  if (!scores.length) html = `<div class="lb-empty">No scores yet</div>`;
+  document.getElementById("topScores").innerHTML = html;
+
+  const champEl = document.getElementById("champion");
+  if (scores.length) {
+    champEl.innerHTML = `
+      <div class="champion-banner">
+        <div class="champion-label">👑 Today's Champion</div>
+        <div class="champion-name">${scores[0].name}</div>
+        <div class="champion-score">${scores[0].score} pts</div>
+      </div>`;
+  } else {
+    champEl.innerHTML = "";
+  }
+}
+
+// ── METER COLOR (green → yellow → red) ─────────────────
+function getMeterColor(pct) {
+  if (pct < 40)  return "#22c55e";   // green
+  if (pct < 70)  return "#eab308";   // yellow
+  return "#ef4444";                  // red
+}
+
+// ── GAME ───────────────────────────────────────────────
+function getCompliment(score) {
+  const tier = score > T_HIGH ? "beast" : score > T_MID ? "high" : score > T_LOW ? "mid" : "low";
+  const pool = complimentTiers[tier];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+async function runChallenge(playerName) {
+  isRunning = true;
+  document.getElementById("startBtn").disabled = true;
+  document.getElementById("retryBtn").classList.remove("show");
+  document.getElementById("resultBlock").classList.remove("show");
+
+  const meter   = document.getElementById("meter");
+  const timerEl = document.getElementById("timer");
+
+  meter.style.width = "0%";
+  meter.style.background = getMeterColor(0);
+
+  let maxValue = 0;
+
+  for (let sec = 5; sec > 0; sec--) {
+    timerEl.className   = "timer-number timer-active";
+    timerEl.textContent = `${sec}`;
+    const start = Date.now();
+    while (Date.now() - start < 1000) {
+      if (currentValue > maxValue) maxValue = currentValue;
+      const pct = Math.min((currentValue / METER_CEILING) * 100, 100);
+      meter.style.width      = pct + "%";
+      meter.style.background = getMeterColor(pct);
+      await new Promise(r => setTimeout(r, 30));
+    }
+  }
+
+  const score = maxValue;
+  timerEl.className   = "timer-number timer-done";
+  timerEl.textContent = "Done!";
+
+  document.getElementById("resultNumber").textContent = score;
+  document.getElementById("compliment").textContent = getCompliment(score);
+
+  // Only show comparison banner if it's a new high score
+  const scoresBefore  = loadValidScores();
+  const highestBefore = scoresBefore.length ? scoresBefore[0].score : 0;
+  const comparisonEl  = document.getElementById("comparison");
+  if (score > highestBefore) {
+    comparisonEl.innerHTML = `<span class="result-comparison">🏆 New highest score today!</span>`;
+  } else {
+    comparisonEl.innerHTML = "";
+  }
+
+  document.getElementById("resultBlock").classList.add("show");
+  document.getElementById("retryBtn").classList.add("show");
+
+  updateTopScores(playerName, score);
+
+  isRunning = false;
+  document.getElementById("startBtn").disabled = false;
+}
+
+async function startChallenge() {
+  if (isRunning) return;
+  const playerName = document.getElementById("playerName").value.trim();
+  if (!playerName) { alert("Please enter your name first!"); return; }
+  if (!isConnected) {
+    if (!confirm("Arduino not connected — sound level will read 0. Continue?")) return;
+  }
+  lastPlayerName = playerName;
+  document.getElementById("playerName").value = "";
+  await runChallenge(playerName);
+}
+
+async function retryChallenge() {
+  if (isRunning) return;
+  if (!isConnected) {
+    if (!confirm("Arduino not connected — sound level will read 0. Continue?")) return;
+  }
+  await runChallenge(lastPlayerName);
+}
+
+// ── RESET (password protected) ─────────────────────────
+document.getElementById("resetBtn").addEventListener("click", () => {
+  document.getElementById("resetPassword").value = "";
+  document.getElementById("resetError").classList.remove("show");
+  document.getElementById("resetModal").classList.add("show");
+  setTimeout(() => document.getElementById("resetPassword").focus(), 50);
+});
+
+document.getElementById("resetCancel").addEventListener("click", () => {
+  document.getElementById("resetModal").classList.remove("show");
+});
+
+document.getElementById("resetConfirm").addEventListener("click", () => {
+  const entered = document.getElementById("resetPassword").value;
+  if (entered === RESET_PASSWORD) {
+    localStorage.removeItem("topScores");
+    displayTopScores();
+    document.getElementById("resetModal").classList.remove("show");
+  } else {
+    document.getElementById("resetError").classList.add("show");
+    document.getElementById("resetPassword").value = "";
+    document.getElementById("resetPassword").focus();
+  }
+});
+
+// Close modal on overlay click
+document.getElementById("resetModal").addEventListener("click", function(e) {
+  if (e.target === this) this.classList.remove("show");
+});
+
+// Allow Enter key in password field
+document.getElementById("resetPassword").addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("resetConfirm").click();
+});
+
+// ── INIT ───────────────────────────────────────────────
+document.getElementById("connectBtn").addEventListener("click", connectArduino);
+document.getElementById("startBtn").addEventListener("click", startChallenge);
+document.getElementById("retryBtn").addEventListener("click", retryChallenge);
+displayTopScores();
+
+// ── CURSOR ─────────────────────────────────────────────
+const cur  = document.getElementById("cursor");
+const ring = document.getElementById("cursor-ring");
+let rx = innerWidth/2, ry = innerHeight/2, tx = rx, ty = ry;
+document.addEventListener("mousemove", e => {
+  tx = e.clientX; ty = e.clientY;
+  cur.style.left = tx+"px"; cur.style.top = ty+"px";
+});
+(function animRing(){
+  rx += (tx-rx)*.12; ry += (ty-ry)*.12;
+  ring.style.left = rx+"px"; ring.style.top = ry+"px";
+  requestAnimationFrame(animRing);
+})();
+
+// ── STARS ──────────────────────────────────────────────
+const sc = document.getElementById("stars-canvas");
+const sctx = sc.getContext("2d");
+let stars = [];
+function resizeSC(){ sc.width = innerWidth; sc.height = innerHeight; }
+function mkStars(){ stars = Array.from({length:260}, () => {
+  const spd=Math.random()*.14+.02, ang=Math.random()*Math.PI*2;
+  return{x:Math.random()*sc.width,y:Math.random()*sc.height,r:Math.random()*1.2+.1,
+    base:Math.random()*.45+.07,twSpd:Math.random()*.35+.04,twPh:Math.random()*Math.PI*2,
+    vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd};
+}); }
+function updateStars(dt){ stars.forEach(s=>{
+  s.x+=s.vx*dt*60; s.y+=s.vy*dt*60;
+  if(s.x<-2)s.x=sc.width+2; if(s.x>sc.width+2)s.x=-2;
+  if(s.y<-2)s.y=sc.height+2; if(s.y>sc.height+2)s.y=-2;
+}); }
+function drawStars(t){ sctx.clearRect(0,0,sc.width,sc.height);
+  stars.forEach(s=>{
+    const a=s.base*(.45+.55*Math.sin(t*s.twSpd+s.twPh));
+    sctx.beginPath(); sctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    sctx.fillStyle=`rgba(255,255,255,${a})`; sctx.fill();
+  });
+}
+window.addEventListener("resize",()=>{resizeSC();mkStars();}); resizeSC(); mkStars();
+
+// ── MOUSE GLOW ─────────────────────────────────────────
+const mc = document.getElementById("mouse-canvas");
+const mctx = mc.getContext("2d");
+mc.width = innerWidth; mc.height = innerHeight;
+window.addEventListener("resize",()=>{mc.width=innerWidth;mc.height=innerHeight;});
+let gx=innerWidth/2, gy=innerHeight/2, tgX=gx, tgY=gy;
+document.addEventListener("mousemove", e=>{tgX=e.clientX;tgY=e.clientY;});
+function drawGlow(){
+  gx+=(tgX-gx)*.06; gy+=(tgY-gy)*.06;
+  mctx.clearRect(0,0,mc.width,mc.height);
+  const g=mctx.createRadialGradient(gx,gy,0,gx,gy,400);
+  g.addColorStop(0,"rgba(109,40,217,0.07)");
+  g.addColorStop(1,"rgba(109,40,217,0)");
+  mctx.beginPath(); mctx.arc(gx,gy,400,0,Math.PI*2);
+  mctx.fillStyle=g; mctx.fill();
+  requestAnimationFrame(drawGlow);
+} drawGlow();
+
+// ── MAIN LOOP ──────────────────────────────────────────
+let prev = 0;
+function loop(ts){
+  const dt=Math.min((ts-prev)/1000,.05); prev=ts;
+  updateStars(dt); drawStars(ts/1000);
+  requestAnimationFrame(loop);
+} requestAnimationFrame(loop);
+</script>
+</body>
+</html>

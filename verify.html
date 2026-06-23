@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/hk-modular" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -46,9 +47,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:h
 nav{display:flex;align-items:center;justify-content:space-between;padding:0 52px;height:82px;position:sticky;top:0;z-index:9001;background:rgba(7,7,12,0.9);backdrop-filter:blur(28px);border-bottom:1px solid var(--border);animation:slideDown .7s cubic-bezier(.22,1,.36,1) both .1s;}
 nav .logo { min-width: 160px; }
 nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; align-items: center; }
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;}
-.logo-img{width:80px;height:80px;object-fit:contain;}
-.logo-name{font-size:1.18rem;font-weight:800;letter-spacing:-0.02em;}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff;}
+.logo-img{width:80px;height:80px;object-fit:contain;border-radius:10px;}
+.logo-text{display:flex;flex-direction:column;gap:1px;}
+.logo-name{font-size:1.45rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1;font-family:'HK Modular',var(--sans);}
+.logo-tagline{font-size:.62rem;font-weight:500;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;}
 .nav-links{display:flex;align-items:center;gap:6px;list-style:none;}
 .nav-links>li{position:relative;}
 .nav-links a{color:var(--muted);text-decoration:none;font-size:0.875rem;font-weight:500;padding:8px 14px;border-radius:8px;display:flex;align-items:center;gap:4px;transition:color .2s,background .2s;cursor:none;white-space:nowrap;}
@@ -62,7 +65,7 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
 .dropdown a strong{color:#fff;font-weight:600;}
 .dropdown a span{font-size:.75rem;color:var(--muted);}
 .nav-right{display:flex;align-items:center;gap:10px;}
-.btn-nav{background:transparent;color:#fff;border:1.5px solid var(--pl);border-radius:999px;padding:9px 22px;font-size:.85rem;font-weight:600;font-family:var(--sans);cursor:none;transition:background .2s,box-shadow .2s;}
+.btn-nav{background:transparent;color:#fff;border:1.5px solid var(--pl);border-radius:999px;padding:9px 22px;font-size:.85rem;font-weight:600;font-family:var(--sans);cursor:none;transition:background .2s,box-shadow .2s;min-height:44px;display:inline-flex;align-items:center;}
 .btn-nav:hover{background:rgba(124,58,237,.18);box-shadow:0 0 20px rgba(109,40,217,.3);}
 .hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;background:none;border:none;cursor:none;padding:6px;}
 .hamburger span{display:block;width:22px;height:2px;background:#fff;border-radius:2px;transition:transform .3s,opacity .3s;}
@@ -128,7 +131,6 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
 
 /* RESULT CARD — NOT FOUND */
 .notfound-card{background:var(--bg2);border:1.5px solid var(--red-border);border-radius:24px;padding:40px;text-align:center;}
-.notfound-card::before{content:'';display:block;width:52px;height:52px;border-radius:50%;background:var(--red-bg);border:2px solid var(--red-border);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;}
 .nf-icon{width:52px;height:52px;border-radius:50%;background:var(--red-bg);border:1.5px solid var(--red-border);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
 .nf-icon svg{width:22px;height:22px;color:var(--red);}
 .notfound-card h3{font-size:1rem;font-weight:800;color:var(--red);margin-bottom:8px;}
@@ -168,9 +170,13 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24
 
 <!-- NAV -->
 <nav>
-  <a href="index.html" class="logo">
-    <img src="images/roboden-logo.png" alt="Roboden Logo" class="logo-img" onerror="this.style.display='none'">
-    <span class="logo-name">ROBODEN</span>
+  <a class="logo" href="index.html">
+    <img class="logo-img" src="images/roboden-logo.png" alt="Roboden"
+         onerror="this.style.display='none'">
+    <div class="logo-text">
+      <img src="images/roboden-text.png" alt="ROBODEN" style="height:25px;width:auto;object-fit:contain;">
+      <span class="logo-tagline">Think • Build • Innovate</span>
+    </div>
   </a>
   <ul class="nav-links">
     <li><a href="index.html">Home</a></li>
@@ -219,7 +225,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24
     <!-- SEARCH -->
     <div class="search-box">
       <div class="search-inner">
-        <input type="text" id="certInput" placeholder="Enter Certificate ID  eg. RD-2024231" maxlength="30" onkeydown="if(event.key==='Enter')verifyCert()">
+        <input type="text" id="certInput" placeholder="RD-0000000" maxlength="10" oninput="formatCertInput(this)" onfocus="initCertInput(this)" onkeydown="certInputKeydown(event)">
         <button class="search-btn" onclick="verifyCert()" aria-label="Verify">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </button>
@@ -293,6 +299,42 @@ function getCourseData(course) {
   return null;
 }
 
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/* CERT INPUT — auto-prefix RD-, digits only, max 7 digits */
+const CERT_PREFIX = 'RD-';
+
+function initCertInput(el) {
+  if (!el.value) el.value = CERT_PREFIX;
+  setTimeout(() => el.setSelectionRange(el.value.length, el.value.length), 0);
+}
+
+function formatCertInput(el) {
+  let val = el.value.toUpperCase();
+  if (!val.startsWith(CERT_PREFIX)) {
+    const digits = val.replace(/[^0-9]/g, '').slice(0, 7);
+    val = CERT_PREFIX + digits;
+  } else {
+    const digits = val.slice(CERT_PREFIX.length).replace(/[^0-9]/g, '').slice(0, 7);
+    val = CERT_PREFIX + digits;
+  }
+  el.value = val;
+}
+
+function certInputKeydown(e) {
+  const el = e.target;
+  if (e.key === 'Enter') { verifyCert(); return; }
+  const atPrefix = el.selectionStart <= CERT_PREFIX.length && el.selectionEnd <= CERT_PREFIX.length;
+  if ((e.key === 'Backspace' || e.key === 'Delete') && atPrefix) e.preventDefault();
+}
+
 /* PARSE CSV */
 function parseCSV(text) {
   const lines = text.trim().split('\n');
@@ -308,7 +350,7 @@ function parseCSV(text) {
 /* VERIFY */
 async function verifyCert() {
   const input = document.getElementById('certInput').value.trim().toUpperCase();
-  if (!input) { document.getElementById('certInput').focus(); return; }
+  if (!input || input === 'RD-') { document.getElementById('certInput').focus(); return; }
 
   const loader = document.getElementById('loader');
   const resultCard = document.getElementById('resultCard');
@@ -387,19 +429,19 @@ async function verifyCert() {
           <div class="cert-details" style="margin-bottom:24px;">
             <div class="cd">
               <div class="cd-label">Certificate ID</div>
-              <div class="cd-value id">${match['Certificate ID'] || '—'}</div>
+              <div class="cd-value id">${escHtml(match['Certificate ID'] || '—')}</div>
             </div>
             <div class="cd">
               <div class="cd-label">Student Name</div>
-              <div class="cd-value">${match['Student Name'] || '—'}</div>
+              <div class="cd-value">${escHtml(match['Student Name'] || '—')}</div>
             </div>
             <div class="cd">
               <div class="cd-label">Course</div>
-              <div class="cd-value">${match['Course'] || '—'}</div>
+              <div class="cd-value">${escHtml(match['Course'] || '—')}</div>
             </div>
             <div class="cd">
               <div class="cd-label">Issue Date</div>
-              <div class="cd-value">${match['Issue Date'] || '—'}</div>
+              <div class="cd-value">${escHtml(match['Issue Date'] || '—')}</div>
             </div>
           </div>
 
@@ -426,7 +468,7 @@ async function verifyCert() {
             </svg>
           </div>
           <h3>Certificate Not Found</h3>
-          <p>No certificate was found matching the ID <strong style="color:#fff;font-family:var(--mono)">${input}</strong>.<br><br>
+          <p>No certificate was found matching the ID <strong style="color:#fff;font-family:var(--mono)">${escHtml(input)}</strong>.<br><br>
           Please check the ID carefully and try again. If you believe this is an error, <a href="contact.html">contact us</a>.</p>
         </div>`;
     }
