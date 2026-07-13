@@ -890,16 +890,17 @@ async function confirmBooking(){
     const slot=BOOKING_SLOTS.find(s=>s.time===bkTime);
     document.getElementById('bkSuccessDetail').innerHTML=
       '<strong style="color:#fff;">'+bkCourse+'</strong><br>'+bkNiceDate(bkDate)+' · '+slot.label;
-    document.getElementById('bkSuccessChannel').textContent=
-      "Your slot is reserved. Once your trainer confirms, you'll receive the class meeting link on "+
-      (contact==='Email'?'email':'WhatsApp')+". See you there!";
     const verifyBtn=document.getElementById('bkVerifyWa'),verifyNote=document.getElementById('bkVerifyNote');
     if(contact==='WhatsApp'){
+      document.getElementById('bkSuccessChannel').textContent=
+        "⚠️ One last step — tap the green button and press Send on WhatsApp. This verifies your number so your class link reaches you. Unverified bookings may be cancelled.";
       const msg='Hi Roboden! ✅ Confirming my WhatsApp number for my free demo class:\n'+
         bkCourse+'\n'+bkNiceDate(bkDate)+' · '+slot.label+'\nStudent: '+name+(ref?'\nRef: '+ref:'');
       verifyBtn.href='https://wa.me/916281849683?text='+encodeURIComponent(msg);
       verifyBtn.style.display='flex';verifyNote.style.display='block';
     }else{
+      document.getElementById('bkSuccessChannel').textContent=
+        "Your slot is reserved. Once your trainer confirms, you'll receive the class meeting link on email. See you there!";
       verifyBtn.style.display='none';verifyNote.style.display='none';
     }
     showBkStep('bkSuccessStep');
