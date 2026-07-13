@@ -297,7 +297,7 @@ const COURSE_DATA = {
 
 function getCourseData(course) {
   const key = (course || '').toLowerCase().trim();
-  if (key.includes('robotics')) return COURSE_DATA.robotics;
+  if (key.includes('robotics') || key.includes('smartwatch')) return COURSE_DATA.robotics;
   if (key.includes('python')) return COURSE_DATA.python;
   return null;
 }
