@@ -377,7 +377,7 @@ function page_(title, subHtml, waUrl) {
     '<h2 style="margin:0 0 14px;">' + title + '</h2>' +
     '<p style="color:rgba(255,255,255,.65);line-height:1.7;">' + subHtml + '</p>' +
     (waUrl
-      ? '<p style="margin-top:28px;"><a href="' + waUrl + '" style="background:#25D366;color:#fff;padding:13px 30px;border-radius:999px;text-decoration:none;font-weight:bold;">Send confirmation on WhatsApp</a></p>'
+      ? '<p style="margin-top:28px;"><a href="' + waUrl + '" target="_blank" rel="noopener noreferrer" style="background:#25D366;color:#fff;padding:13px 30px;border-radius:999px;text-decoration:none;font-weight:bold;">Send confirmation on WhatsApp</a></p>'
       : '') +
     '</div></body></html>';
   return HtmlService.createHtmlOutput(html)
