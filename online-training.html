@@ -157,6 +157,37 @@ section{position:relative;z-index:1;padding:100px 52px;}
 .success-msg h3{font-size:1.1rem;font-weight:800;margin-bottom:8px;}
 .success-msg p{font-size:.86rem;color:var(--muted);line-height:1.7;}
 
+/* BOOKING WIDGET */
+.btn-book{width:100%;background:var(--p);color:#fff;border:none;border-radius:999px;padding:13px;font-size:.92rem;font-weight:700;font-family:var(--sans);cursor:none;margin-bottom:12px;transition:background .2s,box-shadow .2s,transform .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-book:hover{background:var(--pl);box-shadow:0 0 24px rgba(109,40,217,.45);transform:translateY(-2px);}
+.bk-step{display:none;}
+.bk-step.on{display:block;animation:popIn .3s cubic-bezier(.22,1,.36,1) both;}
+.bk-week-label{font-family:var(--mono);font-size:.78rem;color:var(--accent);margin-bottom:14px;letter-spacing:.04em;}
+.bk-days{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.bk-day{background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:12px;padding:12px 4px 10px;text-align:center;cursor:none;font-family:var(--sans);color:#fff;transition:border-color .2s,background .2s,transform .2s;}
+.bk-day:hover:not(:disabled){border-color:var(--accent);background:rgba(109,40,217,.1);transform:translateY(-2px);}
+.bk-day:disabled{opacity:.32;}
+.bk-day .d-name{display:block;font-size:.62rem;color:var(--muted);text-transform:uppercase;font-family:var(--mono);letter-spacing:.06em;margin-bottom:4px;}
+.bk-day .d-num{display:block;font-size:1.1rem;font-weight:800;line-height:1.2;}
+.bk-day .d-left{display:block;font-size:.58rem;margin-top:4px;color:#34d399;font-family:var(--mono);}
+.bk-day:disabled .d-left{color:var(--muted);}
+.bk-slots{display:flex;flex-direction:column;gap:10px;}
+.bk-slot{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:12px;padding:14px 18px;cursor:none;font-family:var(--sans);color:#fff;font-size:.9rem;font-weight:600;transition:border-color .2s,background .2s,transform .2s;width:100%;}
+.bk-slot:hover:not(:disabled){border-color:var(--accent);background:rgba(109,40,217,.1);transform:translateY(-2px);}
+.bk-slot:disabled{opacity:.35;}
+.bk-slot .s-left{font-size:.68rem;font-family:var(--mono);color:#34d399;font-weight:400;}
+.bk-slot:disabled .s-left{color:var(--muted);}
+.bk-back{display:inline-flex;align-items:center;gap:6px;font-size:.76rem;color:var(--muted);cursor:none;background:none;border:none;font-family:var(--mono);padding:0;margin-bottom:16px;transition:color .2s;}
+.bk-back:hover{color:var(--accent);}
+.bk-chosen{background:rgba(109,40,217,.08);border:1px solid rgba(109,40,217,.28);border-radius:12px;padding:12px 16px;font-size:.84rem;color:var(--muted2);margin-bottom:20px;line-height:1.6;}
+.bk-chosen strong{color:#fff;}
+.bk-full{text-align:center;padding:16px 0;}
+.bk-full h3{font-size:1.05rem;font-weight:800;margin-bottom:10px;}
+.bk-full p{font-size:.86rem;color:var(--muted);line-height:1.7;margin-bottom:22px;}
+.bk-loading{text-align:center;padding:40px 0;font-family:var(--mono);font-size:.8rem;color:var(--muted);}
+.bk-note{font-size:.66rem;font-family:var(--mono);color:rgba(255,255,255,.3);text-align:center;margin-top:18px;}
+@media(max-width:640px){.bk-day .d-num{font-size:.95rem;}.bk-slot{padding:12px 14px;font-size:.82rem;}}
+
 /* BOTTOM CTA */
 .bottom-cta{padding:80px 52px;}
 .bottom-inner{max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:32px;background:rgba(109,40,217,.06);border:1px solid rgba(109,40,217,.22);border-radius:24px;padding:48px 52px;}
@@ -311,6 +342,10 @@ footer{position:relative;z-index:1;background:var(--bg2);border-top:1px solid va
           <div class="ce-label">Pricing</div>
           <div class="ce-value">Contact us for pricing details</div>
         </div>
+        <button class="btn-book" onclick="openBooking('Robotics — School')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Book Free Demo Class
+        </button>
         <button class="btn-register" onclick="openPopup('Robotics — School')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
           Register Interest
@@ -338,6 +373,10 @@ footer{position:relative;z-index:1;background:var(--bg2);border-top:1px solid va
           <div class="ce-label">Pricing</div>
           <div class="ce-value">Contact us for pricing details</div>
         </div>
+        <button class="btn-book" onclick="openBooking('Python Programming — School')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Book Free Demo Class
+        </button>
         <button class="btn-register" onclick="openPopup('Python Programming — School')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
           Register Interest
@@ -512,6 +551,101 @@ footer{position:relative;z-index:1;background:var(--bg2);border-top:1px solid va
   </div>
 </div>
 
+<!-- BOOKING POPUP -->
+<div class="overlay" id="bkOverlay" onclick="if(event.target===this)closeBooking()">
+  <div class="popup">
+    <button class="popup-close" onclick="closeBooking()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="popup-title">Book Your Free Demo Class</div>
+    <div class="popup-course-tag" id="bkCourseTag">Course</div>
+
+    <!-- loading -->
+    <div class="bk-step" id="bkLoadingStep"><div class="bk-loading">Checking available slots…</div></div>
+
+    <!-- step 1: pick a day -->
+    <div class="bk-step" id="bkDaysStep">
+      <div class="popup-sub" style="margin-bottom:14px;">Classes run Monday to Friday, 6:00 – 9:00 PM. Pick a day that works for you.</div>
+      <div class="bk-week-label" id="bkWeekLabel"></div>
+      <div class="bk-days" id="bkDays"></div>
+    </div>
+
+    <!-- step 2: pick a slot -->
+    <div class="bk-step" id="bkSlotsStep">
+      <button class="bk-back" onclick="showBkStep('bkDaysStep')">← change day</button>
+      <div class="popup-sub" style="margin-bottom:14px;" id="bkSlotDayLabel"></div>
+      <div class="bk-slots" id="bkSlots"></div>
+    </div>
+
+    <!-- step 3: your details -->
+    <div class="bk-step" id="bkFormStep">
+      <button class="bk-back" onclick="showBkStep('bkSlotsStep')">← change slot</button>
+      <div class="bk-chosen" id="bkChosenLabel"></div>
+      <div class="form-row">
+        <div class="field"><label>Student Name</label><input type="text" id="bkName" placeholder="Eg. Ravi Kumar"></div>
+        <div class="field">
+          <label>Class / Grade</label>
+          <select id="bkGrade">
+            <option value="">Select...</option>
+            <option>Class 4</option><option>Class 5</option><option>Class 6</option><option>Class 7</option>
+            <option>Class 8</option><option>Class 9</option><option>Class 10</option><option>Class 11</option>
+            <option>Class 12</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Send my confirmation via</label>
+        <select id="bkContact" onchange="bkContactChanged()">
+          <option value="WhatsApp">WhatsApp</option>
+          <option value="Email">Email</option>
+        </select>
+      </div>
+      <div class="field"><label id="bkPhoneLabel">WhatsApp Number</label><input type="tel" id="bkPhone" placeholder="+91 XXXXX XXXXX"></div>
+      <div class="field"><label id="bkEmailLabel">Email (optional)</label><input type="email" id="bkEmail" placeholder="you@example.com"></div>
+      <button class="btn-submit" id="bkConfirmBtn" onclick="confirmBooking()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Confirm Booking
+      </button>
+    </div>
+
+    <!-- week full -->
+    <div class="bk-step" id="bkFullStep">
+      <div class="bk-full">
+        <h3>All slots are filled in this week 😔</h3>
+        <p>Every slot for this week is already booked.<br>Want to try next week?</p>
+        <button class="btn-submit" style="margin-top:0;" onclick="loadBkWeek(bkWeek+1)">Yes, show next week →</button>
+        <p style="margin:18px 0 0;font-size:.78rem;">or <a href="https://wa.me/916281849683?text=Hi%21+I+want+to+book+a+free+demo+class+but+slots+are+full." target="_blank" rel="noopener noreferrer" style="color:var(--accent);">message us on WhatsApp</a> and we'll fit you in.</p>
+      </div>
+    </div>
+
+    <!-- too far ahead -->
+    <div class="bk-step" id="bkLimitStep">
+      <div class="bk-full">
+        <h3>We're fully booked for the coming weeks!</h3>
+        <p>Demand is high right now. Message us on WhatsApp and we'll personally arrange a slot for you.</p>
+        <a class="btn-submit" style="text-decoration:none;margin-top:0;" href="https://wa.me/916281849683?text=Hi%21+I+want+to+book+a+free+demo+class+but+all+slots+are+full." target="_blank" rel="noopener noreferrer">Chat on WhatsApp</a>
+      </div>
+    </div>
+
+    <!-- success -->
+    <div class="bk-step" id="bkSuccessStep">
+      <div class="success-msg" style="display:block;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <h3>Demo Class Booked! 🎉</h3>
+        <p id="bkSuccessDetail"></p>
+        <p style="margin-top:10px;" id="bkSuccessChannel">Your slot is reserved. Once your trainer confirms, you'll receive the class meeting link on WhatsApp / email. See you there!</p>
+        <a id="bkVerifyWa" class="btn-submit" style="display:none;text-decoration:none;background:#1daa55;margin-top:20px;" href="#" target="_blank" rel="noopener noreferrer">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Confirm your number — send us a "Hi" on WhatsApp
+        </a>
+        <p id="bkVerifyNote" style="display:none;margin-top:12px;font-size:.76rem;">One tap — WhatsApp opens with the message ready to send. This makes sure we have your correct number, so your class link reaches <em>you</em>.</p>
+      </div>
+    </div>
+
+    <div class="bk-note" id="bkModeNote" style="display:none;">⚠ test mode — bookings are saved only in this browser</div>
+  </div>
+</div>
+
 <script>
 /* CURSOR */
 if(window.matchMedia('(pointer:fine)').matches){
@@ -557,7 +691,7 @@ function closePopup(){
 function handleOverlayClick(e){
   if(e.target===document.getElementById('overlay'))closePopup();
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closePopup();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePopup();closeBooking();}});
 
 /* FORM SUBMIT */
 async function submitRegistration(){
@@ -581,6 +715,199 @@ async function submitRegistration(){
   } else {
     alert('Something went wrong. Please contact us directly on WhatsApp.');
     btn.textContent='Submit Registration';btn.disabled=false;
+  }
+}
+
+/* ═══ FREE DEMO CLASS BOOKING ═══ */
+const BOOKING_API_URL='https://script.google.com/macros/s/AKfycbyiUeChIZngO0MvCYSXIeC1gXLaboXT2_va4tGd720oSPweEhPKAkiZz4rbaF0-SGjn8A/exec';   // ← paste your Google Apps Script Web App URL here (see booking-backend/SETUP.md)
+const BOOKING_CAPACITY=2;   // 2 trainers → 2 bookings per slot
+const BOOKING_SLOTS=[
+  {time:'18:00',label:'6:00 PM – 7:00 PM'},
+  {time:'19:00',label:'7:00 PM – 8:00 PM'},
+  {time:'20:00',label:'8:00 PM – 9:00 PM'}
+];
+const BOOKING_MAX_WEEKS=4;  // how many weeks ahead a user can go
+const DAY_NAMES=['Mon','Tue','Wed','Thu','Fri'];
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+let bkCourse='',bkWeek=0,bkDate='',bkTime='',bkCounts={};
+
+function bkFmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function bkMonday(offset){
+  const now=new Date();
+  const d=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  d.setDate(d.getDate()-((d.getDay()+6)%7)+offset*7);
+  return d;
+}
+function bkWeekDays(offset){
+  const mon=bkMonday(offset);
+  return Array.from({length:5},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
+}
+function bkSlotExpired(dateStr,time){
+  return new Date(dateStr+'T'+time+':00')<=new Date();
+}
+function bkSeatsLeft(dateStr,time){
+  if(bkSlotExpired(dateStr,time))return 0;
+  return Math.max(0,BOOKING_CAPACITY-(bkCounts[dateStr+'|'+time]||0));
+}
+function bkWeekAllExpired(offset){
+  return bkWeekDays(offset).every(d=>BOOKING_SLOTS.every(s=>bkSlotExpired(bkFmt(d),s.time)));
+}
+function bkNiceDate(dateStr){
+  const d=new Date(dateStr+'T12:00:00');
+  return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()]+', '+d.getDate()+' '+MONTH_NAMES[d.getMonth()];
+}
+
+function showBkStep(id){
+  document.querySelectorAll('#bkOverlay .bk-step').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+}
+
+function openBooking(course){
+  bkCourse=course;
+  document.getElementById('bkCourseTag').textContent=course;
+  document.getElementById('bkModeNote').style.display=BOOKING_API_URL?'none':'block';
+  document.getElementById('bkOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  let start=0;
+  while(start<BOOKING_MAX_WEEKS&&bkWeekAllExpired(start))start++;
+  loadBkWeek(start);
+}
+function closeBooking(){
+  document.getElementById('bkOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+async function bkFetchCounts(start,end){
+  if(!BOOKING_API_URL){
+    const all=JSON.parse(localStorage.getItem('rbdn_demo_bookings')||'[]');
+    const c={};
+    all.forEach(b=>{if(b.date>=start&&b.date<=end){const k=b.date+'|'+b.time;c[k]=(c[k]||0)+1;}});
+    return c;
+  }
+  const r=await fetch(BOOKING_API_URL+'?action=availability&start='+start+'&end='+end);
+  if(!r.ok)throw new Error('availability fetch failed');
+  return await r.json();
+}
+
+async function loadBkWeek(offset){
+  if(offset>=BOOKING_MAX_WEEKS){showBkStep('bkLimitStep');return;}
+  bkWeek=offset;
+  showBkStep('bkLoadingStep');
+  const days=bkWeekDays(offset);
+  try{
+    bkCounts=await bkFetchCounts(bkFmt(days[0]),bkFmt(days[4]));
+  }catch(err){
+    bkCounts={};
+    alert('Could not load slot availability. Please check your internet connection and try again.');
+    closeBooking();
+    return;
+  }
+  const mon=days[0],fri=days[4];
+  document.getElementById('bkWeekLabel').textContent=
+    mon.getDate()+' '+MONTH_NAMES[mon.getMonth()].slice(0,3)+' – '+fri.getDate()+' '+MONTH_NAMES[fri.getMonth()].slice(0,3)+' '+fri.getFullYear();
+  let totalSeats=0,html='';
+  days.forEach((d,i)=>{
+    const ds=bkFmt(d);
+    const seats=BOOKING_SLOTS.reduce((sum,s)=>sum+bkSeatsLeft(ds,s.time),0);
+    totalSeats+=seats;
+    const expired=BOOKING_SLOTS.every(s=>bkSlotExpired(ds,s.time));
+    const sub=expired?'—':(seats>0?seats+' free':'Full');
+    html+='<button class="bk-day" '+(seats===0?'disabled':'')+' onclick="selectBkDay(\''+ds+'\')">'+
+      '<span class="d-name">'+DAY_NAMES[i]+'</span><span class="d-num">'+d.getDate()+'</span><span class="d-left">'+sub+'</span></button>';
+  });
+  document.getElementById('bkDays').innerHTML=html;
+  if(totalSeats===0){showBkStep('bkFullStep');}
+  else{showBkStep('bkDaysStep');}
+}
+
+function selectBkDay(dateStr){
+  bkDate=dateStr;
+  document.getElementById('bkSlotDayLabel').textContent='Available slots on '+bkNiceDate(dateStr)+':';
+  let html='';
+  BOOKING_SLOTS.forEach(s=>{
+    const left=bkSeatsLeft(dateStr,s.time);
+    const expired=bkSlotExpired(dateStr,s.time);
+    const sub=expired?'Not available':(left>0?(left===1?'1 seat left':left+' seats free'):'Filled');
+    html+='<button class="bk-slot" '+(left===0?'disabled':'')+' onclick="selectBkSlot(\''+s.time+'\')">'+
+      '<span>'+s.label+'</span><span class="s-left">'+sub+'</span></button>';
+  });
+  document.getElementById('bkSlots').innerHTML=html;
+  showBkStep('bkSlotsStep');
+}
+
+function selectBkSlot(time){
+  bkTime=time;
+  const slot=BOOKING_SLOTS.find(s=>s.time===time);
+  document.getElementById('bkChosenLabel').innerHTML=
+    'Your free demo class:<br><strong>'+bkNiceDate(bkDate)+' · '+slot.label+'</strong>';
+  showBkStep('bkFormStep');
+}
+
+function bkContactChanged(){
+  const via=document.getElementById('bkContact').value;
+  document.getElementById('bkPhoneLabel').textContent=via==='WhatsApp'?'WhatsApp Number':'Phone (optional)';
+  document.getElementById('bkEmailLabel').textContent=via==='Email'?'Email Address':'Email (optional)';
+}
+
+async function confirmBooking(){
+  const name=document.getElementById('bkName').value.trim();
+  const phone=document.getElementById('bkPhone').value.trim();
+  const grade=document.getElementById('bkGrade').value;
+  const email=document.getElementById('bkEmail').value.trim();
+  const contact=document.getElementById('bkContact').value;
+  if(!name||!grade){alert('Please fill in the student name and class/grade.');return;}
+  if(contact==='WhatsApp'&&!phone){alert("Please enter your WhatsApp number — that's where we'll send your confirmation.");return;}
+  if(contact==='Email'&&!email){alert("Please enter your email address — that's where we'll send your confirmation.");return;}
+  if(phone){
+    const digits=phone.replace(/\D/g,'');
+    const okPhone=/^[6-9]\d{9}$/.test(digits)||/^91[6-9]\d{9}$/.test(digits)||/^0[6-9]\d{9}$/.test(digits);
+    if(!okPhone){alert("That doesn't look like a valid Indian mobile number. Please check it once — a wrong number means you won't get your class link!");return;}
+  }
+  if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){alert('That email address looks incomplete. Please check it once.');return;}
+  const btn=document.getElementById('bkConfirmBtn');
+  btn.textContent='Booking...';btn.disabled=true;
+  const payload={date:bkDate,time:bkTime,course:bkCourse,name,phone,email,grade,contact};
+  let ok=false,reason='',ref='';
+  if(!BOOKING_API_URL){
+    const all=JSON.parse(localStorage.getItem('rbdn_demo_bookings')||'[]');
+    const count=all.filter(b=>b.date===bkDate&&b.time===bkTime).length;
+    if(count>=BOOKING_CAPACITY){reason='full';}
+    else{all.push(payload);localStorage.setItem('rbdn_demo_bookings',JSON.stringify(all));ok=true;ref=Math.random().toString(36).slice(2,8).toUpperCase();}
+  }else{
+    try{
+      const r=await fetch(BOOKING_API_URL,{
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify(payload)
+      });
+      const j=await r.json();ok=!!j.ok;reason=j.reason||'';ref=j.ref||'';
+    }catch(err){reason='network';}
+  }
+  btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Confirm Booking';
+  btn.disabled=false;
+  if(ok){
+    const slot=BOOKING_SLOTS.find(s=>s.time===bkTime);
+    document.getElementById('bkSuccessDetail').innerHTML=
+      '<strong style="color:#fff;">'+bkCourse+'</strong><br>'+bkNiceDate(bkDate)+' · '+slot.label;
+    document.getElementById('bkSuccessChannel').textContent=
+      "Your slot is reserved. Once your trainer confirms, you'll receive the class meeting link on "+
+      (contact==='Email'?'email':'WhatsApp')+". See you there!";
+    const verifyBtn=document.getElementById('bkVerifyWa'),verifyNote=document.getElementById('bkVerifyNote');
+    if(contact==='WhatsApp'){
+      const msg='Hi Roboden! ✅ Confirming my WhatsApp number for my free demo class:\n'+
+        bkCourse+'\n'+bkNiceDate(bkDate)+' · '+slot.label+'\nStudent: '+name+(ref?'\nRef: '+ref:'');
+      verifyBtn.href='https://wa.me/916281849683?text='+encodeURIComponent(msg);
+      verifyBtn.style.display='flex';verifyNote.style.display='block';
+    }else{
+      verifyBtn.style.display='none';verifyNote.style.display='none';
+    }
+    showBkStep('bkSuccessStep');
+  }else if(reason==='full'){
+    alert('Oops — that slot was just booked by someone else. Please pick another slot.');
+    loadBkWeek(bkWeek);
+  }else{
+    alert('Something went wrong while booking. Please try again, or message us on WhatsApp.');
   }
 }
 
