@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link href="https://fonts.cdnfonts.com/css/hk-modular" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -22,7 +21,7 @@
   --red:#f87171;--red-bg:rgba(248,113,113,.08);--red-border:rgba(248,113,113,.2);
   --mono:'DM Mono',monospace;--sans:'Sora',sans-serif;
 }
-html{scroll-behavior:smooth;}
+html{scroll-behavior:smooth;overflow-x:hidden;}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;cursor:none;min-height:100vh;}
 ::-webkit-scrollbar{width:3px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
@@ -31,6 +30,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:h
 /* CURSOR */
 #cursor{position:fixed;width:10px;height:10px;border-radius:50%;background:#7c3aed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:screen;}
 #cursor-ring{position:fixed;width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(124,58,237,0.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);will-change:transform;}
+@media(pointer:coarse){body{cursor:auto;}#cursor,#cursor-ring{display:none;}}
 #stars-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
 #mouse-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.55;}
 
@@ -50,7 +50,7 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
 .logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff;}
 .logo-img{width:80px;height:80px;object-fit:contain;border-radius:10px;}
 .logo-text{display:flex;flex-direction:column;gap:1px;}
-.logo-name{font-size:1.45rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1;font-family:'HK Modular',var(--sans);}
+.logo-title{font-size:1.15rem;font-weight:800;color:#fff;white-space:nowrap;line-height:1;letter-spacing:.04em;}
 .logo-tagline{font-size:.62rem;font-weight:500;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;}
 .nav-links{display:flex;align-items:center;gap:6px;list-style:none;}
 .nav-links>li{position:relative;}
@@ -79,7 +79,7 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
 .mob-cta{margin-top:20px;background:var(--p);color:#fff;border:none;border-radius:999px;padding:14px;font-size:.97rem;font-weight:700;font-family:var(--sans);cursor:none;width:100%;}
 
 /* PAGE */
-.page{position:relative;z-index:1;min-height:calc(100vh - 82px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 52px;}
+.page{position:relative;z-index:1;min-height:calc(100vh - 82px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 52px;overflow-x:hidden;}
 .grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(109,40,217,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(109,40,217,.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0;}
 .hero-glow{position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);width:600px;height:300px;border-radius:50%;background:radial-gradient(ellipse,rgba(109,40,217,.14) 0%,transparent 70%);filter:blur(70px);pointer-events:none;}
 
@@ -154,8 +154,11 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24
   nav{padding:0 20px;}
   .nav-links,.nav-right>.btn-nav{display:none;}
   .hamburger{display:flex;}
-  .page{padding:60px 20px;}
+  .page{padding:60px 16px;}
   .cert-details{grid-template-columns:1fr;}
+  .cd-value{word-break:break-word;}
+  .verified-card{padding:24px;}
+  .notfound-card{padding:24px;}
   .cert-footer{flex-direction:column;gap:12px;align-items:flex-start;}
   footer{padding:16px 20px;flex-direction:column;gap:8px;text-align:center;}
 }
@@ -174,7 +177,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24
     <img class="logo-img" src="images/roboden-logo.png" alt="Roboden"
          onerror="this.style.display='none'">
     <div class="logo-text">
-      <img src="images/roboden-text.png" alt="ROBODEN" style="height:25px;width:auto;object-fit:contain;">
+      <span class="logo-title">ROBODEN</span>
       <span class="logo-tagline">Think • Build • Innovate</span>
     </div>
   </a>
@@ -246,7 +249,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24
 </main>
 
 <footer>
-  <span class="footer-copy">© 2026 Roboden · MSME Registered · All rights reserved.</span>
+  <span class="footer-copy">© 2026 Roboden · MSME Recognized · All rights reserved.</span>
   <a href="index.html" class="footer-link">← Back to Home</a>
 </footer>
 
@@ -450,7 +453,7 @@ async function verifyCert() {
           ${majorHTML}
 
           <div class="cert-footer">
-            <div class="cf-issued">Issued by <span>Roboden</span> · MSME Registered · Govt. of India</div>
+            <div class="cf-issued">Issued by <span>Roboden</span> · MSME Recognized · Govt. of India</div>
             <a href="index.html" class="cf-logo">
               <img src="images/roboden-logo.png" alt="Roboden" onerror="this.style.display='none'">
               <span>ROBODEN</span>
@@ -502,10 +505,12 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 /* CURSOR */
+if(window.matchMedia('(pointer:fine)').matches){
 const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
 let rx=innerWidth/2,ry=innerHeight/2;
 document.addEventListener('mousemove',e=>{cur.style.left=e.clientX+'px';cur.style.top=e.clientY+'px';});
 function animRing(){rx+=(parseFloat(cur.style.left||innerWidth/2)-rx)*.12;ry+=(parseFloat(cur.style.top||innerHeight/2)-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing);}animRing();
+}
 
 /* HAMBURGER */
 const ham=document.getElementById('hamburger'),mobMenu=document.getElementById('mobileMenu');

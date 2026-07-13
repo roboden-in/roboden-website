@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link href="https://fonts.cdnfonts.com/css/hk-modular" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -29,6 +28,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:h
 /* CURSOR */
 #cursor{position:fixed;width:10px;height:10px;border-radius:50%;background:#7c3aed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:screen;}
 #cursor-ring{position:fixed;width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(124,58,237,0.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);will-change:transform;}
+@media(pointer:coarse){body{cursor:auto;}#cursor,#cursor-ring{display:none;}}
 #stars-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
 #mouse-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.55;}
 
@@ -58,7 +58,7 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
 .logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff;}
 .logo-img{width:80px;height:80px;object-fit:contain;border-radius:10px;}
 .logo-text{display:flex;flex-direction:column;gap:1px;}
-.logo-name{font-size:1.45rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1;font-family:'HK Modular',var(--sans);}
+.logo-title{font-size:1.15rem;font-weight:800;color:#fff;white-space:nowrap;line-height:1;letter-spacing:.04em;}
 .logo-tagline{font-size:.62rem;font-weight:500;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;}
 .nav-links{display:flex;align-items:center;gap:6px;list-style:none;}
 .nav-links>li{position:relative;}
@@ -230,7 +230,7 @@ footer{position:relative;z-index:1;background:var(--bg2);border-top:1px solid va
     <img class="logo-img" src="images/roboden-logo.png" alt="Roboden"
          onerror="this.style.display='none'">
     <div class="logo-text">
-      <img src="images/roboden-text.png" alt="ROBODEN" style="height:25px;width:auto;object-fit:contain;">
+      <span class="logo-title">ROBODEN</span>
       <span class="logo-tagline">Think • Build • Innovate</span>
     </div>
   </a>
@@ -507,7 +507,7 @@ footer{position:relative;z-index:1;background:var(--bg2);border-top:1px solid va
       <a href="#" class="logo" style="margin-bottom:0;">
         <img src="images/roboden-logo.png" alt="Roboden" style="width:40px;height:40px;object-fit:contain;border-radius:8px;" onerror="this.style.display='none'">
         <div class="logo-text">
-          <img src="images/roboden-text.png" alt="ROBODEN" style="height:16px;width:auto;object-fit:contain;">
+          <span class="logo-title" style="font-size:.75rem;">ROBODEN</span>
           <span class="logo-tagline" style="font-size:.48rem;letter-spacing:.02em;">Think • Build • Innovate</span>
         </div>
       </a>
@@ -526,7 +526,7 @@ footer{position:relative;z-index:1;background:var(--bg2);border-top:1px solid va
     <div class="foot-col"><h4>For Institutions</h4><ul><li><a href="schools.html">School Workshops</a></li><li><a href="colleges.html">College Workshops</a></li></ul></div>
   </div>
   <div class="footer-bottom">
-    <span class="footer-copy">© 2026 Roboden · MSME Registered · Govt. of India · All rights reserved.</span>
+    <span class="footer-copy">© 2026 Roboden · MSME Recognized · Govt. of India · All rights reserved.</span>
     <div class="social-row">
       <button class="soc-btn" aria-label="Instagram" onclick="window.open('https://www.instagram.com/roboden.in/','_blank','noopener,noreferrer')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></button>
       <button class="soc-btn" aria-label="Facebook" onclick="window.open('https://www.facebook.com/profile.php?id=61572330205551','_blank','noopener,noreferrer')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></button>
@@ -547,10 +547,12 @@ footer{position:relative;z-index:1;background:var(--bg2);border-top:1px solid va
 
 <script>
 /* CURSOR */
+if(window.matchMedia('(pointer:fine)').matches){
 const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
 let rx=innerWidth/2,ry=innerHeight/2;
 document.addEventListener('mousemove',e=>{cur.style.left=e.clientX+'px';cur.style.top=e.clientY+'px';});
 function animRing(){rx+=(parseFloat(cur.style.left||innerWidth/2)-rx)*.12;ry+=(parseFloat(cur.style.top||innerHeight/2)-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing);}animRing();
+}
 
 /* HAMBURGER */
 const ham=document.getElementById('hamburger'),mobMenu=document.getElementById('mobileMenu');

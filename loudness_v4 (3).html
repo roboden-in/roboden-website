@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link href="https://fonts.cdnfonts.com/css/hk-modular" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -29,6 +28,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:h
 /* CURSOR */
 #cursor{position:fixed;width:10px;height:10px;border-radius:50%;background:#7c3aed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s;mix-blend-mode:screen;}
 #cursor-ring{position:fixed;width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(124,58,237,0.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);will-change:transform;}
+@media(pointer:coarse){body{cursor:auto;}#cursor,#cursor-ring{display:none;}}
 
 /* BG */
 #stars-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
@@ -44,7 +44,7 @@ nav{
 .logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff;}
 .logo-img{width:80px;height:80px;object-fit:contain;border-radius:10px;}
 .logo-text{display:flex;flex-direction:column;gap:1px;}
-.logo-name{font-size:1.45rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1;font-family:'HK Modular',var(--sans);}
+.logo-title{font-size:1.15rem;font-weight:800;color:#fff;white-space:nowrap;line-height:1;letter-spacing:.04em;}
 .logo-tagline{font-size:.62rem;font-weight:500;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;}
 .nav-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(109,40,217,.1);border:1px solid rgba(109,40,217,.24);border-radius:999px;padding:5px 16px;font-size:.72rem;font-weight:700;color:var(--accent);letter-spacing:.09em;text-transform:uppercase;}
 .badge-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 1.8s ease-in-out infinite;}
@@ -225,7 +225,7 @@ main{position:relative;z-index:1;min-height:calc(100vh - 80px);display:flex;flex
     <img class="logo-img" src="images/roboden-logo.png" alt="Roboden"
          onerror="this.style.display='none'">
     <div class="logo-text">
-      <img src="images/roboden-text.png" alt="ROBODEN" style="height:25px;width:auto;object-fit:contain;">
+      <span class="logo-title">ROBODEN</span>
       <span class="logo-tagline">Think • Build • Innovate</span>
     </div>
   </a>
@@ -569,6 +569,7 @@ document.getElementById("retryBtn").addEventListener("click", retryChallenge);
 displayTopScores();
 
 // ── CURSOR ─────────────────────────────────────────────
+if(window.matchMedia('(pointer:fine)').matches){
 const cur  = document.getElementById("cursor");
 const ring = document.getElementById("cursor-ring");
 let rx = innerWidth/2, ry = innerHeight/2, tx = rx, ty = ry;
@@ -581,6 +582,7 @@ document.addEventListener("mousemove", e => {
   ring.style.left = rx+"px"; ring.style.top = ry+"px";
   requestAnimationFrame(animRing);
 })();
+}
 
 // ── STARS ──────────────────────────────────────────────
 const sc = document.getElementById("stars-canvas");

@@ -4,12 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Roboden</title>
-<meta name="description" content="Roboden provides hands-on embedded systems, bare metal programming, robotics, and STEAM workshops for schools and colleges. MSME Registered. Industry-oriented firmware development training.">
+<meta name="description" content="Roboden provides hands-on embedded systems, bare metal programming, robotics, and STEAM workshops for schools and colleges. MSME Recognized. Industry-oriented firmware development training.">
 <meta name="keywords" content="embedded systems training, bare metal programming, robotics workshops, STEM education, firmware development, C programming course, robotics workshops for schools, embedded systems workshops for colleges">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link href="https://fonts.cdnfonts.com/css/hk-modular" rel="stylesheet">
 <link rel="icon" type="image/png" href="images/roboden-logo.png">
 <link rel="apple-touch-icon" href="images/roboden-logo.png">
 <link rel="shortcut icon" href="images/roboden-logo.png">
@@ -31,9 +30,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:h
 ::-webkit-scrollbar-track{background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:var(--p);border-radius:2px;}
 
-/* ── CUSTOM CURSOR ── */
+/* ── CUSTOM CURSOR (mouse only) ── */
 #cursor{position:fixed;width:10px;height:10px;border-radius:50%;background:#7c3aed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s;mix-blend-mode:screen;}
 #cursor-ring{position:fixed;width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(124,58,237,0.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);will-change:transform;}
+@media(pointer:coarse){body{cursor:auto;}#cursor,#cursor-ring{display:none;}}
 #stars-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
 #mouse-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.55;}
 
@@ -70,7 +70,7 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
 .logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff;}
 .logo-img{width:80px;height:80px;object-fit:contain;border-radius:10px;}
 .logo-text{display:flex;flex-direction:column;gap:1px;}
-.logo-name{font-size:1.45rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1;font-family:'HK Modular',var(--sans);}
+.logo-title{font-size:1.15rem;font-weight:800;color:#fff;white-space:nowrap;line-height:1;letter-spacing:.04em;}
 .logo-tagline{font-size:.62rem;font-weight:500;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;}
 .nav-links{display:flex;align-items:center;gap:6px;list-style:none;}
 .nav-links>li{position:relative;}
@@ -382,7 +382,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:64px 52p
     <img class="logo-img" src="images/roboden-logo.png" alt="Roboden"
          onerror="this.style.display='none'">
     <div class="logo-text">
-      <img src="images/roboden-text.png" alt="ROBODEN" style="height:25px;width:auto;object-fit:contain;">
+      <span class="logo-title">ROBODEN</span>
       <span class="logo-tagline">Think • Build • Innovate</span>
     </div>
   </a>
@@ -460,12 +460,12 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:64px 52p
       <div class="msme-shield">
         <img src="images/msme-logo.png" alt="MSME Logo" style="width:150px;height:150px;object-fit:contain;">
       </div>
-      <div class="msme-reg-text">MSME Registered<br>Govt. of India</div>
+      <div class="msme-reg-text">MSME Recognized<br>Govt. of India</div>
     </div>
     <div class="msme-divider"></div>
     <div class="msme-content">
       <div class="pill" style="margin-bottom:14px;"><span class="pill-dot"></span>Official Recognition</div>
-      <h3>Roboden is MSME Registered</h3>
+      <h3>Roboden is MSME Recognized</h3>
       <p>Roboden is officially recognized by the Government of India under the Ministry of Micro, Small &amp; Medium Enterprises (MSME). This certification ensures we operate with the highest standards of accountability, quality, and trust — giving parents and institutions complete confidence in our programs.</p>
       <div class="msme-badges">
         <div class="msme-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>Govt. of India Certified</div>
@@ -678,7 +678,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:64px 52p
       <a href="#" class="logo" style="margin-bottom:0;">
         <img src="images/roboden-logo.png" alt="Roboden" style="width:40px;height:40px;object-fit:contain;border-radius:8px;" onerror="this.style.display='none'">
         <div class="logo-text">
-          <img src="images/roboden-text.png" alt="ROBODEN" style="height:16px;width:auto;object-fit:contain;">
+          <span class="logo-title" style="font-size:.75rem;">ROBODEN</span>
           <span class="logo-tagline" style="font-size:.48rem;letter-spacing:.02em;">Think • Build • Innovate</span>
         </div>
       </a>
@@ -697,7 +697,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:64px 52p
     <div class="foot-col"><h4>For Institutions</h4><ul><li><a href="schools.html">School Workshops</a></li><li><a href="colleges.html">College Workshops</a></li></ul></div>
   </div>
   <div class="footer-bottom">
-    <span class="footer-copy">© 2026 Roboden · MSME Registered · Govt. of India · All rights reserved.</span>
+    <span class="footer-copy">© 2026 Roboden · MSME Recognized · Govt. of India · All rights reserved.</span>
     <div class="social-row">
       <button class="soc-btn" aria-label="Instagram" onclick="window.open('https://www.instagram.com/roboden.in/','_blank','noopener,noreferrer')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></button>
       <button class="soc-btn" aria-label="Facebook" onclick="window.open('https://www.facebook.com/profile.php?id=61572330205551','_blank','noopener,noreferrer')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></button>
@@ -710,10 +710,12 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:64px 52p
 
 <script>
 /* ── CURSOR ── */
+if(window.matchMedia('(pointer:fine)').matches){
 const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
 let rx=innerWidth/2,ry=innerHeight/2;
 document.addEventListener('mousemove',e=>{cur.style.left=e.clientX+'px';cur.style.top=e.clientY+'px';rx+=(e.clientX-rx)*.12;ry+=(e.clientY-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';});
 function animRing(){rx+=(parseFloat(cur.style.left||0)-rx)*.12;ry+=(parseFloat(cur.style.top||0)-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing);}animRing();
+}
 
 /* ── HAMBURGER ── */
 const ham=document.getElementById('hamburger'),mob=document.getElementById('mobileMenu');
