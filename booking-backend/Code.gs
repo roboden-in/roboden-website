@@ -13,7 +13,7 @@
 // meetLink = that trainer's permanent meeting room (Google Meet / Zoom) — it is
 // sent to the student when the trainer confirms.
 var TRAINERS = [
-  { name: 'Surya',   email: 'surya@roboden.in',   meetLink: 'https://meet.google.com/PASTE-SURYA-LINK-HERE' },
+  { name: 'Surya',   email: 'surya@roboden.in',   meetLink: 'https://meet.google.com/hiu-asvi-dwx' },
   { name: 'Sailaja', email: 'sailaja@roboden.in', meetLink: 'https://meet.google.com/PASTE-SAILAJA-LINK-HERE' }
 ];
 // Seats per slot = number of trainers. If you add a trainer here, also set
