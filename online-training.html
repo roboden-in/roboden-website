@@ -611,9 +611,9 @@ footer{position:relative;z-index:1;background:var(--bg2);border-top:1px solid va
     <!-- week full -->
     <div class="bk-step" id="bkFullStep">
       <div class="bk-full">
-        <h3>All slots are filled in this week 😔</h3>
-        <p>Every slot for this week is already booked.<br>Want to try next week?</p>
-        <button class="btn-submit" style="margin-top:0;" onclick="loadBkWeek(bkWeek+1)">Yes, show next week →</button>
+        <h3>All slots are filled for these days 😔</h3>
+        <p>Every slot in the next few days is already booked.<br>Want to see the days after that?</p>
+        <button class="btn-submit" style="margin-top:0;" onclick="loadBkWeek(bkWeek+1)">Yes, show the next 5 days →</button>
         <p style="margin:18px 0 0;font-size:.78rem;">or <a href="https://wa.me/916281849683?text=Hi%21+I+want+to+book+a+free+demo+class+but+slots+are+full." target="_blank" rel="noopener noreferrer" style="color:var(--accent);">message us on WhatsApp</a> and we'll fit you in.</p>
       </div>
     </div>
@@ -726,23 +726,13 @@ const BOOKING_SLOTS=[
   {time:'19:00',label:'7:00 PM – 8:00 PM'},
   {time:'20:00',label:'8:00 PM – 9:00 PM'}
 ];
-const BOOKING_MAX_WEEKS=4;  // how many weeks ahead a user can go
-const DAY_NAMES=['Mon','Tue','Wed','Thu','Fri'];
+const BOOKING_MAX_WINDOWS=4;  // how many 5-day windows ahead a user can go (4 = ~1 month)
+const DAY_NAMES=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 let bkCourse='',bkWeek=0,bkDate='',bkTime='',bkCounts={};
 
 function bkFmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function bkMonday(offset){
-  const now=new Date();
-  const d=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-  d.setDate(d.getDate()-((d.getDay()+6)%7)+offset*7);
-  return d;
-}
-function bkWeekDays(offset){
-  const mon=bkMonday(offset);
-  return Array.from({length:5},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
-}
 function bkSlotExpired(dateStr,time){
   return new Date(dateStr+'T'+time+':00')<=new Date();
 }
@@ -750,8 +740,20 @@ function bkSeatsLeft(dateStr,time){
   if(bkSlotExpired(dateStr,time))return 0;
   return Math.max(0,BOOKING_CAPACITY-(bkCounts[dateStr+'|'+time]||0));
 }
-function bkWeekAllExpired(offset){
-  return bkWeekDays(offset).every(d=>BOOKING_SLOTS.every(s=>bkSlotExpired(bkFmt(d),s.time)));
+// rolling window: the next 5 bookable weekdays (Mon–Fri, skipping days whose
+// slots have all passed), starting today; offset shifts by 5 days per window
+function bkWeekDays(offset){
+  const days=[];
+  const d=new Date();d.setHours(0,0,0,0);
+  while(days.length<(offset+1)*5){
+    const dow=d.getDay();
+    if(dow!==0&&dow!==6){
+      const ds=bkFmt(d);
+      if(!BOOKING_SLOTS.every(s=>bkSlotExpired(ds,s.time)))days.push(new Date(d));
+    }
+    d.setDate(d.getDate()+1);
+  }
+  return days.slice(offset*5);
 }
 function bkNiceDate(dateStr){
   const d=new Date(dateStr+'T12:00:00');
@@ -769,9 +771,7 @@ function openBooking(course){
   document.getElementById('bkModeNote').style.display=BOOKING_API_URL?'none':'block';
   document.getElementById('bkOverlay').classList.add('open');
   document.body.style.overflow='hidden';
-  let start=0;
-  while(start<BOOKING_MAX_WEEKS&&bkWeekAllExpired(start))start++;
-  loadBkWeek(start);
+  loadBkWeek(0);
 }
 function closeBooking(){
   document.getElementById('bkOverlay').classList.remove('open');
@@ -791,7 +791,7 @@ async function bkFetchCounts(start,end){
 }
 
 async function loadBkWeek(offset){
-  if(offset>=BOOKING_MAX_WEEKS){showBkStep('bkLimitStep');return;}
+  if(offset>=BOOKING_MAX_WINDOWS){showBkStep('bkLimitStep');return;}
   bkWeek=offset;
   showBkStep('bkLoadingStep');
   const days=bkWeekDays(offset);
@@ -803,18 +803,17 @@ async function loadBkWeek(offset){
     closeBooking();
     return;
   }
-  const mon=days[0],fri=days[4];
+  const first=days[0],last=days[4];
   document.getElementById('bkWeekLabel').textContent=
-    mon.getDate()+' '+MONTH_NAMES[mon.getMonth()].slice(0,3)+' – '+fri.getDate()+' '+MONTH_NAMES[fri.getMonth()].slice(0,3)+' '+fri.getFullYear();
+    first.getDate()+' '+MONTH_NAMES[first.getMonth()].slice(0,3)+' – '+last.getDate()+' '+MONTH_NAMES[last.getMonth()].slice(0,3)+' '+last.getFullYear();
   let totalSeats=0,html='';
-  days.forEach((d,i)=>{
+  days.forEach(d=>{
     const ds=bkFmt(d);
     const seats=BOOKING_SLOTS.reduce((sum,s)=>sum+bkSeatsLeft(ds,s.time),0);
     totalSeats+=seats;
-    const expired=BOOKING_SLOTS.every(s=>bkSlotExpired(ds,s.time));
-    const sub=expired?'—':(seats>0?seats+' free':'Full');
+    const sub=seats>0?seats+' free':'Full';
     html+='<button class="bk-day" '+(seats===0?'disabled':'')+' onclick="selectBkDay(\''+ds+'\')">'+
-      '<span class="d-name">'+DAY_NAMES[i]+'</span><span class="d-num">'+d.getDate()+'</span><span class="d-left">'+sub+'</span></button>';
+      '<span class="d-name">'+DAY_NAMES[d.getDay()]+'</span><span class="d-num">'+d.getDate()+'</span><span class="d-left">'+sub+'</span></button>';
   });
   document.getElementById('bkDays').innerHTML=html;
   if(totalSeats===0){showBkStep('bkFullStep');}

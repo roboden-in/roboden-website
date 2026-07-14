@@ -128,7 +128,7 @@ can get your number reported as spam. Three protections are built in:
 |---|---|
 | Trainers / emails / assignment order | `TRAINERS` list in `Code.gs`. Adding a 3rd trainer? Also raise `BOOKING_CAPACITY` in `online-training.html` to 3 (keep it equal to the number of trainers) |
 | Slot timings | `VALID_TIMES` in `Code.gs` **and** `BOOKING_SLOTS` in `online-training.html` |
-| How many weeks ahead users can book | `BOOKING_MAX_WEEKS` in `online-training.html` |
+| How far ahead users can book (in 5-day windows) | `BOOKING_MAX_WINDOWS` in `online-training.html` |
 | Cancel a booking | Click **Cancel** in the booking email (notifies the student), or set its Status cell to `Cancelled` / delete the row in the sheet (silent) |
 | Website link sent to students on cancel | `SITE_BOOKING_URL` in `Code.gs` |
 
