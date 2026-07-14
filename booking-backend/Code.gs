@@ -50,6 +50,13 @@ function doPost(e) {
     return json_({ ok: false, reason: 'bad request' });
   }
 
+  // cap field lengths so no one can stuff huge payloads into the sheet/emails
+  data.name   = clip_(data.name, 80);
+  data.phone  = clip_(data.phone, 20);
+  data.email  = clip_(data.email, 120);
+  data.course = clip_(data.course, 80);
+  data.grade  = clip_(data.grade, 30);
+
   // basic validation — need a name and at least one way to contact the student
   if (!data.date || !data.name || (!data.phone && !data.email) || VALID_TIMES.indexOf(data.time) === -1) {
     return json_({ ok: false, reason: 'missing fields' });
@@ -66,6 +73,10 @@ function doPost(e) {
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
+    // one student can't hoard slots: max 2 upcoming bookings per phone/email
+    if (activeBookingsFor_(data.phone, data.email) >= 2) {
+      return json_({ ok: false, reason: 'limit' });
+    }
     var trainer = freeTrainer_(data.date, data.time);
     if (!trainer) {
       return json_({ ok: false, reason: 'full' });
@@ -140,6 +151,30 @@ function getCounts_(start, end) {
 
 function isCancelled_(row) {
   return String(row[9]).trim() === 'Cancelled';
+}
+
+function clip_(v, n) {
+  return String(v || '').trim().slice(0, n);
+}
+
+// HTML-escape user-typed values before putting them in emails or result pages
+function esc_(v) {
+  return String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// non-cancelled bookings from today onwards for this phone or email
+function activeBookingsFor_(phone, email) {
+  var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  var rows = sheet_().getDataRange().getValues();
+  var n = 0;
+  for (var i = 1; i < rows.length; i++) {
+    if (isCancelled_(rows[i])) continue;
+    if (norm_(rows[i][1], false) < today) continue;
+    var p = norm_(rows[i][5], false), e = String(rows[i][6]).trim().toLowerCase();
+    if ((phone && p === phone) || (email && e === email.toLowerCase())) n++;
+  }
+  return n;
 }
 
 // sends from FROM_EMAIL when it's a verified Gmail alias; otherwise falls back
@@ -218,7 +253,7 @@ function refOf_(id) {
 }
 
 function row_(label, value) {
-  return '<tr><td style="padding:4px 16px 4px 0;color:#777;">' + label + '</td><td style="padding:4px 0;"><b>' + (value || '') + '</b></td></tr>';
+  return '<tr><td style="padding:4px 16px 4px 0;color:#777;">' + label + '</td><td style="padding:4px 0;"><b>' + esc_(value) + '</b></td></tr>';
 }
 
 /* ── trainer clicks "Confirm" in their email ── */
@@ -282,7 +317,7 @@ function confirmBooking_(id) {
       }
       return page_(
         'Booking confirmed ✔',
-        b.name + ' · ' + b.course + '<br>' + b.date + ' · ' + b.time + '<br><br>' + note,
+        esc_(b.name) + ' · ' + esc_(b.course) + '<br>' + esc_(b.date) + ' · ' + esc_(b.time) + '<br><br>' + note,
         waUrl
       );
     }
@@ -347,7 +382,7 @@ function cancelBooking_(id) {
       }
       return page_(
         'Booking cancelled',
-        b.name + ' · ' + b.course + '<br>' + b.date + ' · ' + b.time +
+        esc_(b.name) + ' · ' + esc_(b.course) + '<br>' + esc_(b.date) + ' · ' + esc_(b.time) +
         '<br><br>The slot is free again. ' + note,
         waUrl
       );

@@ -363,13 +363,16 @@ async function handleSubmit() {
   btn.textContent = 'Sending...';
   btn.disabled = true;
 
-  const res = await fetch('https://formspree.io/f/xojbkjoo', { // ← paste your ID here
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({ name, email, location, type, message })
-  });
+  let res = null;
+  try {
+    res = await fetch('https://formspree.io/f/xojbkjoo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ name, email, location, type, message })
+    });
+  } catch (err) {}
 
-  if (res.ok) {
+  if (res && res.ok) {
     document.getElementById('formView').style.display = 'none';
     document.getElementById('successMsg').style.display = 'block';
   } else {
