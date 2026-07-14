@@ -77,6 +77,34 @@ The buttons work from any device without logging in — each link contains a
 unique unguessable booking ID. A cancelled booking can't be confirmed
 afterwards by mistake.
 
+## Sending mails from course@roboden.in (instead of the Gmail account)
+
+Apps Script normally sends from the Google account that owns the script.
+To send from `course@roboden.in` instead, register it as a **verified alias**
+in that Gmail account (one-time, ~5 minutes):
+
+1. Make sure the mailbox `course@roboden.in` exists with your email provider
+   (the same place surya@/sailaja@/hello@roboden.in live). Note its SMTP
+   details and password.
+2. In the Gmail account that owns the script (roboden.in@gmail.com):
+   **⚙ Settings → See all settings → Accounts and Import → "Send mail as"
+   → Add another email address**.
+3. Enter name `Roboden` and `course@roboden.in` → Next → fill in your
+   provider's SMTP server, username `course@roboden.in`, and its password
+   (for Zoho India: `smtp.zoho.in`, port 465, SSL) → Add account.
+4. Google emails a verification code to `course@roboden.in` — open that
+   mailbox, click the link / enter the code. The alias now shows in the
+   "Send mail as" list.
+5. In `Code.gs`, `FROM_EMAIL` is already set to `course@roboden.in`. Paste
+   the updated code into the Apps Script editor, save, then **Run any
+   function once** (e.g. `sheet_`) so Google asks for the new Gmail
+   permission — approve it. Finally: Deploy → Manage deployments → ✏ Edit →
+   New version → Deploy.
+
+If the alias isn't verified (or the permission not granted), the script
+automatically falls back to sending from the Gmail account itself, so no
+booking mail is ever lost.
+
 ## Wrong numbers & spam safety
 
 Students can mistype their WhatsApp number, and messaging a stranger's number

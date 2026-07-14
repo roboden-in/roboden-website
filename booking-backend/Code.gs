@@ -21,6 +21,11 @@ var TRAINERS = [
 var SITE_BOOKING_URL = 'https://roboden.in/online-training.html';   // where students go to pick a new slot
 var SHEET_NAME = 'Bookings';
 var NOTIFY_EMAIL = '';            // optional: extra email that gets a copy of every booking
+// Send all mails from this address instead of the Google account that owns the script.
+// It MUST first be added as a verified "Send mail as" alias in that account's Gmail
+// settings (see SETUP.md), otherwise mails fall back to the account's own address.
+var FROM_EMAIL = 'course@roboden.in';
+var FROM_NAME = 'Roboden';        // display name students see in their inbox
 var VALID_TIMES = ['18:00', '19:00', '20:00'];   // 6, 7, 8 PM start times
 
 function doGet(e) {
@@ -137,6 +142,23 @@ function isCancelled_(row) {
   return String(row[9]).trim() === 'Cancelled';
 }
 
+// sends from FROM_EMAIL when it's a verified Gmail alias; otherwise falls back
+// to the script owner's own address so mails are never lost
+function sendMail_(to, subject, body, htmlBody) {
+  var opts = { name: FROM_NAME };
+  if (htmlBody) opts.htmlBody = htmlBody;
+  if (FROM_EMAIL) {
+    try {
+      opts.from = FROM_EMAIL;
+      GmailApp.sendEmail(to, subject, body, opts);
+      return;
+    } catch (err) {
+      delete opts.from;   // alias not registered/verified yet — send normally
+    }
+  }
+  MailApp.sendEmail(to, subject, body, opts);
+}
+
 // sheet cells may come back as Date objects — normalise to plain strings
 function norm_(v, isTime) {
   if (v instanceof Date) {
@@ -181,9 +203,9 @@ function notify_(data, trainer, id) {
     '<p style="color:#777;font-size:12px;">Confirm emails the student your meeting link (plus a one-click WhatsApp message for you). Cancel frees the slot and asks the student to choose another one.</p>' +
     '</div>';
   try {
-    MailApp.sendEmail(trainer.email, subject, body, { htmlBody: htmlBody });
+    sendMail_(trainer.email, subject, body, htmlBody);
     if (NOTIFY_EMAIL && NOTIFY_EMAIL !== trainer.email) {
-      MailApp.sendEmail(NOTIFY_EMAIL, subject, body, { htmlBody: htmlBody });
+      sendMail_(NOTIFY_EMAIL, subject, body, htmlBody);
     }
   } catch (err) {
     // never fail the booking because of a mail issue
@@ -232,7 +254,7 @@ function confirmBooking_(id) {
       var studentMailed = false;
       if (b.email) {
         try {
-          MailApp.sendEmail(b.email,
+          sendMail_(b.email,
             'Your free Roboden demo class is confirmed! 🎉',
             'Hi ' + b.name + '!\n\n' +
             'Your free demo class is confirmed:\n\n' +
@@ -298,7 +320,7 @@ function cancelBooking_(id) {
       var studentMailed = false;
       if (b.email) {
         try {
-          MailApp.sendEmail(b.email,
+          sendMail_(b.email,
             'Please choose another slot for your Roboden demo class',
             'Hi ' + b.name + ',\n\n' +
             'We\'re really sorry — we can\'t take your demo class at the slot you booked:\n\n' +
