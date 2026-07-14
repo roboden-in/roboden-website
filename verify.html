@@ -255,15 +255,13 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24
 
 
 <script>
-/* ── IMPORTANT: REPLACE THIS URL WITH YOUR OWN ──
-   Steps to get your Google Sheet URL:
-   1. Open your Google Sheet
-   2. Go to File → Share → Publish to web
-   3. Select Sheet1, CSV format → click Publish
-   4. Copy the URL and paste it below
-   Your sheet columns must be in this exact order:
-   A: Certificate ID | B: Student Name | C: Course | D: Issue Date
+/* ── CERTIFICATE LOOKUP ──
+   Preferred: Apps Script lookup that returns one record per query, keeping
+   the full student list private (see certificate-backend/SETUP.md).
+   While VERIFY_API_URL is empty, the page falls back to the published CSV
+   below. Once the API URL is pasted and tested, stop publishing the CSV.
 */
+const VERIFY_API_URL = '';   // ← paste your certificate Apps Script URL here
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRPNlTAk9b9BFNMK7BBWvhT0pwtjiDKULlTriCkqwOD0iDMZIB7nWP7Zc0MBfZYFZIgd3EYOMwvtCJH/pub?gid=0&single=true&output=csv';
 // ─────────────────────────────────────────────
 
@@ -382,14 +380,30 @@ async function verifyCert() {
   loader.style.display = 'flex';
 
   try {
-    const res = await fetch(SHEET_URL + '&t=' + Date.now());
-    if (!res.ok) throw new Error('Sheet fetch failed');
-    const csv = await res.text();
-    const records = parseCSV(csv);
-
-    const match = records.find(r =>
-      (r['Certificate ID'] || '').trim().toUpperCase() === input
-    );
+    let match = null;
+    if (VERIFY_API_URL) {
+      // single-record lookup — the full list never leaves the backend
+      const res = await fetch(VERIFY_API_URL + '?id=' + encodeURIComponent(input) + '&t=' + Date.now());
+      if (!res.ok) throw new Error('Lookup failed');
+      const j = await res.json();
+      if (j.found) {
+        match = {
+          'Certificate ID': j.cert.id,
+          'Student Name':   j.cert.name,
+          'Course':         j.cert.course,
+          'Issue Date':     j.cert.date
+        };
+      }
+    } else {
+      // legacy fallback: published CSV (used until the API URL is configured)
+      const res = await fetch(SHEET_URL + '&t=' + Date.now());
+      if (!res.ok) throw new Error('Sheet fetch failed');
+      const csv = await res.text();
+      const records = parseCSV(csv);
+      match = records.find(r =>
+        (r['Certificate ID'] || '').trim().toUpperCase() === input
+      ) || null;
+    }
 
     loader.style.display = 'none';
     resultCard.style.display = 'block';
