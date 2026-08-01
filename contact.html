@@ -4,6 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Contact — Roboden</title>
+<meta name="description" content="Get in touch with Roboden to book robotics, embedded systems or STEAM training for your school, college or child. Based in Bengaluru. We reply within 24 hours.">
+<link rel="canonical" href="https://roboden.in/contact">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#07070c">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Roboden">
+<meta property="og:locale" content="en_IN">
+<meta property="og:url" content="https://roboden.in/contact">
+<meta property="og:title" content="Contact Roboden — Book a Workshop or Online Class">
+<meta property="og:description" content="Book robotics, embedded systems or STEAM training for your school, college or child. Based in Bengaluru. We reply within 24 hours.">
+<meta property="og:image" content="https://roboden.in/images/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Contact Roboden — Book a Workshop or Online Class">
+<meta name="twitter:description" content="Book robotics, embedded systems or STEAM training for your school, college or child. Based in Bengaluru.">
+<meta name="twitter:image" content="https://roboden.in/images/og-cover.png">
 <link rel="icon" type="image/png" href="images/roboden-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -123,6 +141,13 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .btn-submit{width:100%;background:var(--p);color:#fff;border:none;border-radius:999px;padding:14px;font-size:.95rem;font-weight:700;font-family:var(--sans);cursor:none;margin-top:8px;transition:background .2s,box-shadow .2s,transform .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
 .btn-submit:hover{background:var(--pl);box-shadow:0 0 28px rgba(109,40,217,.45);transform:translateY(-2px);}
+.btn-submit:disabled{opacity:.6;transform:none;box-shadow:none;}
+
+/* required marker + inline error + honeypot */
+.req-star{color:var(--accent);}
+.form-error{margin-top:14px;padding:11px 14px;border-radius:10px;background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.22);color:#fca5a5;font-size:.82rem;line-height:1.5;}
+.form-error[hidden]{display:none;}
+.hp-wrap{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;}
 
 /* success state */
 .success-msg{display:none;text-align:center;padding:24px 0;}
@@ -259,25 +284,26 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:28
         <div class="form-title">Send us a Message</div>
         <div class="form-sub">Fill in your details and we'll get back to you within 24 hours.</div>
 
+        <form id="contactForm" novalidate>
         <div class="form-row">
           <div class="field">
-            <label>Your Name</label>
-            <input type="text" id="fname" placeholder="Eg. Ravi Kumar">
+            <label for="fname">Your Name <span class="req-star" aria-hidden="true">*</span></label>
+            <input type="text" id="fname" name="name" placeholder="Eg. Ravi Kumar" required minlength="2" maxlength="80" autocomplete="name">
           </div>
           <div class="field">
-            <label>Email Address</label>
-            <input type="email" id="femail" placeholder="you@example.com">
+            <label for="femail">Email Address <span class="req-star" aria-hidden="true">*</span></label>
+            <input type="email" id="femail" name="email" placeholder="you@example.com" required maxlength="120" autocomplete="email">
           </div>
         </div>
 
         <div class="field">
-          <label>Location / City</label>
-          <input type="text" id="flocation" placeholder="Eg. Bengaluru">
+          <label for="flocation">Location / City</label>
+          <input type="text" id="flocation" name="location" placeholder="Eg. Bengaluru" maxlength="80" autocomplete="address-level2">
         </div>
 
         <div class="field">
-          <label>I am a</label>
-          <select id="ftype">
+          <label for="ftype">I am a <span class="req-star" aria-hidden="true">*</span></label>
+          <select id="ftype" name="type" required>
             <option value="">Select one...</option>
             <option>Parent of a school student</option>
             <option>College student</option>
@@ -288,14 +314,23 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:28
         </div>
 
         <div class="field">
-          <label>Message</label>
-          <textarea id="fmessage" placeholder="Tell us what you're looking for..."></textarea>
+          <label for="fmessage">Message <span class="req-star" aria-hidden="true">*</span></label>
+          <textarea id="fmessage" name="message" placeholder="Tell us what you're looking for..." required minlength="10" maxlength="2000"></textarea>
         </div>
 
-        <button class="btn-submit" onclick="handleSubmit()">
+        <!-- Honeypot: hidden from humans, filled by bots. Formspree also discards submissions containing _gotcha. -->
+        <div class="hp-wrap" aria-hidden="true">
+          <label for="fcompany">Company</label>
+          <input type="text" id="fcompany" name="_gotcha" tabindex="-1" autocomplete="off">
+        </div>
+
+        <p class="form-error" id="formError" role="alert" aria-live="assertive" hidden></p>
+
+        <button type="submit" class="btn-submit" id="submitBtn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          Send Message
+          <span id="submitLabel">Send Message</span>
         </button>
+        </form>
       </div>
 
       <!-- SUCCESS -->
@@ -347,40 +382,91 @@ const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersec
 document.querySelectorAll('.reveal,.stg').forEach(el=>obs.observe(el));
 
 /* ── FORM SUBMIT ── */
-async function handleSubmit() {
-  const name     = document.getElementById('fname').value.trim();
-  const email    = document.getElementById('femail').value.trim();
-  const location = document.getElementById('flocation').value.trim();
-  const type     = document.getElementById('ftype').value;
-  const message  = document.getElementById('fmessage').value.trim();
+(function(){
+  const form      = document.getElementById('contactForm');
+  const btn       = document.getElementById('submitBtn');
+  const btnLabel  = document.getElementById('submitLabel');
+  const errBox    = document.getElementById('formError');
+  const honeypot  = document.getElementById('fcompany');
+  const loadedAt  = Date.now();
+  const MIN_FILL_MS = 3000;   /* humans take longer than 3s to fill this in */
+  let sending = false;
 
-  if (!name || !email || !message) {
-    alert('Please fill in your name, email, and message.');
-    return;
+  function showError(msg, focusEl){
+    errBox.textContent = msg;
+    errBox.hidden = false;
+    if (focusEl) focusEl.focus();
+  }
+  function clearError(){
+    errBox.hidden = true;
+    errBox.textContent = '';
   }
 
-  const btn = document.querySelector('.btn-submit');
-  btn.textContent = 'Sending...';
-  btn.disabled = true;
+  /* clear the error as soon as the user starts fixing it */
+  form.addEventListener('input', clearError);
+  form.addEventListener('change', clearError);
 
-  let res = null;
-  try {
-    res = await fetch('https://formspree.io/f/xojbkjoo', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ name, email, location, type, message })
-    });
-  } catch (err) {}
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    if (sending) return;
+    clearError();
 
-  if (res && res.ok) {
-    document.getElementById('formView').style.display = 'none';
-    document.getElementById('successMsg').style.display = 'block';
-  } else {
-    alert('Something went wrong. Please try WhatsApp instead.');
-    btn.textContent = 'Send Message';
-    btn.disabled = false;
-  }
-}
+    const name     = document.getElementById('fname').value.trim();
+    const email    = document.getElementById('femail').value.trim();
+    const location = document.getElementById('flocation').value.trim();
+    const type     = document.getElementById('ftype').value;
+    const message  = document.getElementById('fmessage').value.trim();
+
+    /* ── bot traps ── */
+    if (honeypot.value !== '') {
+      /* pretend it worked so the bot does not retry */
+      document.getElementById('formView').style.display = 'none';
+      document.getElementById('successMsg').style.display = 'block';
+      return;
+    }
+    if (Date.now() - loadedAt < MIN_FILL_MS) {
+      showError('That was quick — please take a moment and try again.');
+      return;
+    }
+
+    /* ── validation ── */
+    if (name.length < 2) {
+      return showError('Please enter your name.', document.getElementById('fname'));
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      return showError('Please enter a valid email address.', document.getElementById('femail'));
+    }
+    if (!type) {
+      return showError('Please tell us who you are.', document.getElementById('ftype'));
+    }
+    if (message.length < 10) {
+      return showError('Please write a short message (at least 10 characters).', document.getElementById('fmessage'));
+    }
+
+    sending = true;
+    btnLabel.textContent = 'Sending...';
+    btn.disabled = true;
+
+    let res = null;
+    try {
+      res = await fetch('https://formspree.io/f/xojbkjoo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ name, email, location, type, message })
+      });
+    } catch (err) {}
+
+    if (res && res.ok) {
+      document.getElementById('formView').style.display = 'none';
+      document.getElementById('successMsg').style.display = 'block';
+    } else {
+      showError('Something went wrong. Please try WhatsApp instead.');
+      btnLabel.textContent = 'Send Message';
+      btn.disabled = false;
+      sending = false;
+    }
+  });
+})();
 
 /* ── STARS ── */
 const sc=document.getElementById('stars-canvas');

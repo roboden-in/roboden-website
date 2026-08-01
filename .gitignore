@@ -1,2 +1,6 @@
 # local Claude Code tooling (dev preview config, not part of the website)
 .claude/
+
+# private working notes — must not be published with the site
+seo-headline-options.md
+seo-local-setup-guide.md
