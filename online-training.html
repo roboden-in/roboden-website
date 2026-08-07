@@ -877,6 +877,7 @@ async function confirmBooking(){
   const email=document.getElementById('bkEmail').value.trim();
   const contact=document.getElementById('bkContact').value;
   if(!name||!grade){alert('Please fill in the student name and class/grade.');return;}
+  if(bkSlotExpired(bkDate,bkTime)){alert('Sorry, this slot has already passed. Please pick another one.');loadBkWeek(bkWeek);return;}
   if(contact==='WhatsApp'&&!phone){alert("Please enter your WhatsApp number — that's where we'll send your confirmation.");return;}
   if(contact==='Email'&&!email){alert("Please enter your email address — that's where we'll send your confirmation.");return;}
   if(phone){
@@ -924,6 +925,9 @@ async function confirmBooking(){
       verifyBtn.style.display='none';verifyNote.style.display='none';
     }
     showBkStep('bkSuccessStep');
+  }else if(reason==='expired'){
+    alert('Sorry, this slot has already passed. Please pick another one.');
+    loadBkWeek(bkWeek);
   }else if(reason==='full'){
     alert('Oops — that slot was just booked by someone else. Please pick another slot.');
     loadBkWeek(bkWeek);

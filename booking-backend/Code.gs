@@ -68,6 +68,10 @@ function doPost(e) {
   if (day === 0 || day === 6) {
     return json_({ ok: false, reason: 'weekend' });
   }
+  var slotStart = new Date(data.date + 'T' + data.time + ':00+05:30');
+  if (slotStart <= new Date()) {
+    return json_({ ok: false, reason: 'expired' });
+  }
 
   // lock so two simultaneous bookings can't overfill a slot
   var lock = LockService.getScriptLock();
