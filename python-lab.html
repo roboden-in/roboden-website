@@ -32,18 +32,26 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:h
 ::-webkit-scrollbar-thumb{background:var(--p);border-radius:2px;}
 
 /* NAV */
-nav{display:flex;align-items:center;justify-content:space-between;padding:0 52px;height:64px;position:sticky;top:0;z-index:9001;background:rgba(7,7,12,0.95);backdrop-filter:blur(28px);border-bottom:1px solid var(--border);}
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 52px;height:82px;position:sticky;top:0;z-index:9001;background:rgba(7,7,12,0.9);backdrop-filter:blur(28px);border-bottom:1px solid var(--border);}
 nav .logo{min-width:160px;}
 nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items:center;gap:10px;}
 .logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff;}
-.logo-img{width:44px;height:44px;object-fit:contain;border-radius:8px;}
+.logo-img{width:80px;height:80px;object-fit:contain;border-radius:10px;}
 .logo-text{display:flex;flex-direction:column;gap:1px;}
-.logo-title{font-size:1rem;font-weight:800;color:#fff;white-space:nowrap;line-height:1;letter-spacing:.04em;}
-.logo-tagline{font-size:.55rem;font-weight:500;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;}
+.logo-title{font-size:1.15rem;font-weight:800;color:#fff;white-space:nowrap;line-height:1;letter-spacing:.04em;}
+.logo-tagline{font-size:.62rem;font-weight:500;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;}
 .nav-links{display:flex;align-items:center;gap:6px;list-style:none;}
-.nav-links a{color:var(--muted);text-decoration:none;font-size:0.8rem;font-weight:500;padding:6px 12px;border-radius:8px;display:flex;align-items:center;gap:4px;transition:color .2s,background .2s;white-space:nowrap;}
+.nav-links>li{position:relative;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:0.875rem;font-weight:500;padding:8px 14px;border-radius:8px;display:flex;align-items:center;gap:4px;transition:color .2s,background .2s;white-space:nowrap;}
 .nav-links a:hover{color:#fff;background:rgba(255,255,255,0.05);}
 .nav-links a.active{color:var(--accent);}
+.drop-arrow{transition:transform .3s;}
+.nav-links li:hover .drop-arrow{transform:rotate(180deg);}
+.dropdown{position:absolute;top:100%;left:0;min-width:230px;background:rgba(10,9,18,0.98);border:1px solid var(--border2);border-top:none;border-radius:0 0 14px 14px;padding:8px;opacity:0;pointer-events:none;transform:scaleY(0);transform-origin:top center;transition:opacity .25s ease,transform .3s cubic-bezier(.22,1,.36,1);backdrop-filter:blur(24px);}
+.nav-links li:hover .dropdown{opacity:1;pointer-events:all;transform:scaleY(1);}
+.dropdown a{flex-direction:column;align-items:flex-start;gap:2px;padding:10px 14px;border-radius:9px;font-size:.84rem;}
+.dropdown a strong{color:#fff;font-weight:600;}
+.dropdown a span{font-size:.75rem;color:var(--muted);}
 .hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;background:none;border:none;cursor:pointer;padding:6px;}
 .hamburger span{display:block;width:22px;height:2px;background:#fff;border-radius:2px;transition:transform .3s,opacity .3s;}
 .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
@@ -238,7 +246,7 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 .status-connected{background:var(--success);}
 .status-disconnected{background:var(--error);}
 
-@media(max-width:900px){
+@media(max-width:640px){
   nav{padding:0 20px;height:56px;}
   .nav-links{display:none;}
   .hamburger{display:flex;}
@@ -273,9 +281,17 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
     <li><a href="index.html">Home</a></li>
     <li><a href="schools.html">For Schools</a></li>
     <li><a href="colleges.html">For Colleges</a></li>
-    <li><a href="online-training.html">Online Training</a></li>
-    <li><a href="python-lab.html" class="active">Python Lab</a></li>
+    <li>
+      <a href="online-training.html">Online Training <svg class="drop-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
+      <div class="dropdown">
+        <a href="online-training.html"><strong>For School Students</strong><span>Robotics &amp; Python courses</span></a>
+        <a href="online-training.html#college"><strong>For College Students</strong><span>Bare metal &amp; C programming</span></a>
+      </div>
+    </li>
+    <li><a href="about.html">About</a></li>
     <li><a href="contact.html">Contact</a></li>
+    <li><a href="verify.html">Verify Certificate</a></li>
+    <li><a href="python-lab.html" class="active">Python Lab</a></li>
   </ul>
   <div class="nav-right">
     <div class="user-chip" id="userChip" style="display:none;">
@@ -290,9 +306,12 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
   <a href="index.html">Home</a>
   <a href="schools.html">For Schools</a>
   <a href="colleges.html">For Colleges</a>
-  <a href="online-training.html">Online Training</a>
-  <a href="python-lab.html">Python Lab</a>
+  <a href="online-training.html">Online – School Students</a>
+  <a href="online-training.html#college">Online – College Students</a>
+  <a href="about.html">About</a>
   <a href="contact.html">Contact</a>
+  <a href="verify.html">Verify Certificate</a>
+  <a href="python-lab.html">Python Lab</a>
 </div>
 
 <!-- ═══ SCREEN: LOGIN ═══ -->
