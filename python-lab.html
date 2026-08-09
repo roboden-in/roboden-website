@@ -592,19 +592,25 @@ async function teacherLogin() {
   errEl.style.display = 'none';
   if (!email || !pass) { errEl.textContent = 'Enter email and password.'; errEl.style.display = 'block'; return; }
 
-  const snap = await db.ref('teachers').orderByChild('email').equalTo(email).once('value');
-  const data = snap.val();
-  if (!data) { errEl.textContent = 'Account not found.'; errEl.style.display = 'block'; return; }
+  try {
+    const snap = await db.ref('teachers').orderByChild('email').equalTo(email).once('value');
+    const data = snap.val();
+    if (!data) { errEl.textContent = 'Account not found.'; errEl.style.display = 'block'; return; }
 
-  const tid = Object.keys(data)[0];
-  const teacher = data[tid];
-  if (teacher.password !== pass) { errEl.textContent = 'Incorrect password.'; errEl.style.display = 'block'; return; }
+    const tid = Object.keys(data)[0];
+    const teacher = data[tid];
+    if (teacher.password !== pass) { errEl.textContent = 'Incorrect password.'; errEl.style.display = 'block'; return; }
 
-  S.teacherSession = { id: tid, name: teacher.name, email: teacher.email, isAdmin: !!teacher.isAdmin };
-  localStorage.setItem('teacherSession', JSON.stringify(S.teacherSession));
-  S.role = 'teacher';
-  showNav(teacher.name, teacher.name[0]);
-  showTeacherDashboard();
+    S.teacherSession = { id: tid, name: teacher.name, email: teacher.email, isAdmin: !!teacher.isAdmin };
+    localStorage.setItem('teacherSession', JSON.stringify(S.teacherSession));
+    S.role = 'teacher';
+    showNav(teacher.name, teacher.name[0]);
+    showTeacherDashboard();
+  } catch(e) {
+    console.error('Teacher login error:', e);
+    errEl.textContent = 'Connection error: ' + e.message;
+    errEl.style.display = 'block';
+  }
 }
 
 function showTeacherDashboard() {
@@ -631,34 +637,39 @@ auth.onAuthStateChanged(async user => {
   if (!user) return;
   if (S.teacherSession) return;
 
-  S.studentUser = user;
-  const snap = await db.ref('students/' + user.uid).once('value');
-  const data = snap.val();
+  try {
+    S.studentUser = user;
+    const snap = await db.ref('students/' + user.uid).once('value');
+    const data = snap.val();
 
-  if (!data) {
-    await db.ref('students/' + user.uid).set({
-      name: user.displayName || 'Student',
-      email: user.email,
-      photoURL: user.photoURL || '',
-      status: 'pending',
-      registeredAt: firebase.database.ServerValue.TIMESTAMP
-    });
-    showScreen('screenPending');
-    showNav(user.displayName || 'Student', (user.displayName || 'S')[0]);
-    return;
-  }
+    if (!data) {
+      await db.ref('students/' + user.uid).set({
+        name: user.displayName || 'Student',
+        email: user.email,
+        photoURL: user.photoURL || '',
+        status: 'pending',
+        registeredAt: firebase.database.ServerValue.TIMESTAMP
+      });
+      showScreen('screenPending');
+      showNav(user.displayName || 'Student', (user.displayName || 'S')[0]);
+      return;
+    }
 
-  if (data.status === 'pending') {
-    showScreen('screenPending');
-    showNav(data.name, data.name[0]);
-    return;
-  }
+    if (data.status === 'pending') {
+      showScreen('screenPending');
+      showNav(data.name, data.name[0]);
+      return;
+    }
 
-  if (data.status === 'approved') {
-    S.role = 'student';
-    showNav(data.name, data.name[0]);
-    showStudentDashboard();
-    return;
+    if (data.status === 'approved') {
+      S.role = 'student';
+      showNav(data.name, data.name[0]);
+      showStudentDashboard();
+      return;
+    }
+  } catch(e) {
+    console.error('Student auth error:', e);
+    alert('Connection error: ' + e.message);
   }
 });
 
