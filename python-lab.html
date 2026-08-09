@@ -544,6 +544,30 @@ const db = firebase.database();
 const auth = firebase.auth();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 
+const DB_BASE = firebaseConfig.databaseURL;
+const fbRest = {
+  async get(path) {
+    const r = await fetch(DB_BASE + '/' + path + '.json');
+    if (!r.ok) throw new Error('DB read failed: ' + r.status);
+    return r.json();
+  },
+  async set(path, data) {
+    const r = await fetch(DB_BASE + '/' + path + '.json', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    if (!r.ok) throw new Error('DB write failed: ' + r.status);
+    return r.json();
+  },
+  async update(path, data) {
+    const r = await fetch(DB_BASE + '/' + path + '.json', { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    if (!r.ok) throw new Error('DB update failed: ' + r.status);
+    return r.json();
+  },
+  async push(path, data) {
+    const r = await fetch(DB_BASE + '/' + path + '.json', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    if (!r.ok) throw new Error('DB push failed: ' + r.status);
+    return r.json();
+  }
+};
+
 /* ══════ STATE ══════ */
 let S = {
   role: null, roomCode: null, pyodide: null, pyodideReady: false,
@@ -593,12 +617,14 @@ async function teacherLogin() {
   if (!email || !pass) { errEl.textContent = 'Enter email and password.'; errEl.style.display = 'block'; return; }
 
   try {
-    const snap = await db.ref('teachers').orderByChild('email').equalTo(email).once('value');
-    const data = snap.val();
-    if (!data) { errEl.textContent = 'Account not found.'; errEl.style.display = 'block'; return; }
+    const allTeachers = await fbRest.get('teachers');
+    if (!allTeachers) { errEl.textContent = 'Account not found.'; errEl.style.display = 'block'; return; }
 
-    const tid = Object.keys(data)[0];
-    const teacher = data[tid];
+    let tid = null, teacher = null;
+    for (const [k, v] of Object.entries(allTeachers)) {
+      if (v.email === email) { tid = k; teacher = v; break; }
+    }
+    if (!teacher) { errEl.textContent = 'Account not found.'; errEl.style.display = 'block'; return; }
     if (teacher.password !== pass) { errEl.textContent = 'Incorrect password.'; errEl.style.display = 'block'; return; }
 
     S.teacherSession = { id: tid, name: teacher.name, email: teacher.email, isAdmin: !!teacher.isAdmin };
@@ -639,16 +665,15 @@ auth.onAuthStateChanged(async user => {
 
   try {
     S.studentUser = user;
-    const snap = await db.ref('students/' + user.uid).once('value');
-    const data = snap.val();
+    const data = await fbRest.get('students/' + user.uid);
 
     if (!data) {
-      await db.ref('students/' + user.uid).set({
+      await fbRest.set('students/' + user.uid, {
         name: user.displayName || 'Student',
         email: user.email,
         photoURL: user.photoURL || '',
         status: 'pending',
-        registeredAt: firebase.database.ServerValue.TIMESTAMP
+        registeredAt: { '.sv': 'timestamp' }
       });
       showScreen('screenPending');
       showNav(user.displayName || 'Student', (user.displayName || 'S')[0]);
@@ -716,164 +741,156 @@ function hideTeacherPanels() {
   document.querySelector('#screenTeacherDash .dash-grid').style.display = 'grid';
 }
 
-function loadPendingStudents() {
-  db.ref('students').orderByChild('status').equalTo('pending').once('value', snap => {
-    const data = snap.val() || {};
-    const list = document.getElementById('pendingList');
-    const entries = Object.entries(data);
-    document.getElementById('pendingBadge').textContent = entries.length ? '(' + entries.length + ')' : '';
-    document.getElementById('pendingCountLabel').textContent = entries.length ? entries.length + ' pending request' + (entries.length > 1 ? 's' : '') : 'Approve new students';
+async function loadPendingStudents() {
+  const all = await fbRest.get('students') || {};
+  const data = Object.fromEntries(Object.entries(all).filter(([,v]) => v.status === 'pending'));
+  const list = document.getElementById('pendingList');
+  const entries = Object.entries(data);
+  document.getElementById('pendingBadge').textContent = entries.length ? '(' + entries.length + ')' : '';
+  document.getElementById('pendingCountLabel').textContent = entries.length ? entries.length + ' pending request' + (entries.length > 1 ? 's' : '') : 'Approve new students';
 
-    if (!entries.length) { list.innerHTML = '<div class="no-items">No pending requests</div>'; return; }
-    list.innerHTML = entries.map(([uid, s]) => `
-      <div class="admin-item">
-        <div class="admin-item-info">
-          ${s.photoURL ? '<img class="admin-item-avatar" src="'+s.photoURL+'" onerror="this.style.display=\'none\'">' : ''}
-          <div class="admin-item-text">
-            <div class="admin-item-name">${esc(s.name)}</div>
-            <div class="admin-item-email">${esc(s.email)}</div>
-          </div>
-        </div>
-        <div class="admin-item-actions">
-          <button class="btn-approve" onclick="approveStudent('${uid}')">Approve</button>
-          <button class="btn-reject" onclick="rejectStudent('${uid}')">Reject</button>
+  if (!entries.length) { list.innerHTML = '<div class="no-items">No pending requests</div>'; return; }
+  list.innerHTML = entries.map(([uid, s]) => `
+    <div class="admin-item">
+      <div class="admin-item-info">
+        ${s.photoURL ? '<img class="admin-item-avatar" src="'+s.photoURL+'" onerror="this.style.display=\'none\'">' : ''}
+        <div class="admin-item-text">
+          <div class="admin-item-name">${esc(s.name)}</div>
+          <div class="admin-item-email">${esc(s.email)}</div>
         </div>
       </div>
-    `).join('');
-  });
-}
-
-function loadApprovedStudents() {
-  db.ref('students').orderByChild('status').equalTo('approved').once('value', snap => {
-    const data = snap.val() || {};
-    const list = document.getElementById('approvedList');
-    const entries = Object.entries(data);
-    if (!entries.length) { list.innerHTML = '<div class="no-items">No approved students yet</div>'; return; }
-    list.innerHTML = entries.map(([uid, s]) => `
-      <div class="admin-item">
-        <div class="admin-item-info">
-          ${s.photoURL ? '<img class="admin-item-avatar" src="'+s.photoURL+'" onerror="this.style.display=\'none\'">' : ''}
-          <div class="admin-item-text">
-            <div class="admin-item-name">${esc(s.name)}</div>
-            <div class="admin-item-email">${esc(s.email)}</div>
-          </div>
-        </div>
-        <span class="admin-item-badge badge-approved">Approved</span>
-        <button class="btn-remove" onclick="removeStudent('${uid}','${esc(s.name)}')">Remove</button>
+      <div class="admin-item-actions">
+        <button class="btn-approve" onclick="approveStudent('${uid}')">Approve</button>
+        <button class="btn-reject" onclick="rejectStudent('${uid}')">Reject</button>
       </div>
-    `).join('');
-  });
+    </div>
+  `).join('');
 }
 
-function approveStudent(uid) {
-  db.ref('students/' + uid).update({ status: 'approved', approvedAt: firebase.database.ServerValue.TIMESTAMP });
+async function loadApprovedStudents() {
+  const all = await fbRest.get('students') || {};
+  const data = Object.fromEntries(Object.entries(all).filter(([,v]) => v.status === 'approved'));
+  const list = document.getElementById('approvedList');
+  const entries = Object.entries(data);
+  if (!entries.length) { list.innerHTML = '<div class="no-items">No approved students yet</div>'; return; }
+  list.innerHTML = entries.map(([uid, s]) => `
+    <div class="admin-item">
+      <div class="admin-item-info">
+        ${s.photoURL ? '<img class="admin-item-avatar" src="'+s.photoURL+'" onerror="this.style.display=\'none\'">' : ''}
+        <div class="admin-item-text">
+          <div class="admin-item-name">${esc(s.name)}</div>
+          <div class="admin-item-email">${esc(s.email)}</div>
+        </div>
+      </div>
+      <span class="admin-item-badge badge-approved">Approved</span>
+      <button class="btn-remove" onclick="removeStudent('${uid}','${esc(s.name)}')">Remove</button>
+    </div>
+  `).join('');
+}
+
+async function approveStudent(uid) {
+  await fbRest.update('students/' + uid, { status: 'approved', approvedAt: {'.sv':'timestamp'} });
   loadPendingStudents(); loadApprovedStudents();
 }
-function rejectStudent(uid) {
+async function rejectStudent(uid) {
   if (!confirm('Reject this student?')) return;
-  db.ref('students/' + uid).remove();
+  await fbRest.set('students/' + uid, null);
   loadPendingStudents();
 }
-function removeStudent(uid, name) {
+async function removeStudent(uid, name) {
   if (!confirm('Remove ' + name + '? They will need to register again.')) return;
-  db.ref('students/' + uid).remove();
+  await fbRest.set('students/' + uid, null);
   loadApprovedStudents();
 }
 
 /* ══════ TEACHER: MANAGE TEACHERS ══════ */
-function loadTeachersList() {
-  db.ref('teachers').once('value', snap => {
-    const data = snap.val() || {};
-    const list = document.getElementById('teachersList');
-    const entries = Object.entries(data);
-    if (!entries.length) { list.innerHTML = '<div class="no-items">No teachers. Add one below.</div>'; return; }
-    list.innerHTML = entries.map(([id, t]) => `
-      <div class="admin-item">
-        <div class="admin-item-info">
-          <div class="admin-item-text">
-            <div class="admin-item-name">${esc(t.name)}</div>
-            <div class="admin-item-email">${esc(t.email)}</div>
-          </div>
+async function loadTeachersList() {
+  const data = await fbRest.get('teachers') || {};
+  const list = document.getElementById('teachersList');
+  const entries = Object.entries(data);
+  if (!entries.length) { list.innerHTML = '<div class="no-items">No teachers. Add one below.</div>'; return; }
+  list.innerHTML = entries.map(([id, t]) => `
+    <div class="admin-item">
+      <div class="admin-item-info">
+        <div class="admin-item-text">
+          <div class="admin-item-name">${esc(t.name)}</div>
+          <div class="admin-item-email">${esc(t.email)}</div>
         </div>
-        <button class="btn-remove" onclick="removeTeacher('${id}','${esc(t.name)}')">Remove</button>
       </div>
-    `).join('');
-  });
+      <button class="btn-remove" onclick="removeTeacher('${id}','${esc(t.name)}')">Remove</button>
+    </div>
+  `).join('');
 }
 
-function addTeacher() {
+async function addTeacher() {
   const name = document.getElementById('newTeacherName').value.trim();
   const email = document.getElementById('newTeacherEmail').value.trim().toLowerCase();
   const pass = document.getElementById('newTeacherPass').value;
   if (!name || !email || !pass) { alert('Fill all fields.'); return; }
   if (pass.length < 4) { alert('Password must be at least 4 characters.'); return; }
-  db.ref('teachers').push({ name, email, password: pass, createdAt: firebase.database.ServerValue.TIMESTAMP });
+  await fbRest.push('teachers', { name, email, password: pass, createdAt: {'.sv':'timestamp'} });
   document.getElementById('newTeacherName').value = '';
   document.getElementById('newTeacherEmail').value = '';
   document.getElementById('newTeacherPass').value = '';
   loadTeachersList();
 }
 
-function removeTeacher(id, name) {
+async function removeTeacher(id, name) {
   if (S.teacherSession && S.teacherSession.id === id) { alert('Cannot remove yourself.'); return; }
   if (!confirm('Remove teacher ' + name + '?')) return;
-  db.ref('teachers/' + id).remove();
+  await fbRest.set('teachers/' + id, null);
   loadTeachersList();
 }
 
 /* ══════ TEACHER: VIEW STUDENT PROJECTS ══════ */
-function loadAllStudentProjects() {
-  db.ref('students').orderByChild('status').equalTo('approved').once('value', usersSnap => {
-    db.ref('projects').once('value', projSnap => {
-      const students = usersSnap.val() || {};
-      const allProjects = projSnap.val() || {};
-      const list = document.getElementById('allProjectsList');
+async function loadAllStudentProjects() {
+  const allStudents = await fbRest.get('students') || {};
+  const students = Object.fromEntries(Object.entries(allStudents).filter(([,v]) => v.status === 'approved'));
+  const allProjects = await fbRest.get('projects') || {};
+  const list = document.getElementById('allProjectsList');
 
-      const items = Object.entries(allProjects)
-        .filter(([uid]) => students[uid])
-        .map(([uid, projects]) => ({ uid, student: students[uid], projects: Object.entries(projects).sort((a,b) => (b[1].updatedAt||0) - (a[1].updatedAt||0)) }));
+  const items = Object.entries(allProjects)
+    .filter(([uid]) => students[uid])
+    .map(([uid, projects]) => ({ uid, student: students[uid], projects: Object.entries(projects).sort((a,b) => (b[1].updatedAt||0) - (a[1].updatedAt||0)) }));
 
-      if (!items.length) { list.innerHTML = '<div class="no-items">No student projects yet</div>'; return; }
-      list.innerHTML = items.map(s => `
-        <div class="student-item" id="sp-${s.uid}">
-          <div class="student-header" onclick="document.getElementById('sp-${s.uid}').classList.toggle('open')">
-            ${s.student.photoURL ? '<img class="admin-item-avatar" src="'+s.student.photoURL+'" onerror="this.style.display=\'none\'">' : ''}
-            <span class="student-name">${esc(s.student.name)}</span>
-            <span class="student-count">${s.projects.length} project${s.projects.length!==1?'s':''}</span>
-            <svg class="student-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+  if (!items.length) { list.innerHTML = '<div class="no-items">No student projects yet</div>'; return; }
+  list.innerHTML = items.map(s => `
+    <div class="student-item" id="sp-${s.uid}">
+      <div class="student-header" onclick="document.getElementById('sp-${s.uid}').classList.toggle('open')">
+        ${s.student.photoURL ? '<img class="admin-item-avatar" src="'+s.student.photoURL+'" onerror="this.style.display=\'none\'">' : ''}
+        <span class="student-name">${esc(s.student.name)}</span>
+        <span class="student-count">${s.projects.length} project${s.projects.length!==1?'s':''}</span>
+        <svg class="student-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="student-projects">
+        ${s.projects.map(([pid, p]) => `
+          <div class="student-project">
+            <div><div class="student-project-name">${esc(p.name)}</div><div class="student-project-date">${formatDate(p.updatedAt)}</div></div>
+            <button class="btn-view" onclick="viewProject('${s.uid}','${pid}','${esc(s.student.name)}')">View</button>
           </div>
-          <div class="student-projects">
-            ${s.projects.map(([pid, p]) => `
-              <div class="student-project">
-                <div><div class="student-project-name">${esc(p.name)}</div><div class="student-project-date">${formatDate(p.updatedAt)}</div></div>
-                <button class="btn-view" onclick="viewProject('${s.uid}','${pid}','${esc(s.student.name)}')">View</button>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `).join('');
-    });
-  });
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
 }
 
-function viewProject(uid, pid, studentName) {
-  db.ref('projects/' + uid + '/' + pid).once('value', snap => {
-    const d = snap.val(); if (!d) return;
-    document.getElementById('modalTitle').textContent = d.name || 'Untitled';
-    document.getElementById('modalSub').textContent = studentName + ' · ' + formatDate(d.updatedAt);
-    document.getElementById('modalCode').value = d.code || '';
-    document.getElementById('modalOverlay').classList.add('active');
-  });
+async function viewProject(uid, pid, studentName) {
+  const d = await fbRest.get('projects/' + uid + '/' + pid);
+  if (!d) return;
+  document.getElementById('modalTitle').textContent = d.name || 'Untitled';
+  document.getElementById('modalSub').textContent = studentName + ' · ' + formatDate(d.updatedAt);
+  document.getElementById('modalCode').value = d.code || '';
+  document.getElementById('modalOverlay').classList.add('active');
 }
 function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); }
 
 /* ══════ TEACHER: CREATE ROOM ══════ */
-function teacherCreateRoom() {
+async function teacherCreateRoom() {
   S.roomCode = genCode();
   const name = S.teacherSession ? S.teacherSession.name : 'Teacher';
-  db.ref('rooms/' + S.roomCode).set({
+  await fbRest.set('rooms/' + S.roomCode, {
     teacherName: name, teacherCode: '# Welcome to Python Lab!\n# Students will see your code live.\n\nprint("Hello, students!")\n',
-    createdAt: firebase.database.ServerValue.TIMESTAMP
+    createdAt: {'.sv':'timestamp'}
   });
   document.getElementById('roomCodeDisplayT').textContent = S.roomCode;
   document.getElementById('roomCreatedTeacher').style.display = 'block';
@@ -891,8 +908,8 @@ function showJoinRoom() { document.getElementById('joinRoomSection').style.displ
 async function studentJoinRoom() {
   const code = document.getElementById('studentRoomCode').value.trim().toUpperCase();
   if (!code || code.length < 4) { document.getElementById('studentRoomCode').focus(); return; }
-  const snap = await db.ref('rooms/' + code).once('value');
-  if (!snap.exists()) { alert('Room not found.'); return; }
+  const room = await fbRest.get('rooms/' + code);
+  if (!room) { alert('Room not found.'); return; }
   S.roomCode = code;
   S.ideMode = 'room';
   enterIDE();
@@ -960,21 +977,26 @@ function enterIDE() {
   initPyodide();
 }
 
-/* ══════ FIREBASE SYNC ══════ */
+/* ══════ FIREBASE SYNC (REST polling) ══════ */
 function setupFirebaseSync() {
   if (!S.roomCode) return;
-  S.roomRef = db.ref('rooms/' + S.roomCode);
   const tEd = document.getElementById('teacherEditor');
   const sEd = document.getElementById('studentEditor');
 
   if (S.role === 'teacher') {
-    S.roomRef.child('teacherCode').once('value', s => { if (s.val()) tEd.value = s.val(); });
-    let t; tEd.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => S.roomRef.child('teacherCode').set(tEd.value), 150); });
-    S.roomRef.child('studentCode').on('value', s => { if (s.val() != null) sEd.value = s.val(); });
+    fbRest.get('rooms/' + S.roomCode + '/teacherCode').then(v => { if (v) tEd.value = v; });
+    let t; tEd.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => fbRest.set('rooms/' + S.roomCode + '/teacherCode', tEd.value), 150); });
+    S._syncInterval = setInterval(async () => {
+      const v = await fbRest.get('rooms/' + S.roomCode + '/studentCode');
+      if (v != null && v !== sEd.value) sEd.value = v;
+    }, 2000);
   } else {
-    S.roomRef.child('teacherCode').on('value', s => { if (s.val() != null) tEd.value = s.val(); });
-    S.roomRef.child('teacherName').once('value', s => { if (s.val()) document.getElementById('teacherPanelTitle').innerHTML = '<span class="dot dot-teacher"></span> Teacher\'s Code (' + esc(s.val()) + ')'; });
-    let t; sEd.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => S.roomRef.child('studentCode').set(sEd.value), 150); });
+    fbRest.get('rooms/' + S.roomCode + '/teacherName').then(v => { if (v) document.getElementById('teacherPanelTitle').innerHTML = '<span class="dot dot-teacher"></span> Teacher\'s Code (' + esc(v) + ')'; });
+    let t; sEd.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => fbRest.set('rooms/' + S.roomCode + '/studentCode', sEd.value), 150); });
+    S._syncInterval = setInterval(async () => {
+      const v = await fbRest.get('rooms/' + S.roomCode + '/teacherCode');
+      if (v != null && v !== tEd.value) tEd.value = v;
+    }, 2000);
   }
 }
 
@@ -982,13 +1004,12 @@ function setupPresence() {
   if (!S.roomCode) return;
   const uid = S.role === 'teacher' ? 'teacher_' + (S.teacherSession ? S.teacherSession.id : Date.now()) : S.studentUser.uid;
   const name = S.role === 'teacher' ? S.teacherSession.name : (S.studentUser.displayName || 'Student');
-  const pRef = db.ref('rooms/' + S.roomCode + '/presence/' + uid);
-  S.presenceRef = pRef;
-  pRef.set({ name, role: S.role, joinedAt: firebase.database.ServerValue.TIMESTAMP });
-  pRef.onDisconnect().remove();
-  db.ref('rooms/' + S.roomCode + '/presence').on('value', s => {
-    document.getElementById('userCount').textContent = s.val() ? Object.keys(s.val()).length : 1;
-  });
+  fbRest.set('rooms/' + S.roomCode + '/presence/' + uid, { name, role: S.role, joinedAt: {'.sv':'timestamp'} });
+  S._presenceUid = uid;
+  S._presenceInterval = setInterval(async () => {
+    const p = await fbRest.get('rooms/' + S.roomCode + '/presence');
+    document.getElementById('userCount').textContent = p ? Object.keys(p).length : 1;
+  }, 5000);
 }
 
 /* ══════ PYODIDE ══════ */
@@ -1033,19 +1054,18 @@ function runCode() {
 function clearOutput() { document.getElementById('outputArea').innerHTML = '<span class="system">Output cleared.</span>'; document.getElementById('execTime').textContent = ''; }
 
 /* ══════ PROJECTS ══════ */
-function saveProject() {
+async function saveProject() {
   if (!S.studentUser) return;
   const code = document.getElementById('studentEditor').value;
   if (!code.trim()) return;
   const uid = S.studentUser.uid;
   if (S.currentProjectId) {
-    db.ref('projects/'+uid+'/'+S.currentProjectId).update({ code, updatedAt: firebase.database.ServerValue.TIMESTAMP });
+    await fbRest.update('projects/'+uid+'/'+S.currentProjectId, { code, updatedAt: {'.sv':'timestamp'} });
   } else {
     const name = prompt('Project name:', 'My Project');
     if (!name) return;
-    const r = db.ref('projects/'+uid).push();
-    S.currentProjectId = r.key;
-    r.set({ name, code, createdAt: firebase.database.ServerValue.TIMESTAMP, updatedAt: firebase.database.ServerValue.TIMESTAMP });
+    const result = await fbRest.push('projects/'+uid, { name, code, createdAt: {'.sv':'timestamp'}, updatedAt: {'.sv':'timestamp'} });
+    S.currentProjectId = result.name;
   }
   showSaveIndicator();
 }
@@ -1057,7 +1077,7 @@ function setupAutoSave() {
     clearTimeout(S.autoSaveTimer);
     S.autoSaveTimer = setTimeout(() => {
       const code = ed.value; if (!code.trim()) return;
-      db.ref('projects/'+S.studentUser.uid+'/'+S.currentProjectId).update({ code, updatedAt: firebase.database.ServerValue.TIMESTAMP });
+      fbRest.update('projects/'+S.studentUser.uid+'/'+S.currentProjectId, { code, updatedAt: {'.sv':'timestamp'} });
       showSaveIndicator();
     }, 3000);
   });
@@ -1069,54 +1089,53 @@ function showSaveIndicator() {
   setTimeout(() => el.classList.remove('show'), 2000);
 }
 
-function loadMyProjects() {
+async function loadMyProjects() {
   if (!S.studentUser) return;
-  db.ref('projects/'+S.studentUser.uid).orderByChild('updatedAt').once('value', snap => {
-    const list = document.getElementById('myProjectsList');
-    const data = snap.val();
-    if (!data) { list.innerHTML = '<div class="no-items">No saved projects yet. Start coding!</div>'; document.getElementById('myProjectCount').textContent = ''; return; }
-    const projects = Object.entries(data).sort((a,b) => (b[1].updatedAt||0) - (a[1].updatedAt||0));
-    document.getElementById('myProjectCount').textContent = '('+projects.length+')';
-    list.innerHTML = projects.map(([id,p]) => `
-      <div class="project-item" onclick="openMyProject('${id}')">
-        <div class="project-info"><div class="project-name">${esc(p.name)}</div><div class="project-date">${formatDate(p.updatedAt)}</div></div>
-        <div class="project-actions">
-          <button class="project-btn" onclick="event.stopPropagation();renameProject('${id}','${esc(p.name)}')" title="Rename"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-          <button class="project-btn" onclick="event.stopPropagation();deleteProject('${id}','${esc(p.name)}')" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-        </div>
+  const data = await fbRest.get('projects/'+S.studentUser.uid);
+  const list = document.getElementById('myProjectsList');
+  if (!data) { list.innerHTML = '<div class="no-items">No saved projects yet. Start coding!</div>'; document.getElementById('myProjectCount').textContent = ''; return; }
+  const projects = Object.entries(data).sort((a,b) => (b[1].updatedAt||0) - (a[1].updatedAt||0));
+  document.getElementById('myProjectCount').textContent = '('+projects.length+')';
+  list.innerHTML = projects.map(([id,p]) => `
+    <div class="project-item" onclick="openMyProject('${id}')">
+      <div class="project-info"><div class="project-name">${esc(p.name)}</div><div class="project-date">${formatDate(p.updatedAt)}</div></div>
+      <div class="project-actions">
+        <button class="project-btn" onclick="event.stopPropagation();renameProject('${id}','${esc(p.name)}')" title="Rename"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="project-btn" onclick="event.stopPropagation();deleteProject('${id}','${esc(p.name)}')" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
       </div>
-    `).join('');
-  });
+    </div>
+  `).join('');
 }
 
-function openMyProject(pid) {
-  db.ref('projects/'+S.studentUser.uid+'/'+pid).once('value', snap => {
-    const d = snap.val(); if (!d) return;
-    S.currentProjectId = pid;
-    S.ideMode = 'solo';
-    enterIDE();
-    setTimeout(() => { document.getElementById('studentEditor').value = d.code || ''; }, 100);
-  });
+async function openMyProject(pid) {
+  const d = await fbRest.get('projects/'+S.studentUser.uid+'/'+pid);
+  if (!d) return;
+  S.currentProjectId = pid;
+  S.ideMode = 'solo';
+  enterIDE();
+  setTimeout(() => { document.getElementById('studentEditor').value = d.code || ''; }, 100);
 }
 
-function renameProject(id, oldName) {
+async function renameProject(id, oldName) {
   const n = prompt('Rename project:', oldName);
   if (!n || n === oldName) return;
-  db.ref('projects/'+S.studentUser.uid+'/'+id).update({ name: n });
+  await fbRest.update('projects/'+S.studentUser.uid+'/'+id, { name: n });
   loadMyProjects();
 }
 
-function deleteProject(id, name) {
+async function deleteProject(id, name) {
   if (!confirm('Delete "'+name+'"?')) return;
-  db.ref('projects/'+S.studentUser.uid+'/'+id).remove();
+  await fbRest.set('projects/'+S.studentUser.uid+'/'+id, null);
   if (S.currentProjectId === id) S.currentProjectId = null;
   loadMyProjects();
 }
 
 /* ══════ LEAVE IDE ══════ */
 function leaveIDE() {
-  if (S.presenceRef) S.presenceRef.remove();
-  if (S.roomRef) { S.roomRef.child('teacherCode').off(); S.roomRef.child('studentCode').off(); db.ref('rooms/'+S.roomCode+'/presence').off(); }
+  if (S._presenceUid && S.roomCode) fbRest.set('rooms/'+S.roomCode+'/presence/'+S._presenceUid, null);
+  if (S._syncInterval) clearInterval(S._syncInterval);
+  if (S._presenceInterval) clearInterval(S._presenceInterval);
+  S._syncInterval = null; S._presenceInterval = null; S._presenceUid = null;
   S.roomRef = null; S.presenceRef = null; S.roomCode = null; S.currentProjectId = null; S.ideMode = null;
   document.getElementById('teacherEditor').value = '';
   document.getElementById('studentEditor').value = '';
@@ -1155,11 +1174,15 @@ document.querySelectorAll('.editor-area').forEach(ed => {
 })();
 
 /* ══════ CONNECTION ══════ */
-db.ref('.info/connected').on('value', s => {
+(async () => {
   const d=document.getElementById('statusDot'),t=document.getElementById('statusText');
-  if(s.val()===true){d.className='status-dot status-connected';t.textContent='Connected';}
-  else{d.className='status-dot status-disconnected';t.textContent='Disconnected';}
-});
+  try {
+    await fbRest.get('teachers');
+    d.className='status-dot status-connected'; t.textContent='Connected';
+  } catch(e) {
+    d.className='status-dot status-disconnected'; t.textContent='Disconnected';
+  }
+})();
 </script>
 </body>
 </html>
