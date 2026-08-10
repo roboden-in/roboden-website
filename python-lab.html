@@ -18,14 +18,14 @@
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --p:#18181b;--pl:#27272a;--p3:#09090b;
-  --pa:rgba(0,0,0,0.06);--pa2:rgba(0,0,0,0.03);
+  --p:#4f46e5;--pl:#4338ca;--p3:#3730a3;
+  --pa:rgba(79,70,229,0.08);--pa2:rgba(79,70,229,0.04);
   --bg-nav:#07070c;
   --bg:#fafafa;--bg2:#ffffff;--bg3:#f4f4f5;
   --border:rgba(0,0,0,0.06);--border2:rgba(0,0,0,0.10);
-  --text:#09090b;--muted:rgba(0,0,0,0.45);--muted2:rgba(0,0,0,0.65);
-  --accent:#18181b;--accent2:#27272a;
-  --purple:#6d28d9;--purple-l:#7c3aed;--purple-bg:rgba(109,40,217,0.06);
+  --text:#1e1b4b;--muted:rgba(0,0,0,0.45);--muted2:rgba(0,0,0,0.65);
+  --accent:#4f46e5;--accent2:#4338ca;
+  --purple:#6d28d9;--purple-l:#7c3aed;--purple-bg:rgba(79,70,229,0.06);
   --mono:'DM Mono',monospace;--sans:'Sora',sans-serif;
   --editor-bg:#1e1e2e;
   --success:#059669;--error:#dc2626;--warning:#d97706;
@@ -88,22 +88,22 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 /* LOBBY CARD */
 .lobby-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:48px 44px;max-width:440px;width:100%;box-shadow:var(--shadow-lg);}
 .lobby-card.wide{max-width:720px;}
-.lobby-icon{width:48px;height:48px;background:var(--text);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
+.lobby-icon{width:48px;height:48px;background:var(--p);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
 .lobby-icon svg{width:24px;height:24px;color:#fff;}
-.lobby-card h1{font-size:1.35rem;font-weight:700;margin-bottom:4px;letter-spacing:-.02em;color:var(--text);}
-.lobby-card h2{font-size:1.1rem;font-weight:700;margin-bottom:4px;color:var(--text);}
-.lobby-card p{font-size:.84rem;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+.lobby-card h1{font-size:1.6rem;font-weight:700;margin-bottom:6px;letter-spacing:-.02em;color:var(--text);}
+.lobby-card h2{font-size:1.25rem;font-weight:700;margin-bottom:6px;color:var(--text);}
+.lobby-card p{font-size:.92rem;color:var(--muted);margin-bottom:24px;line-height:1.6;}
 
 /* LOGIN TABS */
 .lobby-tabs{display:flex;gap:0;border:1px solid var(--border2);border-radius:var(--radius-full);padding:3px;margin-bottom:28px;}
 .lobby-tab{flex:1;padding:10px;border-radius:var(--radius-full);border:none;background:none;color:var(--muted);font-family:var(--sans);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;}
-.lobby-tab.active{background:var(--text);color:#fff;box-shadow:var(--shadow-sm);}
+.lobby-tab.active{background:var(--p);color:#fff;box-shadow:var(--shadow-sm);}
 
 /* INPUT GROUPS */
 .input-group{margin-bottom:16px;text-align:left;}
 .input-group label{font-size:.7rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;display:block;font-family:var(--mono);}
 .input-group input{width:100%;padding:11px 14px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg2);color:var(--text);font-family:var(--sans);font-size:.9rem;outline:none;transition:border-color .2s,box-shadow .2s;}
-.input-group input:focus{border-color:var(--text);box-shadow:0 0 0 3px rgba(0,0,0,0.06);}
+.input-group input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(79,70,229,0.1);}
 .input-group input::placeholder{color:rgba(0,0,0,0.25);}
 .input-group.pw-group{position:relative;}
 .input-group.pw-group input{padding-right:42px;}
@@ -112,11 +112,11 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 .btn-pw-toggle svg{width:18px;height:18px;}
 
 /* BUTTONS */
-.btn-primary{width:100%;padding:12px;border-radius:var(--radius-full);border:none;background:var(--text);color:#fff;font-family:var(--sans);font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s;margin-top:8px;box-shadow:var(--shadow-sm);}
-.btn-primary:hover{background:var(--pl);box-shadow:var(--shadow-md);transform:translateY(-1px);}
+.btn-primary{width:100%;padding:12px;border-radius:var(--radius-full);border:none;background:var(--p);color:#fff;font-family:var(--sans);font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s;margin-top:8px;box-shadow:var(--shadow-sm);}
+.btn-primary:hover{background:var(--pl);box-shadow:0 4px 14px rgba(79,70,229,0.35);transform:translateY(-1px);}
 .btn-primary:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
 .btn-google{width:100%;padding:12px;border-radius:var(--radius-full);border:1px solid var(--border2);background:var(--bg2);color:var(--text);font-family:var(--sans);font-size:.88rem;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px;box-shadow:var(--shadow-sm);}
-.btn-google:hover{border-color:var(--text);box-shadow:var(--shadow-md);transform:translateY(-1px);}
+.btn-google:hover{border-color:var(--p);box-shadow:var(--shadow-md);transform:translateY(-1px);}
 .btn-google svg{width:20px;height:20px;flex-shrink:0;}
 
 /* ROOM CODE */
@@ -136,8 +136,8 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 .dash-card:hover{border-color:var(--border2);box-shadow:var(--shadow-md);transform:translateY(-2px);}
 .dash-card-icon{width:38px;height:38px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
 .dash-card-icon svg{width:18px;height:18px;}
-.dash-card h3{font-size:.85rem;font-weight:700;margin-bottom:3px;color:var(--text);}
-.dash-card p{font-size:.72rem;color:var(--muted);margin-bottom:0;line-height:1.4;font-family:var(--mono);}
+.dash-card h3{font-size:.95rem;font-weight:700;margin-bottom:4px;color:var(--text);}
+.dash-card p{font-size:.8rem;color:var(--muted);margin-bottom:0;line-height:1.5;}
 .ic-room{background:var(--purple-bg);color:var(--purple);}
 .ic-students{background:rgba(5,150,105,.06);color:var(--success);}
 .ic-projects{background:rgba(217,119,6,.06);color:var(--warning);}
@@ -147,15 +147,15 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 
 /* ADMIN PANELS */
 .admin-panel{text-align:left;margin-top:20px;}
-.admin-panel h3{font-size:.75rem;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.admin-panel h3{font-size:.85rem;font-weight:700;color:var(--text);letter-spacing:-.01em;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
 .admin-list{display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;}
 .admin-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg2);gap:10px;transition:box-shadow .2s;}
 .admin-item:hover{box-shadow:var(--shadow-sm);}
 .admin-item-info{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
 .admin-item-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--bg3);}
 .admin-item-text{min-width:0;flex:1;}
-.admin-item-name{font-size:.85rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);}
-.admin-item-email{font-size:.7rem;color:var(--muted);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.admin-item-name{font-size:.9rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);}
+.admin-item-email{font-size:.78rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .admin-item-badge{font-size:.65rem;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;}
 .badge-pending{background:rgba(217,119,6,.08);color:#92400e;border:1px solid rgba(217,119,6,.18);}
 .badge-approved{background:rgba(5,150,105,.08);color:#065f46;border:1px solid rgba(5,150,105,.18);}
@@ -168,13 +168,13 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 .btn-remove:hover{border-color:var(--error);color:var(--error);}
 .no-items{font-size:.82rem;color:var(--muted);font-style:italic;padding:20px 0;text-align:center;}
 .btn-back{background:none;border:1px solid var(--border2);border-radius:var(--radius-full);padding:8px 18px;color:var(--muted);font-family:var(--sans);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;margin-bottom:20px;display:inline-flex;align-items:center;gap:6px;}
-.btn-back:hover{border-color:var(--text);color:var(--text);}
+.btn-back:hover{border-color:var(--accent);color:var(--accent);}
 .btn-back svg{width:16px;height:16px;}
 .inline-form{display:flex;gap:8px;margin-top:12px;}
 .inline-form input{flex:1;padding:10px 14px;border-radius:var(--radius);border:1.5px solid var(--border2);background:var(--bg);color:var(--text);font-family:var(--sans);font-size:.85rem;outline:none;transition:border-color .2s,box-shadow .2s;}
-.inline-form input:focus{border-color:var(--pl);box-shadow:0 0 0 3px rgba(109,40,217,0.1);}
-.inline-form button{padding:10px 22px;border-radius:var(--radius-full);border:none;background:var(--text);color:#fff;font-family:var(--sans);font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;box-shadow:var(--shadow-sm);}
-.inline-form button:hover{background:var(--pl);box-shadow:var(--shadow-md);}
+.inline-form input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(79,70,229,0.1);}
+.inline-form button{padding:10px 22px;border-radius:var(--radius-full);border:none;background:var(--p);color:#fff;font-family:var(--sans);font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;box-shadow:var(--shadow-sm);}
+.inline-form button:hover{background:var(--pl);box-shadow:0 4px 14px rgba(79,70,229,0.3);}
 
 /* STUDENT PROJECT LIST */
 .project-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg2);cursor:pointer;transition:all .2s;}
@@ -202,8 +202,8 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 .student-project:hover{background:var(--bg3);}
 .student-project-name{font-size:.8rem;color:var(--muted2);}
 .student-project-date{font-size:.68rem;color:var(--muted);font-family:var(--mono);}
-.btn-view{background:var(--pa);border:1px solid var(--border2);border-radius:var(--radius-full);padding:5px 14px;color:var(--text);font-family:var(--sans);font-size:.7rem;font-weight:600;cursor:pointer;transition:all .2s;}
-.btn-view:hover{background:var(--text);color:#fff;box-shadow:var(--shadow-sm);}
+.btn-view{background:var(--pa);border:1px solid rgba(79,70,229,0.15);border-radius:var(--radius-full);padding:5px 14px;color:var(--accent);font-family:var(--sans);font-size:.7rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-view:hover{background:var(--p);color:#fff;box-shadow:var(--shadow-sm);}
 
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);z-index:10000;display:none;align-items:center;justify-content:center;padding:24px;}
@@ -213,7 +213,7 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 .modal-title{font-size:.95rem;font-weight:700;color:var(--text);}
 .modal-sub{font-size:.72rem;color:var(--muted);margin-top:2px;}
 .btn-modal-close{background:none;border:1px solid var(--border2);border-radius:var(--radius-full);padding:6px 16px;color:var(--muted);font-family:var(--sans);font-size:.78rem;cursor:pointer;transition:all .2s;}
-.btn-modal-close:hover{border-color:var(--text);color:var(--text);}
+.btn-modal-close:hover{border-color:var(--error);color:var(--error);}
 .modal-body{flex:1;overflow:auto;}
 .modal-code{width:100%;min-height:300px;background:#1e1e2e;color:#cdd6f4;font-family:var(--mono);font-size:13px;line-height:1.7;padding:16px;border:none;outline:none;resize:none;}
 
@@ -258,11 +258,11 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 .dot-student{background:#34d399;}
 .dot-output{background:#a78bfa;}
 
-/* Teacher bottom tabs */
-.teacher-bottom-tabs{display:flex;gap:0;height:100%;align-items:center;}
-.teacher-bottom-tab{padding:0 14px;height:100%;display:flex;align-items:center;font-size:.7rem;font-weight:600;color:rgba(255,255,255,0.35);cursor:pointer;transition:all .15s;border-bottom:2px solid transparent;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap;user-select:none;}
-.teacher-bottom-tab:hover{color:rgba(255,255,255,0.6);}
-.teacher-bottom-tab.active{color:#a78bfa;border-bottom-color:#a78bfa;}
+/* Output source toggle (teacher only) */
+.output-source-toggle{display:flex;border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius-full);padding:2px;gap:0;}
+.output-src-btn{padding:4px 12px;border-radius:var(--radius-full);border:none;background:none;color:rgba(255,255,255,0.35);font-family:var(--mono);font-size:.65rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;letter-spacing:.02em;}
+.output-src-btn:hover{color:rgba(255,255,255,0.6);}
+.output-src-btn.active{background:rgba(167,139,250,0.15);color:#a78bfa;}
 
 .editor-wrap{flex:1;position:relative;overflow:hidden;}
 /* CodeMirror fills the editor wrap */
@@ -306,7 +306,6 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
   .lobby-card{padding:32px 24px;}
   .dash-grid{grid-template-columns:1fr;}
   .user-chip-name{display:none;}
-  .teacher-bottom-tab{padding:0 10px;font-size:.65rem;}
 }
 @media(max-width:480px){
   nav{padding:0 16px;}
@@ -431,7 +430,7 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
         <h3>Create Room</h3>
         <p>Start a live coding session</p>
       </div>
-      <div class="dash-card" onclick="showTeacherPanel('students')">
+      <div class="dash-card" id="studentRequestsCard" onclick="showTeacherPanel('students')">
         <div class="dash-card-icon ic-students"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
         <h3>Student Requests</h3>
         <p id="pendingCountLabel">Approve new students</p>
@@ -453,6 +452,17 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
       <div class="room-code-display" id="roomCodeDisplayT"></div>
       <p class="copy-hint">Click code to copy</p>
       <button class="btn-primary" onclick="enterIDE()">Enter Lab</button>
+    </div>
+
+    <div id="rejoinRoomTeacher" style="display:none;margin-top:16px;">
+      <div class="divider"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="text-align:left;">
+          <div style="font-size:.72rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-family:var(--mono);">Last room</div>
+          <div style="font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--accent);letter-spacing:.15em;margin-top:4px;" id="lastRoomCode"></div>
+        </div>
+        <button class="btn-primary" onclick="rejoinRoom()" style="width:auto;padding:10px 28px;">Rejoin Room</button>
+      </div>
     </div>
 
     <!-- SUB-PANELS -->
@@ -550,9 +560,6 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
       <button class="btn-run" id="btnRun" onclick="runCode()" disabled>
         <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run
       </button>
-      <button class="btn-run" id="btnRunStudent" onclick="runStudentCode()" disabled style="display:none;background:#7c3aed;">
-        <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run Student
-      </button>
       <button class="btn-toolbar" onclick="clearOutput()">Clear</button>
       <button class="btn-leave" onclick="leaveIDE()">Leave</button>
     </div>
@@ -566,22 +573,22 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
     <div class="editor-panel" id="studentPanel">
       <div class="panel-header">
         <span class="panel-title" id="studentPanelTitle"><span class="dot dot-student"></span> Your Code</span>
-        <!-- Teacher bottom-right tabs: switch between student code and output -->
-        <div class="teacher-bottom-tabs" id="teacherBottomTabs" style="display:none;">
-          <div class="teacher-bottom-tab active" data-tab="code" onclick="switchTeacherTab('code')">Student Code</div>
-          <div class="teacher-bottom-tab" data-tab="output" onclick="switchTeacherTab('output')">Output</div>
-        </div>
       </div>
       <div class="editor-wrap" id="studentEditorWrap"><textarea class="editor-area" id="studentEditor" spellcheck="false" placeholder="# Write your code here...&#10;# Press Run or Ctrl+Enter to execute&#10;&#10;print('Hello, World!')"></textarea></div>
-      <!-- Teacher's inline output panel (shown when teacher switches to Output tab) -->
-      <div class="editor-wrap" id="teacherOutputWrap" style="display:none;">
-        <div class="output-area" id="teacherOutputArea" style="height:100%;"><span class="system">Run student code to see output here.</span></div>
-      </div>
     </div>
   </div>
   <div class="output-container" id="outputContainer">
     <div class="output-resize" id="outputResize"></div>
-    <div class="panel-header"><span class="panel-title"><span class="dot dot-output"></span> Output</span><span id="execTime" style="font-size:.68rem;color:rgba(255,255,255,0.35);font-family:var(--mono);"></span></div>
+    <div class="panel-header">
+      <span class="panel-title"><span class="dot dot-output"></span> Output</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="output-source-toggle" id="outputSourceToggle" style="display:none;">
+          <button class="output-src-btn active" data-src="own" onclick="switchOutputSource('own')">My code</button>
+          <button class="output-src-btn" data-src="student" onclick="switchOutputSource('student')">Student code</button>
+        </div>
+        <span id="execTime" style="font-size:.68rem;color:rgba(255,255,255,0.35);font-family:var(--mono);"></span>
+      </div>
+    </div>
     <div class="output-area" id="outputArea"><span class="system">Python Lab ready. Press Run or Ctrl+Enter to execute your code.</span></div>
   </div>
   <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div><div class="loading-text" id="loadingText">Loading Python engine...</div></div>
@@ -649,7 +656,8 @@ let S = {
   role: null, roomCode: null, pyodide: null, pyodideReady: false,
   roomRef: null, presenceRef: null, currentProjectId: null, autoSaveTimer: null,
   teacherSession: null, studentUser: null, ideMode: null,
-  teacherCM: null, studentCM: null, teacherActiveTab: 'code'
+  teacherCM: null, studentCM: null, teacherActiveTab: 'code',
+  lastTeacherRoom: null, outputSource: 'own'
 };
 
 /* ══════ CODEMIRROR SETUP ══════ */
@@ -703,47 +711,11 @@ function initEditors() {
   });
 }
 
-/* ══════ TEACHER BOTTOM TABS ══════ */
-function switchTeacherTab(tab) {
-  S.teacherActiveTab = tab;
-  document.querySelectorAll('#teacherBottomTabs .teacher-bottom-tab').forEach(t => t.classList.remove('active'));
-  document.querySelector('#teacherBottomTabs .teacher-bottom-tab[data-tab="'+tab+'"]').classList.add('active');
-
-  const editorWrap = document.getElementById('studentEditorWrap');
-  const outputWrap = document.getElementById('teacherOutputWrap');
-  const btnRunStudent = document.getElementById('btnRunStudent');
-
-  if (tab === 'code') {
-    editorWrap.style.display = '';
-    outputWrap.style.display = 'none';
-    btnRunStudent.style.display = 'none';
-    if (S.studentCM) S.studentCM.refresh();
-  } else {
-    editorWrap.style.display = 'none';
-    outputWrap.style.display = '';
-    btnRunStudent.style.display = 'flex';
-  }
-}
-
-/* Run student's code (teacher feature) */
-function runStudentCode() {
-  if (!S.pyodideReady) return;
-  const code = S.studentCM ? S.studentCM.getValue() : '';
-  const out = document.getElementById('teacherOutputArea');
-  const btn = document.getElementById('btnRunStudent');
-  btn.disabled = true;
-  out.innerHTML = '';
-  try {
-    S.pyodide.runPython('import sys\nfrom io import StringIO\nsys.stdout = StringIO()\nsys.stderr = StringIO()');
-    S.pyodide.runPython(code);
-    const so = S.pyodide.runPython('sys.stdout.getvalue()'), se = S.pyodide.runPython('sys.stderr.getvalue()');
-    if (so) out.textContent = so;
-    if (se) out.innerHTML += '<span class="error">' + esc(se) + '</span>';
-    if (!so && !se) out.innerHTML = '<span class="system">Program finished with no output.</span>';
-  } catch(e) {
-    out.innerHTML = '<span class="error">' + esc(e.message) + '</span>';
-  }
-  btn.disabled = false;
+/* ══════ OUTPUT SOURCE TOGGLE ══════ */
+function switchOutputSource(src) {
+  S.outputSource = src;
+  document.querySelectorAll('#outputSourceToggle .output-src-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('#outputSourceToggle .output-src-btn[data-src="'+src+'"]').classList.add('active');
 }
 
 /* ══════ HAMBURGER ══════ */
@@ -824,11 +796,20 @@ function showTeacherDashboard() {
   showScreen('screenTeacherDash');
   hideTeacherPanels();
   document.getElementById('roomCreatedTeacher').style.display = 'none';
-  document.getElementById('manageTeachersCard').style.display = S.teacherSession.isAdmin ? 'block' : 'none';
-  loadPendingStudents();
-  loadApprovedStudents();
+  const isAdmin = S.teacherSession.isAdmin;
+  document.getElementById('manageTeachersCard').style.display = isAdmin ? 'block' : 'none';
+  document.getElementById('studentRequestsCard').style.display = isAdmin ? 'block' : 'none';
+  if (isAdmin) { loadPendingStudents(); loadApprovedStudents(); }
   loadAllStudentProjects();
-  if (S.teacherSession.isAdmin) loadTeachersList();
+  if (isAdmin) loadTeachersList();
+  // Show rejoin button if teacher has a last room
+  const rejoinWrap = document.getElementById('rejoinRoomTeacher');
+  if (S.lastTeacherRoom) {
+    rejoinWrap.style.display = 'block';
+    document.getElementById('lastRoomCode').textContent = S.lastTeacherRoom;
+  } else {
+    rejoinWrap.style.display = 'none';
+  }
 }
 
 /* ══════ STUDENT SIGN-IN (Google) ══════ */
@@ -1067,6 +1048,7 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
 /* ══════ TEACHER: CREATE ROOM ══════ */
 async function teacherCreateRoom() {
   S.roomCode = genCode();
+  S.lastTeacherRoom = S.roomCode;
   const name = S.teacherSession ? S.teacherSession.name : 'Teacher';
   await fbRest.set('rooms/' + S.roomCode, {
     teacherName: name, teacherCode: '# Welcome to Python Lab!\n# Students will see your code live.\n\nprint("Hello, students!")\n',
@@ -1080,6 +1062,16 @@ async function teacherCreateRoom() {
       setTimeout(() => document.getElementById('roomCodeDisplayT').style.borderColor = '', 1500);
     });
   };
+}
+
+/* ══════ TEACHER: REJOIN ROOM ══════ */
+async function rejoinRoom() {
+  if (!S.lastTeacherRoom) return;
+  const room = await fbRest.get('rooms/' + S.lastTeacherRoom);
+  if (!room) { alert('Room no longer exists.'); S.lastTeacherRoom = null; document.getElementById('rejoinRoomTeacher').style.display = 'none'; return; }
+  S.roomCode = S.lastTeacherRoom;
+  S.ideMode = 'room';
+  enterIDE();
 }
 
 /* ══════ STUDENT: JOIN ROOM ══════ */
@@ -1111,15 +1103,11 @@ function enterIDE() {
   initEditors();
 
   const roleBadge = document.getElementById('roleBadge');
-  const teacherBottomTabs = document.getElementById('teacherBottomTabs');
-  const btnRunStudent = document.getElementById('btnRunStudent');
+  const outputToggle = document.getElementById('outputSourceToggle');
 
-  // Reset teacher tabs
-  teacherBottomTabs.style.display = 'none';
-  btnRunStudent.style.display = 'none';
-  S.teacherActiveTab = 'code';
-  document.getElementById('studentEditorWrap').style.display = '';
-  document.getElementById('teacherOutputWrap').style.display = 'none';
+  // Reset output source
+  outputToggle.style.display = 'none';
+  S.outputSource = 'own';
 
   if (S.ideMode === 'solo') {
     document.getElementById('teacherPanel').style.display = 'none';
@@ -1141,8 +1129,7 @@ function enterIDE() {
     roleBadge.className = 'role-badge role-teacher';
     document.getElementById('teacherPanelTitle').innerHTML = '<span class="dot dot-teacher"></span> Your Code (Teacher)';
     document.getElementById('studentPanelTitle').innerHTML = '<span class="dot dot-student"></span> Student View';
-    // Show teacher bottom tabs
-    teacherBottomTabs.style.display = 'flex';
+    outputToggle.style.display = 'flex';
     S.teacherCM.setOption('readOnly', false);
     S.studentCM.setOption('readOnly', true);
     setupFirebaseSync();
@@ -1227,7 +1214,7 @@ function setupPresence() {
 
 /* ══════ PYODIDE ══════ */
 async function initPyodide() {
-  if (S.pyodideReady) { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('btnRun').disabled = false; document.getElementById('btnRunStudent').disabled = false; return; }
+  if (S.pyodideReady) { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('btnRun').disabled = false; return; }
   const overlay = document.getElementById('loadingOverlay');
   const lt = document.getElementById('loadingText');
   overlay.classList.remove('hidden');
@@ -1238,7 +1225,6 @@ async function initPyodide() {
     S.pyodide.runPython('import sys\nfrom io import StringIO');
     S.pyodideReady = true;
     document.getElementById('btnRun').disabled = false;
-    document.getElementById('btnRunStudent').disabled = false;
     document.getElementById('pyodideVersion').textContent = 'Python ' + S.pyodide.runPython('import sys; sys.version.split()[0]');
     overlay.classList.add('hidden');
   } catch(e) { lt.textContent = 'Failed to load Python. Refresh page.'; console.error(e); }
@@ -1247,7 +1233,12 @@ async function initPyodide() {
 /* ══════ RUN CODE ══════ */
 function runCode() {
   if (!S.pyodideReady) return;
-  const code = (S.role === 'teacher' && S.ideMode !== 'solo') ? S.teacherCM.getValue() : S.studentCM.getValue();
+  let code;
+  if (S.role === 'teacher' && S.ideMode !== 'solo') {
+    code = S.outputSource === 'student' ? S.studentCM.getValue() : S.teacherCM.getValue();
+  } else {
+    code = S.studentCM.getValue();
+  }
   const out = document.getElementById('outputArea');
   const btn = document.getElementById('btnRun');
   const et = document.getElementById('execTime');
@@ -1268,7 +1259,6 @@ function runCode() {
 function clearOutput() {
   document.getElementById('outputArea').innerHTML = '<span class="system">Output cleared.</span>';
   document.getElementById('execTime').textContent = '';
-  document.getElementById('teacherOutputArea').innerHTML = '<span class="system">Output cleared.</span>';
 }
 
 /* ══════ PROJECTS ══════ */
@@ -1351,6 +1341,7 @@ async function deleteProject(id, name) {
 /* ══════ LEAVE IDE ══════ */
 function leaveIDE() {
   if (S._presenceUid && S.roomCode) fbRest.set('rooms/'+S.roomCode+'/presence/'+S._presenceUid, null);
+  if (S.role === 'teacher' && S.roomCode) S.lastTeacherRoom = S.roomCode;
   if (S._syncES) S._syncES.close();
   if (S._presenceES) S._presenceES.close();
   S._syncES = null; S._presenceES = null; S._presenceUid = null;
