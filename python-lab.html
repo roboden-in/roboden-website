@@ -327,19 +327,6 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
   </a>
   <ul class="nav-links">
     <li><a href="index.html">Home</a></li>
-    <li><a href="schools.html">For Schools</a></li>
-    <li><a href="colleges.html">For Colleges</a></li>
-    <li>
-      <a href="online-training.html">Online Training <svg class="drop-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
-      <div class="dropdown">
-        <a href="online-training.html"><strong>For School Students</strong><span>Robotics &amp; Python courses</span></a>
-        <a href="online-training.html#college"><strong>For College Students</strong><span>Bare metal &amp; C programming</span></a>
-      </div>
-    </li>
-    <li><a href="about.html">About</a></li>
-    <li><a href="contact.html">Contact</a></li>
-    <li><a href="verify.html">Verify Certificate</a></li>
-    <li><a href="python-lab.html" class="active">Python Lab</a></li>
   </ul>
   <div class="nav-right">
     <div class="user-chip" id="userChip" style="display:none;">
@@ -352,14 +339,6 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 </nav>
 <div class="mobile-menu" id="mobileMenu">
   <a href="index.html">Home</a>
-  <a href="schools.html">For Schools</a>
-  <a href="colleges.html">For Colleges</a>
-  <a href="online-training.html">Online – School Students</a>
-  <a href="online-training.html#college">Online – College Students</a>
-  <a href="about.html">About</a>
-  <a href="contact.html">Contact</a>
-  <a href="verify.html">Verify Certificate</a>
-  <a href="python-lab.html">Python Lab</a>
 </div>
 
 <!-- SCREEN: LOGIN -->
@@ -1131,7 +1110,10 @@ function enterIDE() {
     document.getElementById('studentPanelTitle').innerHTML = '<span class="dot dot-student"></span> Student View';
     outputToggle.style.display = 'flex';
     S.teacherCM.setOption('readOnly', false);
-    S.studentCM.setOption('readOnly', true);
+    S.studentCM.setOption('readOnly', false);
+    outputToggle.style.display = 'flex';
+    outputToggle.querySelector('[data-src="own"]').textContent = 'My code';
+    outputToggle.querySelector('[data-src="student"]').textContent = 'Student code';
     setupFirebaseSync();
     setupPresence();
   } else {
@@ -1146,6 +1128,9 @@ function enterIDE() {
     document.getElementById('studentPanelTitle').innerHTML = '<span class="dot dot-student"></span> Your Code';
     S.teacherCM.setOption('readOnly', true);
     S.studentCM.setOption('readOnly', false);
+    outputToggle.style.display = 'flex';
+    outputToggle.querySelector('[data-src="own"]').textContent = 'My code';
+    outputToggle.querySelector('[data-src="student"]').textContent = 'Teacher code';
     setupFirebaseSync();
     setupPresence();
     setupAutoSave();
@@ -1201,12 +1186,24 @@ function setupFirebaseSync() {
   }
 }
 
-function setupPresence() {
+async function setupPresence() {
   if (!S.roomCode) return;
   const uid = S.role === 'teacher' ? 'teacher_' + (S.teacherSession ? S.teacherSession.id : Date.now()) : S.studentUser.uid;
   const name = S.role === 'teacher' ? S.teacherSession.name : (S.studentUser.displayName || 'Student');
-  fbRest.set('rooms/' + S.roomCode + '/presence/' + uid, { name, role: S.role, joinedAt: {'.sv':'timestamp'} });
+  const now = Date.now();
+  await fbRest.set('rooms/' + S.roomCode + '/presence/' + uid, { name, role: S.role, joinedAt: {'.sv':'timestamp'}, lastSeen: {'.sv':'timestamp'} });
   S._presenceUid = uid;
+  S._presenceHeartbeat = setInterval(() => {
+    if (S.roomCode && S._presenceUid) fbRest.update('rooms/' + S.roomCode + '/presence/' + S._presenceUid, { lastSeen: {'.sv':'timestamp'} });
+  }, 30000);
+  const existing = await fbRest.get('rooms/' + S.roomCode + '/presence');
+  if (existing) {
+    for (const [k, v] of Object.entries(existing)) {
+      if (k !== uid && v.lastSeen && now - v.lastSeen > 120000) {
+        fbRest.set('rooms/' + S.roomCode + '/presence/' + k, null);
+      }
+    }
+  }
   S._presenceES = fbListen('rooms/' + S.roomCode + '/presence', p => {
     document.getElementById('userCount').textContent = p ? Object.keys(p).length : 1;
   });
@@ -1234,10 +1231,12 @@ async function initPyodide() {
 function runCode() {
   if (!S.pyodideReady) return;
   let code;
-  if (S.role === 'teacher' && S.ideMode !== 'solo') {
+  if (S.ideMode === 'solo') {
+    code = S.studentCM.getValue();
+  } else if (S.role === 'teacher') {
     code = S.outputSource === 'student' ? S.studentCM.getValue() : S.teacherCM.getValue();
   } else {
-    code = S.studentCM.getValue();
+    code = S.outputSource === 'student' ? S.teacherCM.getValue() : S.studentCM.getValue();
   }
   const out = document.getElementById('outputArea');
   const btn = document.getElementById('btnRun');
@@ -1344,7 +1343,8 @@ function leaveIDE() {
   if (S.role === 'teacher' && S.roomCode) S.lastTeacherRoom = S.roomCode;
   if (S._syncES) S._syncES.close();
   if (S._presenceES) S._presenceES.close();
-  S._syncES = null; S._presenceES = null; S._presenceUid = null;
+  if (S._presenceHeartbeat) clearInterval(S._presenceHeartbeat);
+  S._syncES = null; S._presenceES = null; S._presenceUid = null; S._presenceHeartbeat = null;
   S.roomRef = null; S.presenceRef = null; S.roomCode = null; S.currentProjectId = null; S.ideMode = null;
   if (S.teacherCM) S.teacherCM.setValue('');
   if (S.studentCM) S.studentCM.setValue('');
