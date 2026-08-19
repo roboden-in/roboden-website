@@ -7,40 +7,40 @@
 <meta name="description" content="Live collaborative Python coding lab by Roboden. Teacher and student code side-by-side with real-time sync and in-browser Python execution.">
 <link rel="canonical" href="https://roboden.in/python-lab">
 <meta name="robots" content="index, follow">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#0a0a0f">
 <link rel="icon" type="image/png" href="images/roboden-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <!-- CodeMirror 5 -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/theme/material-darker.min.css">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --p:#4f46e5;--pl:#4338ca;--p3:#3730a3;
-  --pa:rgba(79,70,229,0.08);--pa2:rgba(79,70,229,0.04);
+  --p:#7c3aed;--pl:#6d28d9;--p3:#5b21b6;
+  --pa:rgba(124,58,237,0.12);--pa2:rgba(124,58,237,0.06);
   --bg-nav:#07070c;
-  --bg:#fafafa;--bg2:#ffffff;--bg3:#f4f4f5;
-  --border:rgba(0,0,0,0.06);--border2:rgba(0,0,0,0.10);
-  --text:#1e1b4b;--muted:rgba(0,0,0,0.45);--muted2:rgba(0,0,0,0.65);
-  --accent:#4f46e5;--accent2:#4338ca;
-  --purple:#6d28d9;--purple-l:#7c3aed;--purple-bg:rgba(79,70,229,0.06);
-  --mono:'DM Mono',monospace;--sans:'Sora',sans-serif;
+  --bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);
+  --text:#f0f0f5;--muted:rgba(255,255,255,0.45);--muted2:rgba(255,255,255,0.65);
+  --accent:#a78bfa;--accent2:#7c3aed;
+  --purple:#7c3aed;--purple-l:#a78bfa;--purple-bg:rgba(124,58,237,0.10);
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',system-ui,sans-serif;
   --editor-bg:#1e1e2e;
-  --success:#059669;--error:#dc2626;--warning:#d97706;
-  --shadow-sm:0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.02);
-  --shadow:0 2px 8px rgba(0,0,0,0.06),0 1px 3px rgba(0,0,0,0.04);
-  --shadow-md:0 4px 12px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.03);
-  --shadow-lg:0 12px 40px rgba(0,0,0,0.10),0 4px 12px rgba(0,0,0,0.04);
-  --radius:8px;--radius-lg:12px;--radius-full:9999px;
+  --success:#10b981;--error:#ef4444;--warning:#f59e0b;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.3),0 1px 2px rgba(0,0,0,0.2);
+  --shadow:0 2px 8px rgba(0,0,0,0.4),0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.5),0 2px 4px rgba(0,0,0,0.3);
+  --shadow-lg:0 12px 40px rgba(0,0,0,0.6),0 4px 12px rgba(0,0,0,0.3);
+  --radius:10px;--radius-lg:16px;--radius-full:9999px;
 }
 html{scroll-behavior:smooth;}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.15);border-radius:4px;}
-::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,0.25);}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.2);}
 
 /* NAV */
 nav{display:flex;align-items:center;justify-content:space-between;padding:0 52px;height:82px;position:sticky;top:0;z-index:9001;background:rgba(7,7,12,0.9);backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,0.07);}
@@ -74,139 +74,196 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 .btn-signout:hover{border-color:#dc2626;color:#f87171;}
 
 /* SCREENS */
-.screen{display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:40px 24px;text-align:center;min-height:calc(100vh - 82px);background:var(--bg);}
+.screen{display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:60px 24px;text-align:center;min-height:calc(100vh - 82px);background:var(--bg);position:relative;}
+.screen::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(124,58,237,0.08) 0%,transparent 70%);pointer-events:none;}
 .screen.active{display:flex;}
 .screen.active-scroll{display:flex;justify-content:flex-start;padding-top:40px;overflow-y:auto;}
 
+/* SPLIT LOGIN LAYOUT */
+.login-screen{flex-direction:row !important;padding:0 !important;gap:0;align-items:stretch !important;min-height:calc(100vh - 82px) !important;height:calc(100vh - 82px);overflow:hidden;}
+.login-screen::before{display:none;}
+.login-hero{flex:1;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#120a20 0%,#1e1038 35%,#180d2a 70%,#12081f 100%);position:relative;overflow:hidden;padding:60px 48px;border-right:1px solid rgba(124,58,237,0.15);}
+.login-hero::before{content:'';position:absolute;top:-20%;right:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(124,58,237,0.2) 0%,rgba(124,58,237,0.05) 50%,transparent 70%);pointer-events:none;}
+.login-hero::after{content:'';position:absolute;bottom:-15%;left:10%;width:500px;height:500px;background:radial-gradient(circle,rgba(167,139,250,0.12) 0%,rgba(167,139,250,0.03) 50%,transparent 70%);pointer-events:none;}
+.login-hero-content{position:relative;z-index:1;max-width:560px;width:100%;display:flex;flex-direction:column;gap:32px;}
+.hero-text{text-align:left;}
+.login-hero-title{font-size:2.2rem;font-weight:800;color:#fff;letter-spacing:-.04em;line-height:1.1;margin-bottom:10px;}
+.login-hero-sub{font-size:.95rem;color:rgba(255,255,255,0.45);line-height:1.7;font-weight:400;}
+
+/* IDE MOCKUP */
+.hero-mockup{width:100%;}
+.mockup-window{background:#11111b;border-radius:12px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;box-shadow:0 24px 48px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.03);}
+.mockup-titlebar{display:flex;align-items:center;gap:12px;padding:10px 14px;background:#181825;border-bottom:1px solid rgba(255,255,255,0.05);}
+.mockup-dots{display:flex;gap:6px;}
+.mockup-dots span{width:10px;height:10px;border-radius:50%;}
+.mockup-dots span:nth-child(1){background:#f87171;}
+.mockup-dots span:nth-child(2){background:#fbbf24;}
+.mockup-dots span:nth-child(3){background:#34d399;}
+.mockup-tab{font-size:.68rem;color:rgba(255,255,255,0.5);font-family:var(--sans);display:flex;align-items:center;gap:6px;padding:3px 10px;background:rgba(255,255,255,0.04);border-radius:5px;}
+.mockup-toolbar{display:flex;align-items:center;gap:8px;padding:6px 14px;background:#181825;border-bottom:1px solid rgba(255,255,255,0.05);}
+.mockup-badge-room{font-size:.62rem;font-weight:600;font-family:var(--mono);color:#a78bfa;background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);padding:2px 8px;border-radius:4px;letter-spacing:.05em;}
+.mockup-badge-users{font-size:.62rem;font-weight:500;color:#34d399;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.15);padding:2px 8px;border-radius:4px;}
+.mockup-role{font-size:.58rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fbbf24;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2);padding:2px 8px;border-radius:3px;margin-left:auto;}
+.mockup-editors{display:flex;min-height:140px;}
+.mockup-panel{flex:1;display:flex;flex-direction:column;}
+.mockup-panel+.mockup-panel{border-left:1px solid rgba(255,255,255,0.05);}
+.mockup-panel-head{font-size:.62rem;font-weight:600;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.06em;padding:5px 14px;background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:6px;}
+.mdot{width:6px;height:6px;border-radius:50%;display:inline-block;}
+.mockup-code{padding:8px 0;font-family:var(--mono);font-size:.72rem;line-height:1.8;flex:1;}
+.code-line{padding:0 14px;display:flex;white-space:pre;}
+.code-line:hover{background:rgba(255,255,255,0.02);}
+.ln{color:rgba(255,255,255,0.15);width:22px;margin-right:12px;text-align:right;user-select:none;flex-shrink:0;}
+.kw{color:#c678dd;}.fn{color:#61afef;}.st{color:#98c379;}.arg{color:#e06c75;}.num{color:#d19a66;}.cm{color:rgba(255,255,255,0.25);font-style:italic;}.br{color:#56b6c2;}
+.cursor-line::after{content:'';display:inline-block;width:7px;height:14px;background:rgba(167,139,250,0.6);animation:blink-cursor 1s step-end infinite;vertical-align:middle;}
+@keyframes blink-cursor{0%,100%{opacity:1;}50%{opacity:0;}}
+.mockup-output{border-top:1px solid rgba(255,255,255,0.05);}
+.mockup-output-text{padding:8px 14px;font-family:var(--mono);font-size:.7rem;line-height:1.7;color:rgba(255,255,255,0.6);}
+.out-line{display:block;}
+.login-form-side{display:flex;align-items:center;justify-content:center;padding:48px;min-width:420px;max-width:480px;background:#0d0d14;border-left:1px solid rgba(124,58,237,0.1);}
+.login-form-side .lobby-card{border:none;background:none;padding:0;backdrop-filter:none;max-width:380px;text-align:left;}
+.login-form-side .lobby-card h2{text-align:left;}
+.login-form-side .lobby-card p{text-align:left;}
+.login-form-side .lobby-tabs{margin-top:0;}
+@media(max-width:900px){
+  .login-screen{flex-direction:column !important;height:auto !important;overflow:auto !important;}
+  .login-hero{padding:48px 24px 36px;min-height:auto;}
+  .login-hero-title{font-size:1.8rem;}
+  .hero-text{text-align:center;}
+  .hero-mockup{display:none;}
+  .login-form-side{min-width:auto;max-width:none;padding:36px 24px 48px;flex:1;border-left:none;border-top:1px solid rgba(255,255,255,0.04);}
+  .login-form-side .lobby-card{max-width:400px;width:100%;margin:0 auto;}
+}
+
 /* LOBBY CARD */
-.lobby-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:48px 44px;max-width:440px;width:100%;box-shadow:var(--shadow-lg);}
-.lobby-card.wide{max-width:720px;}
-.lobby-icon{width:48px;height:48px;background:var(--p);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
-.lobby-icon svg{width:24px;height:24px;color:#fff;}
-.lobby-card h1{font-size:1.6rem;font-weight:700;margin-bottom:6px;letter-spacing:-.02em;color:var(--text);}
-.lobby-card h2{font-size:1.25rem;font-weight:700;margin-bottom:6px;color:var(--text);}
-.lobby-card p{font-size:.92rem;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+.lobby-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius-lg);padding:48px 52px;max-width:480px;width:100%;backdrop-filter:blur(20px);position:relative;z-index:1;}
+.lobby-card.wide{max-width:760px;padding:44px 48px;}
+.lobby-icon{width:56px;height:56px;background:linear-gradient(135deg,var(--p),#a78bfa);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 8px 24px rgba(124,58,237,0.25);}
+.lobby-icon svg{width:26px;height:26px;color:#fff;stroke-width:1.5;}
+.lobby-card h1{font-size:1.75rem;font-weight:800;margin-bottom:8px;letter-spacing:-.03em;color:#fff;}
+.lobby-card h2{font-size:1.35rem;font-weight:700;margin-bottom:8px;color:#fff;letter-spacing:-.02em;}
+.lobby-card p{font-size:.9rem;color:rgba(255,255,255,0.5);margin-bottom:28px;line-height:1.7;font-weight:400;}
 
 /* LOGIN TABS */
-.lobby-tabs{display:flex;gap:0;border:1px solid var(--border2);border-radius:var(--radius-full);padding:3px;margin-bottom:28px;}
-.lobby-tab{flex:1;padding:10px;border-radius:var(--radius-full);border:none;background:none;color:var(--muted);font-family:var(--sans);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;}
-.lobby-tab.active{background:var(--p);color:#fff;box-shadow:var(--shadow-sm);}
+.lobby-tabs{display:flex;gap:0;border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-full);padding:3px;margin-bottom:32px;background:rgba(255,255,255,0.03);}
+.lobby-tab{flex:1;padding:11px;border-radius:var(--radius-full);border:none;background:none;color:rgba(255,255,255,0.4);font-family:var(--sans);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .25s;}
+.lobby-tab:hover{color:rgba(255,255,255,0.6);}
+.lobby-tab.active{background:linear-gradient(135deg,var(--p),#a78bfa);color:#fff;box-shadow:0 4px 14px rgba(124,58,237,0.3);}
 
 /* INPUT GROUPS */
-.input-group{margin-bottom:16px;text-align:left;}
-.input-group label{font-size:.7rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;display:block;font-family:var(--mono);}
-.input-group input{width:100%;padding:11px 14px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg2);color:var(--text);font-family:var(--sans);font-size:.9rem;outline:none;transition:border-color .2s,box-shadow .2s;}
-.input-group input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(79,70,229,0.1);}
-.input-group input::placeholder{color:rgba(0,0,0,0.25);}
+.input-group{margin-bottom:18px;text-align:left;}
+.input-group label{font-size:.72rem;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px;display:block;font-family:var(--sans);}
+.input-group input{width:100%;padding:13px 16px;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:#fff;font-family:var(--sans);font-size:.9rem;outline:none;transition:border-color .2s,box-shadow .2s;}
+.input-group input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,0.15);}
+.input-group input::placeholder{color:rgba(255,255,255,0.2);}
 .input-group.pw-group{position:relative;}
 .input-group.pw-group input{padding-right:42px;}
-.btn-pw-toggle{position:absolute;right:10px;top:26px;background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;display:flex;align-items:center;justify-content:center;transition:color .2s;}
-.btn-pw-toggle:hover{color:var(--text);}
+.btn-pw-toggle{position:absolute;right:10px;top:26px;background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.35);padding:4px;display:flex;align-items:center;justify-content:center;transition:color .2s;}
+.btn-pw-toggle:hover{color:rgba(255,255,255,0.7);}
 .btn-pw-toggle svg{width:18px;height:18px;}
 
 /* BUTTONS */
-.btn-primary{width:100%;padding:12px;border-radius:var(--radius-full);border:none;background:var(--p);color:#fff;font-family:var(--sans);font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s;margin-top:8px;box-shadow:var(--shadow-sm);}
-.btn-primary:hover{background:var(--pl);box-shadow:0 4px 14px rgba(79,70,229,0.35);transform:translateY(-1px);}
-.btn-primary:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
-.btn-google{width:100%;padding:12px;border-radius:var(--radius-full);border:1px solid var(--border2);background:var(--bg2);color:var(--text);font-family:var(--sans);font-size:.88rem;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px;box-shadow:var(--shadow-sm);}
-.btn-google:hover{border-color:var(--p);box-shadow:var(--shadow-md);transform:translateY(-1px);}
+.btn-primary{width:100%;padding:14px;border-radius:var(--radius-full);border:none;background:linear-gradient(135deg,var(--p),#a78bfa);color:#fff;font-family:var(--sans);font-size:.9rem;font-weight:700;cursor:pointer;transition:all .25s;margin-top:10px;box-shadow:0 4px 14px rgba(124,58,237,0.25);letter-spacing:.01em;}
+.btn-primary:hover{box-shadow:0 6px 20px rgba(124,58,237,0.4);transform:translateY(-1px);}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-google{width:100%;padding:14px;border-radius:var(--radius-full);border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-family:var(--sans);font-size:.9rem;font-weight:600;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px;}
+.btn-google:hover{border-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.07);transform:translateY(-1px);}
 .btn-google svg{width:20px;height:20px;flex-shrink:0;}
 
 /* ROOM CODE */
-.room-code-display{font-family:var(--mono);font-size:2rem;font-weight:700;color:var(--accent);letter-spacing:.2em;padding:16px;background:var(--bg3);border-radius:var(--radius-lg);border:2px dashed var(--border2);margin:16px 0;user-select:all;cursor:pointer;}
+.room-code-display{font-family:var(--mono);font-size:2rem;font-weight:700;color:var(--accent);letter-spacing:.2em;padding:18px;background:rgba(124,58,237,0.06);border-radius:var(--radius-lg);border:2px dashed rgba(124,58,237,0.2);margin:16px 0;user-select:all;cursor:pointer;}
 .copy-hint{font-size:.75rem;color:var(--muted);margin-bottom:16px;}
-.divider{height:1px;background:var(--border);margin:24px 0;}
+.divider{height:1px;background:rgba(255,255,255,0.06);margin:24px 0;}
 
 /* MESSAGE BOXES */
 .msg-box{padding:16px;border-radius:var(--radius);font-size:.85rem;line-height:1.6;margin:12px 0;}
-.msg-pending{background:rgba(217,119,6,.06);border:1px solid rgba(217,119,6,.18);color:#92400e;}
-.msg-rejected{background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.18);color:#991b1b;}
-.msg-success{background:rgba(5,150,105,.06);border:1px solid rgba(5,150,105,.18);color:#065f46;}
+.msg-pending{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:#fbbf24;}
+.msg-rejected{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;}
+.msg-success{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:#34d399;}
 
 /* DASHBOARD CARDS */
-.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
-.dash-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;cursor:pointer;transition:all .2s;text-align:left;box-shadow:var(--shadow);}
-.dash-card:hover{border-color:var(--border2);box-shadow:var(--shadow-md);transform:translateY(-2px);}
-.dash-card-icon{width:38px;height:38px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px;}
+.dash-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius-lg);padding:22px;cursor:pointer;transition:all .25s;text-align:left;}
+.dash-card:hover{border-color:rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);transform:translateY(-2px);}
+.dash-card-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
 .dash-card-icon svg{width:18px;height:18px;}
-.dash-card h3{font-size:.95rem;font-weight:700;margin-bottom:4px;color:var(--text);}
-.dash-card p{font-size:.8rem;color:var(--muted);margin-bottom:0;line-height:1.5;}
-.ic-room{background:var(--purple-bg);color:var(--purple);}
-.ic-students{background:rgba(5,150,105,.06);color:var(--success);}
-.ic-projects{background:rgba(217,119,6,.06);color:var(--warning);}
-.ic-teachers{background:rgba(0,0,0,.04);color:var(--text);}
-.ic-code{background:var(--purple-bg);color:var(--purple);}
-.ic-join{background:rgba(5,150,105,.06);color:var(--success);}
+.dash-card h3{font-size:.95rem;font-weight:700;margin-bottom:4px;color:#fff;}
+.dash-card p{font-size:.8rem;color:rgba(255,255,255,0.4);margin-bottom:0;line-height:1.5;}
+.ic-room{background:rgba(124,58,237,.12);color:var(--accent);}
+.ic-students{background:rgba(16,185,129,.1);color:#34d399;}
+.ic-projects{background:rgba(245,158,11,.1);color:#fbbf24;}
+.ic-teachers{background:rgba(255,255,255,.06);color:rgba(255,255,255,0.7);}
+.ic-code{background:rgba(124,58,237,.12);color:var(--accent);}
+.ic-join{background:rgba(16,185,129,.1);color:#34d399;}
 
 /* ADMIN PANELS */
 .admin-panel{text-align:left;margin-top:20px;}
-.admin-panel h3{font-size:.85rem;font-weight:700;color:var(--text);letter-spacing:-.01em;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.admin-panel h3{font-size:.85rem;font-weight:700;color:#fff;letter-spacing:-.01em;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
 .admin-list{display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;}
-.admin-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg2);gap:10px;transition:box-shadow .2s;}
-.admin-item:hover{box-shadow:var(--shadow-sm);}
+.admin-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);gap:10px;transition:all .2s;}
+.admin-item:hover{border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);}
 .admin-item-info{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
-.admin-item-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--bg3);}
+.admin-item-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid rgba(255,255,255,0.1);}
 .admin-item-text{min-width:0;flex:1;}
-.admin-item-name{font-size:.9rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);}
-.admin-item-email{font-size:.78rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.admin-item-name{font-size:.9rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;}
+.admin-item-email{font-size:.78rem;color:rgba(255,255,255,0.4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .admin-item-badge{font-size:.65rem;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;}
-.badge-pending{background:rgba(217,119,6,.08);color:#92400e;border:1px solid rgba(217,119,6,.18);}
-.badge-approved{background:rgba(5,150,105,.08);color:#065f46;border:1px solid rgba(5,150,105,.18);}
+.badge-pending{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2);}
+.badge-approved{background:rgba(16,185,129,.1);color:#34d399;border:1px solid rgba(16,185,129,.2);}
 .admin-item-actions{display:flex;gap:6px;flex-shrink:0;}
-.btn-approve{background:rgba(5,150,105,.08);border:1px solid rgba(5,150,105,.2);color:var(--success);border-radius:var(--radius-full);padding:7px 16px;font-family:var(--sans);font-size:.72rem;font-weight:600;cursor:pointer;transition:all .2s;}
-.btn-approve:hover{background:var(--success);color:#fff;box-shadow:var(--shadow-sm);}
-.btn-reject{background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.15);color:var(--error);border-radius:var(--radius-full);padding:7px 16px;font-family:var(--sans);font-size:.72rem;font-weight:600;cursor:pointer;transition:all .2s;}
-.btn-reject:hover{background:var(--error);color:#fff;box-shadow:var(--shadow-sm);}
-.btn-remove{background:none;border:1px solid var(--border2);border-radius:var(--radius-full);padding:7px 16px;color:var(--muted);font-family:var(--sans);font-size:.72rem;font-weight:500;cursor:pointer;transition:all .2s;}
-.btn-remove:hover{border-color:var(--error);color:var(--error);}
-.no-items{font-size:.82rem;color:var(--muted);font-style:italic;padding:20px 0;text-align:center;}
-.btn-back{background:none;border:1px solid var(--border2);border-radius:var(--radius-full);padding:8px 18px;color:var(--muted);font-family:var(--sans);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;margin-bottom:20px;display:inline-flex;align-items:center;gap:6px;}
+.btn-approve{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);color:#34d399;border-radius:var(--radius-full);padding:7px 16px;font-family:var(--sans);font-size:.72rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-approve:hover{background:#10b981;color:#fff;}
+.btn-reject{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);color:#f87171;border-radius:var(--radius-full);padding:7px 16px;font-family:var(--sans);font-size:.72rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-reject:hover{background:#ef4444;color:#fff;}
+.btn-remove{background:none;border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-full);padding:7px 16px;color:rgba(255,255,255,0.4);font-family:var(--sans);font-size:.72rem;font-weight:500;cursor:pointer;transition:all .2s;}
+.btn-remove:hover{border-color:rgba(239,68,68,.3);color:#f87171;}
+.no-items{font-size:.82rem;color:rgba(255,255,255,0.3);font-style:italic;padding:20px 0;text-align:center;}
+.btn-back{background:none;border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-full);padding:8px 18px;color:rgba(255,255,255,0.5);font-family:var(--sans);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;margin-bottom:20px;display:inline-flex;align-items:center;gap:6px;}
 .btn-back:hover{border-color:var(--accent);color:var(--accent);}
 .btn-back svg{width:16px;height:16px;}
 .inline-form{display:flex;gap:8px;margin-top:12px;}
-.inline-form input{flex:1;padding:10px 14px;border-radius:var(--radius);border:1.5px solid var(--border2);background:var(--bg);color:var(--text);font-family:var(--sans);font-size:.85rem;outline:none;transition:border-color .2s,box-shadow .2s;}
-.inline-form input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(79,70,229,0.1);}
-.inline-form button{padding:10px 22px;border-radius:var(--radius-full);border:none;background:var(--p);color:#fff;font-family:var(--sans);font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;box-shadow:var(--shadow-sm);}
-.inline-form button:hover{background:var(--pl);box-shadow:0 4px 14px rgba(79,70,229,0.3);}
+.inline-form input{flex:1;padding:10px 14px;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:#fff;font-family:var(--sans);font-size:.85rem;outline:none;transition:border-color .2s,box-shadow .2s;}
+.inline-form input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,0.15);}
+.inline-form button{padding:10px 22px;border-radius:var(--radius-full);border:none;background:linear-gradient(135deg,var(--p),#a78bfa);color:#fff;font-family:var(--sans);font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;}
+.inline-form button:hover{box-shadow:0 4px 14px rgba(124,58,237,0.3);}
 
 /* STUDENT PROJECT LIST */
-.project-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg2);cursor:pointer;transition:all .2s;}
-.project-item:hover{border-color:var(--pl);box-shadow:var(--shadow-sm);transform:translateY(-1px);}
+.project-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .2s;}
+.project-item:hover{border-color:rgba(124,58,237,0.3);background:rgba(124,58,237,0.05);transform:translateY(-1px);}
 .project-info{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;}
-.project-name{font-size:.85rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.project-date{font-size:.7rem;color:var(--muted);font-family:var(--mono);}
+.project-name{font-size:.85rem;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.project-date{font-size:.7rem;color:rgba(255,255,255,0.35);font-family:var(--mono);}
 .project-actions{display:flex;gap:4px;}
-.project-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:6px;border-radius:6px;transition:all .2s;display:flex;align-items:center;}
-.project-btn:hover{color:var(--error);background:rgba(220,38,38,.06);}
+.project-btn{background:none;border:none;color:rgba(255,255,255,0.35);cursor:pointer;padding:6px;border-radius:6px;transition:all .2s;display:flex;align-items:center;}
+.project-btn:hover{color:#f87171;background:rgba(239,68,68,.1);}
 .project-btn svg{width:14px;height:14px;}
 
 /* STUDENT EXPANDABLE */
-.student-item{border:1px solid var(--border);border-radius:var(--radius);background:var(--bg2);overflow:hidden;transition:box-shadow .2s;}
-.student-item:hover{box-shadow:var(--shadow-sm);}
+.student-item{border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius);background:rgba(255,255,255,0.03);overflow:hidden;transition:all .2s;}
+.student-item:hover{border-color:rgba(255,255,255,0.1);}
 .student-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;transition:all .2s;}
-.student-header:hover{background:var(--bg3);}
-.student-name{font-size:.85rem;font-weight:600;color:var(--text);flex:1;}
-.student-count{font-size:.7rem;color:var(--muted);font-family:var(--mono);}
-.student-arrow{color:var(--muted);transition:transform .2s;flex-shrink:0;}
+.student-header:hover{background:rgba(255,255,255,0.03);}
+.student-name{font-size:.85rem;font-weight:600;color:#fff;flex:1;}
+.student-count{font-size:.7rem;color:rgba(255,255,255,0.4);font-family:var(--mono);}
+.student-arrow{color:rgba(255,255,255,0.4);transition:transform .2s;flex-shrink:0;}
 .student-item.open .student-arrow{transform:rotate(180deg);}
-.student-projects{display:none;padding:4px 14px 12px;border-top:1px solid var(--border);}
+.student-projects{display:none;padding:4px 14px 12px;border-top:1px solid rgba(255,255,255,0.06);}
 .student-item.open .student-projects{display:block;}
 .student-project{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;cursor:pointer;transition:all .2s;margin-top:4px;}
-.student-project:hover{background:var(--bg3);}
-.student-project-name{font-size:.8rem;color:var(--muted2);}
-.student-project-date{font-size:.68rem;color:var(--muted);font-family:var(--mono);}
-.btn-view{background:var(--pa);border:1px solid rgba(79,70,229,0.15);border-radius:var(--radius-full);padding:5px 14px;color:var(--accent);font-family:var(--sans);font-size:.7rem;font-weight:600;cursor:pointer;transition:all .2s;}
-.btn-view:hover{background:var(--p);color:#fff;box-shadow:var(--shadow-sm);}
+.student-project:hover{background:rgba(255,255,255,0.04);}
+.student-project-name{font-size:.8rem;color:rgba(255,255,255,0.6);}
+.student-project-date{font-size:.68rem;color:rgba(255,255,255,0.35);font-family:var(--mono);}
+.btn-view{background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,0.2);border-radius:var(--radius-full);padding:5px 14px;color:var(--accent);font-family:var(--sans);font-size:.7rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-view:hover{background:var(--p);color:#fff;}
 
 /* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);z-index:10000;display:none;align-items:center;justify-content:center;padding:24px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);z-index:10000;display:none;align-items:center;justify-content:center;padding:24px;}
 .modal-overlay.active{display:flex;}
-.modal{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);max-width:700px;width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow-lg);}
-.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
-.modal-title{font-size:.95rem;font-weight:700;color:var(--text);}
-.modal-sub{font-size:.72rem;color:var(--muted);margin-top:2px;}
-.btn-modal-close{background:none;border:1px solid var(--border2);border-radius:var(--radius-full);padding:6px 16px;color:var(--muted);font-family:var(--sans);font-size:.78rem;cursor:pointer;transition:all .2s;}
-.btn-modal-close:hover{border-color:var(--error);color:var(--error);}
+.modal{background:var(--bg2);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-lg);max-width:700px;width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 48px rgba(0,0,0,0.5);}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.06);}
+.modal-title{font-size:.95rem;font-weight:700;color:#fff;}
+.modal-sub{font-size:.72rem;color:rgba(255,255,255,0.4);margin-top:2px;}
+.btn-modal-close{background:none;border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius-full);padding:6px 16px;color:rgba(255,255,255,0.5);font-family:var(--sans);font-size:.78rem;cursor:pointer;transition:all .2s;}
+.btn-modal-close:hover{border-color:rgba(239,68,68,.3);color:#f87171;}
 .modal-body{flex:1;overflow:auto;}
 .modal-code{width:100%;min-height:300px;background:#1e1e2e;color:#cdd6f4;font-family:var(--mono);font-size:13px;line-height:1.7;padding:16px;border:none;outline:none;resize:none;}
 
@@ -362,13 +419,60 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 </div>
 
 <!-- SCREEN: LOGIN -->
-<div class="screen active" id="screenLogin">
-  <div class="lobby-card">
-    <div class="lobby-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22" transform="rotate(15 12 12)"/></svg>
+<div class="screen active login-screen" id="screenLogin">
+  <div class="login-hero">
+    <div class="login-hero-content">
+      <div class="hero-text">
+        <h1 class="login-hero-title">Python Lab</h1>
+        <p class="login-hero-sub">Write, run, and learn Python — together in real time.</p>
+      </div>
+      <div class="hero-mockup">
+        <div class="mockup-window">
+          <div class="mockup-titlebar">
+            <div class="mockup-dots"><span></span><span></span><span></span></div>
+            <div class="mockup-tab active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:10px;height:10px;"><polygon points="5 3 19 12 5 21 5 3"/></svg> Python Lab — Roboden</div>
+          </div>
+          <div class="mockup-toolbar">
+            <span class="mockup-badge-room">ROOM: A7X3</span>
+            <span class="mockup-badge-users">2 online</span>
+            <span class="mockup-role">TEACHER</span>
+          </div>
+          <div class="mockup-editors">
+            <div class="mockup-panel">
+              <div class="mockup-panel-head"><span class="mdot" style="background:#fbbf24"></span> Teacher's Code</div>
+              <div class="mockup-code">
+                <div class="code-line"><span class="ln">1</span><span class="kw">def</span> <span class="fn">greet</span>(<span class="arg">name</span>):</div>
+                <div class="code-line"><span class="ln">2</span>    <span class="kw">return</span> <span class="st">f"Hello, </span><span class="br">{</span><span class="arg">name</span><span class="br">}</span><span class="st">!"</span></div>
+                <div class="code-line"><span class="ln">3</span></div>
+                <div class="code-line"><span class="ln">4</span><span class="arg">student</span> = <span class="fn">input</span>(<span class="st">"Your name: "</span>)</div>
+                <div class="code-line"><span class="ln">5</span><span class="fn">print</span>(<span class="fn">greet</span>(<span class="arg">student</span>))</div>
+              </div>
+            </div>
+            <div class="mockup-panel">
+              <div class="mockup-panel-head"><span class="mdot" style="background:#34d399"></span> Student's Code</div>
+              <div class="mockup-code">
+                <div class="code-line"><span class="ln">1</span><span class="cm"># My solution</span></div>
+                <div class="code-line"><span class="ln">2</span><span class="kw">for</span> <span class="arg">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):</div>
+                <div class="code-line"><span class="ln">3</span>    <span class="fn">print</span>(<span class="st">f"</span><span class="br">{</span><span class="arg">i</span>+<span class="num">1</span><span class="br">}</span><span class="st">. Hello!"</span>)</div>
+                <div class="code-line"><span class="ln">4</span><span class="cursor-line"></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="mockup-output">
+            <div class="mockup-panel-head"><span class="mdot" style="background:#a78bfa"></span> Output</div>
+            <div class="mockup-output-text">
+              <span class="out-line">Your name: <span style="color:#a78bfa">Surya</span></span>
+              <span class="out-line">Hello, Surya!</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <h1>Python Lab</h1>
-    <p>Live collaborative coding environment for Roboden students.</p>
+  </div>
+  <div class="login-form-side">
+  <div class="lobby-card">
+    <h2>Get Started</h2>
+    <p>Sign in to start coding.</p>
 
     <div class="lobby-tabs">
       <button class="lobby-tab active" onclick="switchLoginTab('teacher',this)">Teacher</button>
@@ -390,7 +494,7 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
         </button>
       </div>
       <button class="btn-primary" onclick="teacherLogin()">Sign In</button>
-      <div id="teacherLoginError" style="color:var(--error);font-size:.8rem;margin-top:10px;display:none;"></div>
+      <div id="teacherLoginError" style="color:#f87171;font-size:.8rem;margin-top:10px;display:none;"></div>
     </div>
 
     <!-- STUDENT LOGIN -->
@@ -400,8 +504,9 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
         Sign in with Google
       </button>
       <div class="divider"></div>
-      <p style="font-size:.8rem;color:var(--muted);margin-bottom:0;">First time? Click above to register. Your teacher will approve your access.</p>
+      <p style="font-size:.8rem;color:rgba(255,255,255,0.4);margin-bottom:0;">First time? Click above to register. Your teacher will approve your access.</p>
     </div>
+  </div>
   </div>
 </div>
 
@@ -650,24 +755,40 @@ const auth = firebase.auth();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 
 const DB_BASE = firebaseConfig.databaseURL;
+function getAuthToken() {
+  const u = auth.currentUser;
+  return u ? u.getIdToken() : Promise.resolve(null);
+}
 const fbRest = {
   async get(path) {
-    const r = await fetch(DB_BASE + '/' + path + '.json');
+    let url = DB_BASE + '/' + path + '.json';
+    const tok = await getAuthToken();
+    if (tok) url += '?auth=' + tok;
+    const r = await fetch(url);
     if (!r.ok) throw new Error('DB read failed: ' + r.status);
     return r.json();
   },
   async set(path, data) {
-    const r = await fetch(DB_BASE + '/' + path + '.json', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    let url = DB_BASE + '/' + path + '.json';
+    const tok = await getAuthToken();
+    if (tok) url += '?auth=' + tok;
+    const r = await fetch(url, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
     if (!r.ok) throw new Error('DB write failed: ' + r.status);
     return r.json();
   },
   async update(path, data) {
-    const r = await fetch(DB_BASE + '/' + path + '.json', { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    let url = DB_BASE + '/' + path + '.json';
+    const tok = await getAuthToken();
+    if (tok) url += '?auth=' + tok;
+    const r = await fetch(url, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
     if (!r.ok) throw new Error('DB update failed: ' + r.status);
     return r.json();
   },
   async push(path, data) {
-    const r = await fetch(DB_BASE + '/' + path + '.json', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    let url = DB_BASE + '/' + path + '.json';
+    const tok = await getAuthToken();
+    if (tok) url += '?auth=' + tok;
+    const r = await fetch(url, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
     if (!r.ok) throw new Error('DB push failed: ' + r.status);
     return r.json();
   }
@@ -681,7 +802,7 @@ let S = {
   teacherCM: null, studentCM: null, teacherActiveTab: 'code',
   lastTeacherRoom: null, outputSource: 'own',
   selectedStudentUid: null, studentsInRoom: {},
-  editorLocked: false
+  editorLocked: false, currentProjectName: null
 };
 
 /* ══════ CODEMIRROR SETUP ══════ */
@@ -783,7 +904,7 @@ function switchLoginTab(tab, btn) {
   document.getElementById('loginStudent').style.display = tab === 'student' ? 'block' : 'none';
 }
 
-/* ══════ TEACHER LOGIN (email + password from DB) ══════ */
+/* ══════ TEACHER LOGIN (Firebase Auth email/password) ══════ */
 async function teacherLogin() {
   const email = document.getElementById('teacherEmail').value.trim().toLowerCase();
   const pass = document.getElementById('teacherPassword').value;
@@ -792,24 +913,30 @@ async function teacherLogin() {
   if (!email || !pass) { errEl.textContent = 'Enter email and password.'; errEl.style.display = 'block'; return; }
 
   try {
-    const allTeachers = await fbRest.get('teachers');
-    if (!allTeachers) { errEl.textContent = 'Account not found.'; errEl.style.display = 'block'; return; }
+    S.role = 'teacher';
+    const cred = await auth.signInWithEmailAndPassword(email, pass);
+    const uid = cred.user.uid;
 
-    let tid = null, teacher = null;
-    for (const [k, v] of Object.entries(allTeachers)) {
-      if (v.email === email) { tid = k; teacher = v; break; }
-    }
-    if (!teacher) { errEl.textContent = 'Account not found.'; errEl.style.display = 'block'; return; }
-    if (teacher.password !== pass) { errEl.textContent = 'Incorrect password.'; errEl.style.display = 'block'; return; }
+    const teacherData = await fbRest.get('teachers/' + uid);
+    if (!teacherData) { S.role = null; await auth.signOut(); errEl.textContent = 'Not registered as a teacher.'; errEl.style.display = 'block'; return; }
 
-    S.teacherSession = { id: tid, name: teacher.name, email: teacher.email, isAdmin: !!teacher.isAdmin };
+    S.teacherSession = { id: uid, name: teacherData.name, email: teacherData.email, isAdmin: !!teacherData.isAdmin };
     localStorage.setItem('teacherSession', JSON.stringify(S.teacherSession));
     S.role = 'teacher';
-    showNav(teacher.name, teacher.name[0]);
+    showNav(teacherData.name, teacherData.name[0]);
     showTeacherDashboard();
   } catch(e) {
+    S.role = null;
     console.error('Teacher login error:', e);
-    errEl.textContent = 'Connection error: ' + e.message;
+    if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
+      errEl.textContent = 'Invalid email or password.';
+    } else if (e.code === 'auth/wrong-password') {
+      errEl.textContent = 'Incorrect password.';
+    } else if (e.code === 'auth/too-many-requests') {
+      errEl.textContent = 'Too many failed attempts. Try again later.';
+    } else {
+      errEl.textContent = 'Login failed: ' + e.message;
+    }
     errEl.style.display = 'block';
   }
 }
@@ -843,8 +970,24 @@ function studentSignIn() {
 }
 
 auth.onAuthStateChanged(async user => {
-  if (!user) return;
-  if (S.teacherSession) return;
+  if (!user) { localStorage.removeItem('teacherSession'); return; }
+  if (S.role) return;
+
+  const savedTeacher = localStorage.getItem('teacherSession');
+  if (savedTeacher) {
+    try {
+      const parsed = JSON.parse(savedTeacher);
+      const teacherData = await fbRest.get('teachers/' + user.uid);
+      if (teacherData) {
+        S.teacherSession = { id: user.uid, name: teacherData.name, email: teacherData.email, isAdmin: !!teacherData.isAdmin };
+        localStorage.setItem('teacherSession', JSON.stringify(S.teacherSession));
+        S.role = 'teacher';
+        showNav(S.teacherSession.name, S.teacherSession.name[0]);
+        showTeacherDashboard();
+        return;
+      }
+    } catch(e) { localStorage.removeItem('teacherSession'); }
+  }
 
   try {
     S.studentUser = user;
@@ -876,8 +1019,7 @@ auth.onAuthStateChanged(async user => {
       return;
     }
   } catch(e) {
-    console.error('Student auth error:', e);
-    alert('Connection error: ' + e.message);
+    console.error('Auth state error:', e);
   }
 });
 
@@ -899,19 +1041,6 @@ function logout() {
   hideNav();
   showScreen('screenLogin');
 }
-
-/* ══════ AUTO-LOGIN CHECK ══════ */
-(function checkSavedSession() {
-  const saved = localStorage.getItem('teacherSession');
-  if (saved) {
-    try {
-      S.teacherSession = JSON.parse(saved);
-      S.role = 'teacher';
-      showNav(S.teacherSession.name, S.teacherSession.name[0]);
-      showTeacherDashboard();
-    } catch(e) { localStorage.removeItem('teacherSession'); }
-  }
-})();
 
 /* ══════ TEACHER: MANAGE STUDENTS ══════ */
 function showTeacherPanel(panel) {
@@ -936,7 +1065,7 @@ async function loadPendingStudents() {
   list.innerHTML = entries.map(([uid, s]) => `
     <div class="admin-item">
       <div class="admin-item-info">
-        ${s.photoURL ? '<img class="admin-item-avatar" src="'+s.photoURL+'" onerror="this.style.display=\'none\'">' : ''}
+        ${safeImgSrc(s.photoURL) ? '<img class="admin-item-avatar" src="'+safeImgSrc(s.photoURL)+'" onerror="this.style.display=\'none\'">' : ''}
         <div class="admin-item-text">
           <div class="admin-item-name">${esc(s.name)}</div>
           <div class="admin-item-email">${esc(s.email)}</div>
@@ -959,7 +1088,7 @@ async function loadApprovedStudents() {
   list.innerHTML = entries.map(([uid, s]) => `
     <div class="admin-item">
       <div class="admin-item-info">
-        ${s.photoURL ? '<img class="admin-item-avatar" src="'+s.photoURL+'" onerror="this.style.display=\'none\'">' : ''}
+        ${safeImgSrc(s.photoURL) ? '<img class="admin-item-avatar" src="'+safeImgSrc(s.photoURL)+'" onerror="this.style.display=\'none\'">' : ''}
         <div class="admin-item-text">
           <div class="admin-item-name">${esc(s.name)}</div>
           <div class="admin-item-email">${esc(s.email)}</div>
@@ -1010,12 +1139,29 @@ async function addTeacher() {
   const email = document.getElementById('newTeacherEmail').value.trim().toLowerCase();
   const pass = document.getElementById('newTeacherPass').value;
   if (!name || !email || !pass) { alert('Fill all fields.'); return; }
-  if (pass.length < 4) { alert('Password must be at least 4 characters.'); return; }
-  await fbRest.push('teachers', { name, email, password: pass, createdAt: {'.sv':'timestamp'} });
-  document.getElementById('newTeacherName').value = '';
-  document.getElementById('newTeacherEmail').value = '';
-  document.getElementById('newTeacherPass').value = '';
-  loadTeachersList();
+  if (pass.length < 6) { alert('Password must be at least 6 characters (Firebase requirement).'); return; }
+
+  try {
+    const tempApp = firebase.initializeApp(firebaseConfig, 'temp_' + Date.now());
+    const tempAuth = tempApp.auth();
+    const cred = await tempAuth.createUserWithEmailAndPassword(email, pass);
+    const newUid = cred.user.uid;
+    await tempAuth.signOut();
+    await tempApp.delete();
+
+    await fbRest.set('teachers/' + newUid, { name, email, createdAt: {'.sv':'timestamp'} });
+
+    document.getElementById('newTeacherName').value = '';
+    document.getElementById('newTeacherEmail').value = '';
+    document.getElementById('newTeacherPass').value = '';
+    loadTeachersList();
+  } catch(e) {
+    if (e.code === 'auth/email-already-in-use') {
+      alert('This email is already registered.');
+    } else {
+      alert('Failed to add teacher: ' + e.message);
+    }
+  }
 }
 
 async function removeTeacher(id, name) {
@@ -1040,7 +1186,7 @@ async function loadAllStudentProjects() {
   list.innerHTML = items.map(s => `
     <div class="student-item" id="sp-${s.uid}">
       <div class="student-header" onclick="document.getElementById('sp-${s.uid}').classList.toggle('open')">
-        ${s.student.photoURL ? '<img class="admin-item-avatar" src="'+s.student.photoURL+'" onerror="this.style.display=\'none\'">' : ''}
+        ${safeImgSrc(s.student.photoURL) ? '<img class="admin-item-avatar" src="'+safeImgSrc(s.student.photoURL)+'" onerror="this.style.display=\'none\'">' : ''}
         <span class="student-name">${esc(s.student.name)}</span>
         <span class="student-count">${s.projects.length} project${s.projects.length!==1?'s':''}</span>
         <svg class="student-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
@@ -1080,10 +1226,10 @@ async function teacherCreateRoom() {
   document.getElementById('roomCodeDisplayT').textContent = S.roomCode;
   document.getElementById('roomCreatedTeacher').style.display = 'block';
   document.getElementById('roomCodeDisplayT').onclick = () => {
-    navigator.clipboard.writeText(S.roomCode).then(() => {
+    (navigator.clipboard ? navigator.clipboard.writeText(S.roomCode) : Promise.reject()).then(() => {
       document.getElementById('roomCodeDisplayT').style.borderColor = 'var(--success)';
       setTimeout(() => document.getElementById('roomCodeDisplayT').style.borderColor = '', 1500);
-    });
+    }).catch(() => { window.prompt('Copy room code:', S.roomCode); });
   };
 }
 
@@ -1201,28 +1347,45 @@ function enterIDE() {
 }
 
 /* ══════ FIREBASE SSE (real-time streaming via REST) ══════ */
-function fbListen(path, callback) {
-  const url = DB_BASE + '/' + path + '.json';
+async function fbListen(path, callback) {
+  const tok = await getAuthToken();
+  let url = DB_BASE + '/' + path + '.json';
+  if (tok) url += '?auth=' + tok;
   const es = new EventSource(url);
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
   es.addEventListener('put', e => {
     try { const d = JSON.parse(e.data); callback(d.data, d.path); } catch(err) {}
   });
   es.addEventListener('patch', e => {
     try { const d = JSON.parse(e.data); callback(d.data, d.path); } catch(err) {}
   });
+  es.onopen = () => { dot.className = 'status-dot status-connected'; txt.textContent = 'Connected'; };
+  es.onerror = () => { dot.className = 'status-dot status-disconnected'; txt.textContent = 'Reconnecting...'; };
   return es;
+}
+
+function cleanupSync() {
+  if (S._syncES) { S._syncES.close(); S._syncES = null; }
+  if (S._studentsES) { S._studentsES.close(); S._studentsES = null; }
+  if (S._studentSyncES) { S._studentSyncES.close(); S._studentSyncES = null; }
+  if (S._lockES) { S._lockES.close(); S._lockES = null; }
+  if (S._teacherChangeHandler) { S.teacherCM.off('change', S._teacherChangeHandler); S._teacherChangeHandler = null; }
+  if (S._studentChangeHandler) { S.studentCM.off('change', S._studentChangeHandler); S._studentChangeHandler = null; }
 }
 
 function setupFirebaseSync() {
   if (!S.roomCode) return;
+  cleanupSync();
 
   if (S.role === 'teacher') {
     fbRest.get('rooms/' + S.roomCode + '/teacherCode').then(v => { if (v && S.teacherCM) S.teacherCM.setValue(v); });
     let t;
-    S.teacherCM.on('change', () => {
+    S._teacherChangeHandler = () => {
       clearTimeout(t);
-      t = setTimeout(() => fbRest.set('rooms/' + S.roomCode + '/teacherCode', S.teacherCM.getValue()), 150);
-    });
+      t = setTimeout(() => fbRest.set('rooms/' + S.roomCode + '/teacherCode', S.teacherCM.getValue()), 500);
+    };
+    S.teacherCM.on('change', S._teacherChangeHandler);
 
     // Listen for all students' code
     S._studentsES = fbListen('rooms/' + S.roomCode + '/students', (data, path) => {
@@ -1259,11 +1422,12 @@ function setupFirebaseSync() {
 
     // Teacher writes to selected student's code
     let st;
-    S.studentCM.on('change', () => {
+    S._studentChangeHandler = () => {
       if (!S.selectedStudentUid) return;
       clearTimeout(st);
-      st = setTimeout(() => fbRest.set('rooms/' + S.roomCode + '/students/' + S.selectedStudentUid + '/code', S.studentCM.getValue()), 150);
-    });
+      st = setTimeout(() => fbRest.set('rooms/' + S.roomCode + '/students/' + S.selectedStudentUid + '/code', S.studentCM.getValue()), 500);
+    };
+    S.studentCM.on('change', S._studentChangeHandler);
 
     // Listen for lock state
     S._lockES = fbListen('rooms/' + S.roomCode + '/locked', v => {
@@ -1291,13 +1455,14 @@ function setupFirebaseSync() {
 
     // Sync student code to Firebase
     let t;
-    S.studentCM.on('change', () => {
+    S._studentChangeHandler = () => {
       clearTimeout(t);
       t = setTimeout(() => {
         fbRest.set('rooms/' + S.roomCode + '/students/' + uid + '/code', S.studentCM.getValue());
         fbRest.update('rooms/' + S.roomCode + '/students/' + uid, { status: 'typing' });
-      }, 150);
-    });
+      }, 500);
+    };
+    S.studentCM.on('change', S._studentChangeHandler);
 
     // Listen for teacher code
     S._syncES = fbListen('rooms/' + S.roomCode + '/teacherCode', v => {
@@ -1415,7 +1580,7 @@ function downloadCode() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = (S.currentProjectId ? 'project' : 'code') + '.py';
+  a.download = (S.currentProjectName || 'code') + '.py';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -1480,7 +1645,7 @@ def _browser_input(p=''):
         sys.stdout.write(str(p))
     result = js_prompt(str(p) if p else 'Enter input:')
     if result is None:
-        result = ''
+        raise EOFError('Input cancelled')
     sys.stdout.write(result + '\\n')
     return result
 builtins.input = _browser_input
@@ -1509,8 +1674,18 @@ function runCode() {
   }
 
   try {
-    S.pyodide.runPython('import sys\nfrom io import StringIO\nsys.stdout = StringIO()\nsys.stderr = StringIO()');
+    S.pyodide.runPython('import sys, time\nfrom io import StringIO\nsys.stdout = StringIO()\nsys.stderr = StringIO()');
+    S.pyodide.runPython(`
+_t0 = time.time()
+def _guard(frame, event, arg):
+    if time.time() - _t0 > 10:
+        sys.settrace(None)
+        raise TimeoutError('Program took too long (possible infinite loop). Check your while/for loops.')
+    return _guard
+sys.settrace(_guard)
+`);
     S.pyodide.runPython(code);
+    S.pyodide.runPython('sys.settrace(None)');
     const so = S.pyodide.runPython('sys.stdout.getvalue()'), se = S.pyodide.runPython('sys.stderr.getvalue()');
     et.textContent = ((performance.now()-t0)/1000).toFixed(3)+'s';
     if (so) out.textContent = so;
@@ -1547,13 +1722,15 @@ async function saveProject() {
     if (!name) return;
     const result = await fbRest.push('projects/'+uid, { name, code, createdAt: {'.sv':'timestamp'}, updatedAt: {'.sv':'timestamp'} });
     S.currentProjectId = result.name;
+    S.currentProjectName = name;
   }
   showSaveIndicator();
 }
 
 function setupAutoSave() {
   if (!S.studentCM) return;
-  S.studentCM.on('change', () => {
+  if (S._autoSaveHandler) { S.studentCM.off('change', S._autoSaveHandler); }
+  S._autoSaveHandler = () => {
     if (!S.currentProjectId || !S.studentUser) return;
     clearTimeout(S.autoSaveTimer);
     S.autoSaveTimer = setTimeout(() => {
@@ -1561,7 +1738,8 @@ function setupAutoSave() {
       fbRest.update('projects/'+S.studentUser.uid+'/'+S.currentProjectId, { code, updatedAt: {'.sv':'timestamp'} });
       showSaveIndicator();
     }, 3000);
-  });
+  };
+  S.studentCM.on('change', S._autoSaveHandler);
 }
 
 function showSaveIndicator() {
@@ -1592,6 +1770,7 @@ async function openMyProject(pid) {
   const d = await fbRest.get('projects/'+S.studentUser.uid+'/'+pid);
   if (!d) return;
   S.currentProjectId = pid;
+  S.currentProjectName = d.name || 'project';
   S.ideMode = 'solo';
   enterIDE();
   setTimeout(() => { if (S.studentCM) S.studentCM.setValue(d.code || ''); }, 100);
@@ -1615,15 +1794,13 @@ async function deleteProject(id, name) {
 function leaveIDE() {
   if (S._presenceUid && S.roomCode) fbRest.set('rooms/'+S.roomCode+'/presence/'+S._presenceUid, null);
   if (S.role === 'teacher' && S.roomCode) S.lastTeacherRoom = S.roomCode;
-  if (S._syncES) S._syncES.close();
+  cleanupSync();
   if (S._presenceES) S._presenceES.close();
-  if (S._studentsES) S._studentsES.close();
-  if (S._studentSyncES) S._studentSyncES.close();
-  if (S._lockES) S._lockES.close();
   if (S._presenceHeartbeat) clearInterval(S._presenceHeartbeat);
-  S._syncES = null; S._presenceES = null; S._presenceUid = null; S._presenceHeartbeat = null;
-  S._studentsES = null; S._studentSyncES = null; S._lockES = null;
-  S.roomRef = null; S.presenceRef = null; S.roomCode = null; S.currentProjectId = null; S.ideMode = null;
+  if (S._autoSaveHandler && S.studentCM) { S.studentCM.off('change', S._autoSaveHandler); S._autoSaveHandler = null; }
+  S._presenceES = null; S._presenceUid = null; S._presenceHeartbeat = null;
+  S.roomRef = null; S.presenceRef = null; S.roomCode = null;
+  S.currentProjectId = null; S.currentProjectName = null; S.ideMode = null;
   S.selectedStudentUid = null; S.studentsInRoom = {}; S.editorLocked = false;
   if (S.teacherCM) S.teacherCM.setValue('');
   if (S.studentCM) S.studentCM.setValue('');
@@ -1635,7 +1812,17 @@ function leaveIDE() {
 /* ══════ HELPERS ══════ */
 function genCode() { const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let r=''; for(let i=0;i<6;i++) r+=c[Math.floor(Math.random()*c.length)]; return r; }
 function esc(t) { const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+function safeImgSrc(url) { if (!url) return ''; try { const u = new URL(url); if (u.protocol === 'https:') return esc(url); } catch(e) {} return ''; }
 function formatDate(ts) { if(!ts) return ''; const d=new Date(ts),n=new Date(),df=n-d; if(df<60000) return 'just now'; if(df<3600000) return Math.floor(df/60000)+'m ago'; if(df<86400000) return Math.floor(df/3600000)+'h ago'; return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:d.getFullYear()!==n.getFullYear()?'numeric':undefined}); }
+
+/* ══════ CLEANUP ON PAGE CLOSE ══════ */
+window.addEventListener('beforeunload', () => {
+  if (S._presenceUid && S.roomCode) {
+    const url = DB_BASE + '/rooms/' + S.roomCode + '/presence/' + S._presenceUid + '.json';
+    navigator.sendBeacon(url.replace('.json', '.json?x-http-method-override=DELETE'), '');
+    fetch(url, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: 'null', keepalive: true });
+  }
+});
 
 /* ══════ KEYBOARD SHORTCUTS ══════ */
 document.addEventListener('keydown', e => {
