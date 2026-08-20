@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#126e5d" />
+    <title>Typing Lab | Roboden</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="icon" type="image/png" href="images/roboden-logo.png" />
+    <link rel="stylesheet" href="typing-lab.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="student-portal.html" aria-label="Roboden learning hub">
+          <img class="brand-logo" src="images/roboden-logo.png" alt="Roboden" />
+          <span>typing<span>lab</span><small>by Roboden</small></span>
+        </a>
+        <nav class="side-nav" aria-label="Main navigation">
+          <button class="nav-item active" data-view="dashboard"><span class="nav-icon">▦</span>Typing home</button>
+          <button class="nav-item" data-view="practice"><span class="nav-icon">⌨</span>Practice</button>
+          <button class="nav-item" data-view="test"><span class="nav-icon">◴</span>Typing test</button>
+          <button class="nav-item" data-view="progress"><span class="nav-icon">↗</span>Progress</button>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="tiny-streak"><span>◆</span><strong id="sidebarStreak">0</strong> day streak</div>
+          <button class="student-card" id="openProfile" aria-label="Open profile">
+            <span class="avatar" id="avatarInitial">S</span>
+            <span><strong id="studentName">Student</strong><small>Beginner journey</small></span>
+            <span class="chevron">›</span>
+          </button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="viewEyebrow">YOUR LEARNING SPACE</p>
+            <h1 id="viewTitle">Good afternoon, Student!</h1>
+          </div>
+          <div class="top-actions">
+            <button class="icon-button" id="soundButton" aria-label="Toggle sound">♬</button>
+            <button class="help-button" id="helpButton">?</button>
+          </div>
+        </header>
+
+        <section class="view active" id="dashboardView">
+          <div class="today-card">
+            <div class="today-copy">
+              <span class="today-label">TODAY'S QUEST</span>
+              <h2 id="todayTitle">Home row explorers</h2>
+              <p id="todayDescription">Meet the keys your fingers will visit most often.</p>
+              <div class="lesson-meta"><span>Day <strong id="todayDay">1</strong> of 30</span><i></i><span>6 min</span><i></i><span>Accuracy first</span></div>
+              <button class="primary-button" id="startLesson">Start today's lesson <span>→</span></button>
+            </div>
+            <div class="today-art" aria-hidden="true">
+              <div class="spark spark-one">✦</div><div class="spark spark-two">+</div>
+              <div class="key-stack"><span>F</span><span>J</span><b>home row</b></div>
+            </div>
+          </div>
+
+          <div class="section-heading">
+            <div><p class="eyebrow">YOUR SNAPSHOT</p><h2>Little steps add up.</h2></div>
+            <span class="week-label">THIS WEEK</span>
+          </div>
+          <div class="metric-grid">
+            <article class="metric-card mint"><span class="metric-icon">◆</span><p>Practice streak</p><strong><span id="streakValue">0</span> <small>days</small></strong><em id="streakMessage">Start your first quest today!</em></article>
+            <article class="metric-card yellow"><span class="metric-icon">◎</span><p>Best accuracy</p><strong><span id="accuracyValue">--</span><small id="accuracySuffix">%</small></strong><em>Slow and steady is strong.</em></article>
+            <article class="metric-card coral"><span class="metric-icon">↗</span><p>Best speed</p><strong><span id="wpmValue">--</span><small> WPM</small></strong><em>Words per minute</em></article>
+            <article class="metric-card blue"><span class="metric-icon">✓</span><p>Lessons complete</p><strong><span id="lessonValue">0</span><small> / 30</small></strong><em>Keep the rhythm going.</em></article>
+          </div>
+
+          <div class="dashboard-grid">
+            <article class="panel path-panel">
+              <div class="panel-head"><div><p class="eyebrow">YOUR PATH</p><h3>30-day journey</h3></div><button class="text-button" id="seePath">See all</button></div>
+              <div class="path-line" id="pathLine"></div>
+              <div class="path-legend"><span><i class="legend done"></i>Complete</span><span><i class="legend current"></i>Today</span><span><i class="legend future"></i>Coming up</span></div>
+            </article>
+            <article class="panel key-panel">
+              <div class="panel-head"><div><p class="eyebrow">SMART PRACTICE</p><h3>Your focus keys</h3></div><span class="mini-badge" id="keyBadge">Ready</span></div>
+              <div class="focus-keys" id="focusKeys"><span class="focus-key">F</span><span class="focus-key">J</span><div><strong>Start with home row</strong><p>Your practice will adapt to you.</p></div></div>
+              <button class="secondary-button" id="quickPractice">Quick key practice <span>→</span></button>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" id="practiceView">
+          <div class="practice-header"><div><p class="eyebrow" id="practiceEyebrow">DAY 1 · HOME ROW</p><h2 id="practiceTitle">Find your home keys</h2><p id="practiceInstruction">Keep your fingers resting on A S D F and J K L ;. Type the highlighted letters.</p></div><button class="outline-button" id="exitPractice">Exit lesson</button></div>
+          <div class="lesson-progress"><span id="stepLabel">Step 1 of 3</span><div><i id="lessonProgress"></i></div></div>
+          <article class="typing-card">
+            <div class="typing-topline"><span class="status-chip" id="typingStatus">READY WHEN YOU ARE</span><span class="timer" id="practiceTimer">00:00</span></div>
+            <p class="target-text" id="targetText" aria-live="polite"></p>
+            <div class="type-field" id="typeField" tabindex="0" role="textbox" aria-label="Type the practice text" aria-multiline="false"><span class="placeholder">Click here, then start typing...</span></div>
+            <div class="typing-stats"><span><b id="liveWpm">0</b> WPM</span><span><b id="liveAccuracy">100</b>% accuracy</span><span><b id="liveErrors">0</b> errors</span></div>
+          </article>
+          <section class="keyboard-section"><div class="keyboard-heading"><div><p class="eyebrow">KEYBOARD GUIDE</p><h3 id="keyboardPrompt">Your next key is <span>F</span></h3></div><span class="key-tip">Use the color zones to find each finger.</span></div><div class="keyboard" id="keyboard" aria-label="Visual keyboard"></div></section>
+          <div class="practice-actions"><button class="text-button" id="restartPractice">↻ Restart</button><button class="primary-button" id="continueLesson" disabled>Finish step <span>→</span></button></div>
+        </section>
+
+        <section class="view" id="testView">
+          <div class="test-intro" id="testIntro"><p class="eyebrow">SKILL CHECK</p><h2>A tiny test, just for you.</h2><p>Type for one minute. Your score is private, and it only competes with your own progress.</p><div class="test-options"><button class="test-option selected" data-test="60"><strong>60 seconds</strong><span>Build your pace</span></button><button class="test-option" data-test="passage"><strong>Short passage</strong><span>Focus on accuracy</span></button></div><button class="primary-button" id="startTest">Start test <span>→</span></button></div>
+          <div class="test-run hidden" id="testRun"><div class="test-run-head"><div><p class="eyebrow">TYPING TEST</p><h2 id="testModeTitle">60 second test</h2></div><span class="test-clock" id="testClock">01:00</span></div><article class="typing-card test-card"><p class="target-text" id="testTarget"></p><div class="type-field" id="testField" tabindex="0" role="textbox" aria-label="Type the test text"><span class="placeholder">Click here, then start typing...</span></div><div class="typing-stats"><span><b id="testWpm">0</b> WPM</span><span><b id="testAccuracy">100</b>% accuracy</span><span><b id="testErrors">0</b> errors</span></div></article><button class="outline-button" id="stopTest">Finish test</button></div>
+        </section>
+
+        <section class="view" id="progressView">
+          <div class="progress-hero"><p class="eyebrow">YOUR PROGRESS</p><h2>Your skills are growing.</h2><p>Every session helps your fingers remember where to go next.</p></div>
+          <div class="progress-layout"><article class="panel chart-panel"><div class="panel-head"><div><p class="eyebrow">RECENT PRACTICE</p><h3>Accuracy trend</h3></div><span class="chart-average" id="chartAverage">No sessions yet</span></div><div class="simple-chart" id="simpleChart"></div></article><article class="panel"><div class="panel-head"><div><p class="eyebrow">KEY COACH</p><h3>Keys to revisit</h3></div></div><div class="key-coach" id="keyCoach"><p>Complete a practice session and your personal key coach will appear here.</p></div></article></div>
+          <article class="panel history-panel"><div class="panel-head"><div><p class="eyebrow">SESSION HISTORY</p><h3>Your latest wins</h3></div></div><div id="historyList" class="history-list"><p class="empty-history">Your completed practice sessions will appear here.</p></div></article>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="onboardingModal" aria-modal="true" role="dialog">
+      <div class="onboarding-card"><span class="welcome-mark">K</span><p class="eyebrow">WELCOME TO KEYQUEST</p><h2>Let's make typing feel easy.</h2><p>We'll guide you one key at a time, for a few minutes each day.</p><label for="nameInput">What should we call you?</label><input id="nameInput" maxlength="18" placeholder="Your first name" autocomplete="given-name" /><button class="primary-button wide-button" id="beginJourney">Begin my journey <span>→</span></button><small>Your progress stays on this device until Firebase is connected.</small></div>
+    </div>
+    <div class="modal-backdrop hidden" id="resultModal" aria-modal="true" role="dialog"><div class="result-card"><span class="result-star">✦</span><p class="eyebrow" id="resultEyebrow">LESSON COMPLETE</p><h2 id="resultTitle">Nice work!</h2><div class="result-metrics"><div><strong id="resultWpm">0</strong><span>WPM</span></div><div><strong id="resultAccuracy">100%</strong><span>accuracy</span></div><div><strong id="resultErrors">0</strong><span>errors</span></div></div><p id="resultMessage">You are building an excellent foundation.</p><button class="primary-button wide-button" id="resultAction">Continue <span>→</span></button></div></div>
+    <div class="toast hidden" id="toast"></div>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="typing-lab.js"></script>
+    <script src="typing-sync.js"></script>
+  </body>
+</html>

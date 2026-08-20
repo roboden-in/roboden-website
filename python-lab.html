@@ -35,7 +35,7 @@
   --shadow-lg:0 12px 40px rgba(0,0,0,0.6),0 4px 12px rgba(0,0,0,0.3);
   --radius:10px;--radius-lg:16px;--radius-full:9999px;
 }
-html{scroll-behavior:smooth;}
+html{scroll-behavior:smooth;zoom:1.05;}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -189,11 +189,11 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 .dash-card h3{font-size:.95rem;font-weight:700;margin-bottom:4px;color:#fff;}
 .dash-card p{font-size:.8rem;color:rgba(255,255,255,0.4);margin-bottom:0;line-height:1.5;}
 .ic-room{background:rgba(124,58,237,.12);color:var(--accent);}
-.ic-students{background:rgba(16,185,129,.1);color:#34d399;}
-.ic-projects{background:rgba(245,158,11,.1);color:#fbbf24;}
-.ic-teachers{background:rgba(255,255,255,.06);color:rgba(255,255,255,0.7);}
+.ic-students{background:rgba(124,58,237,.08);color:var(--purple-l);}
+.ic-projects{background:rgba(124,58,237,.08);color:var(--purple-l);}
+.ic-teachers{background:rgba(124,58,237,.08);color:var(--purple-l);}
 .ic-code{background:rgba(124,58,237,.12);color:var(--accent);}
-.ic-join{background:rgba(16,185,129,.1);color:#34d399;}
+.ic-join{background:rgba(124,58,237,.08);color:var(--purple-l);}
 
 /* ADMIN PANELS */
 .admin-panel{text-align:left;margin-top:20px;}
@@ -355,6 +355,8 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 .output-area{flex:1;background:#11111b;padding:12px 16px;font-family:var(--mono);font-size:13px;line-height:1.65;overflow:auto;white-space:pre-wrap;color:rgba(255,255,255,0.72);}
 .output-area .error{color:#f87171;}
 .output-area .system{color:#a78bfa;font-style:italic;}
+.output-area .term-input{background:transparent;border:none;outline:none;color:#fff;font-family:var(--mono);font-size:13px;line-height:1.65;padding:0;margin:0;caret-color:#a78bfa;vertical-align:baseline;}
+.output-area .term-echo{color:#fff;}
 
 .loading-overlay{position:absolute;inset:0;background:rgba(17,17,27,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;gap:12px;}
 .loading-overlay.hidden{display:none;}
@@ -461,8 +463,8 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
           <div class="mockup-output">
             <div class="mockup-panel-head"><span class="mdot" style="background:#a78bfa"></span> Output</div>
             <div class="mockup-output-text">
-              <span class="out-line">Your name: <span style="color:#a78bfa">Surya</span></span>
-              <span class="out-line">Hello, Surya!</span>
+              <span class="out-line">Your name: <span style="color:#a78bfa">Aarna</span></span>
+              <span class="out-line">Hello, Aarna!</span>
             </div>
           </div>
         </div>
@@ -530,22 +532,22 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 
     <div class="dash-grid">
       <div class="dash-card" onclick="teacherCreateRoom()">
-        <div class="dash-card-icon ic-room"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></div>
+        <div class="dash-card-icon ic-room"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><circle cx="12" cy="10" r="2" fill="currentColor" opacity="0.3"/></svg></div>
         <h3>Create Room</h3>
         <p>Start a live coding session</p>
       </div>
       <div class="dash-card" id="studentRequestsCard" onclick="showTeacherPanel('students')">
-        <div class="dash-card-icon ic-students"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+        <div class="dash-card-icon ic-students"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/><path d="M19 8v6"/><path d="M16 11h6"/></svg></div>
         <h3>Student Requests</h3>
         <p id="pendingCountLabel">Approve new students</p>
       </div>
       <div class="dash-card" onclick="showTeacherPanel('projects')">
-        <div class="dash-card-icon ic-projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
+        <div class="dash-card-icon ic-projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M2 8h20"/><path d="M10 4v4"/></svg></div>
         <h3>Student Projects</h3>
         <p>Review all student work</p>
       </div>
       <div class="dash-card" id="manageTeachersCard" onclick="showTeacherPanel('teachers')">
-        <div class="dash-card-icon ic-teachers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15c-4 0-8 2-8 4v2h16v-2c0-2-4-4-8-4z"/><circle cx="12" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></div>
+        <div class="dash-card-icon ic-teachers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-1a4 4 0 0 0-3-3.87"/><circle cx="12" cy="7" r="4"/><path d="M4 21v-1a4 4 0 0 1 4-4h4"/><path d="M18 14l2 2 4-4"/></svg></div>
         <h3>Manage Teachers</h3>
         <p>Add or remove teachers</p>
       </div>
@@ -614,12 +616,12 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 
     <div class="dash-grid">
       <div class="dash-card" onclick="studentStartCoding()">
-        <div class="dash-card-icon ic-code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+        <div class="dash-card-icon ic-code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
         <h3>My Code</h3>
         <p>Practice Python on your own</p>
       </div>
       <div class="dash-card" onclick="showJoinRoom()">
-        <div class="dash-card-icon ic-join"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></div>
+        <div class="dash-card-icon ic-join"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg></div>
         <h3>Join Room</h3>
         <p>Enter live class session</p>
       </div>
@@ -716,7 +718,7 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
         <span id="execTime" style="font-size:.68rem;color:rgba(255,255,255,0.35);font-family:var(--mono);"></span>
       </div>
     </div>
-    <div class="output-area" id="outputArea"><span class="system">Python Lab ready. Press Run or Ctrl+Enter to execute your code.</span></div>
+    <div class="output-area" id="outputArea" onclick="if(S._activeInput)S._activeInput.focus();"><span class="system">Python Lab ready. Press Run or Ctrl+Enter to execute your code.</span></div>
   </div>
   <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div><div class="loading-text" id="loadingText">Loading Python engine...</div></div>
   <div class="status-bar"><span><span class="status-dot status-connected" id="statusDot"></span><span id="statusText">Connected</span></span><span id="pyodideVersion">Pyodide loading...</span></div>
@@ -1388,10 +1390,9 @@ function setupFirebaseSync() {
     S.teacherCM.on('change', S._teacherChangeHandler);
 
     // Listen for all students' code
-    S._studentsES = fbListen('rooms/' + S.roomCode + '/students', (data, path) => {
+    fbListen('rooms/' + S.roomCode + '/students', (data, path) => {
       if (!data) return;
       if (path === '/') {
-        // Full data
         for (const [uid, val] of Object.entries(data)) {
           S.studentsInRoom[uid] = S.studentsInRoom[uid] || {};
           if (val.code !== undefined) S.studentsInRoom[uid].code = val.code;
@@ -1399,7 +1400,6 @@ function setupFirebaseSync() {
           if (val.name !== undefined) S.studentsInRoom[uid].name = val.name;
         }
       } else {
-        // Partial update like /uid/code or /uid
         const parts = path.split('/').filter(Boolean);
         if (parts.length === 1) {
           const uid = parts[0];
@@ -1418,7 +1418,7 @@ function setupFirebaseSync() {
           S.studentCM.setValue(sv);
         }
       }
-    });
+    }).then(es => { S._studentsES = es; });
 
     // Teacher writes to selected student's code
     let st;
@@ -1430,10 +1430,10 @@ function setupFirebaseSync() {
     S.studentCM.on('change', S._studentChangeHandler);
 
     // Listen for lock state
-    S._lockES = fbListen('rooms/' + S.roomCode + '/locked', v => {
+    fbListen('rooms/' + S.roomCode + '/locked', v => {
       S.editorLocked = !!v;
       updateLockUI();
-    });
+    }).then(es => { S._lockES = es; });
 
   } else {
     // Student
@@ -1465,17 +1465,15 @@ function setupFirebaseSync() {
     S.studentCM.on('change', S._studentChangeHandler);
 
     // Listen for teacher code
-    S._syncES = fbListen('rooms/' + S.roomCode + '/teacherCode', v => {
+    fbListen('rooms/' + S.roomCode + '/teacherCode', v => {
       if (v != null && S.teacherCM && v !== S.teacherCM.getValue()) S.teacherCM.setValue(v);
-    });
+    }).then(es => { S._syncES = es; });
 
-    // Listen for own code changes (teacher edits)
-    S._studentSyncES = fbListen('rooms/' + S.roomCode + '/students/' + uid + '/code', v => {
+    fbListen('rooms/' + S.roomCode + '/students/' + uid + '/code', v => {
       if (v != null && S.studentCM && v !== S.studentCM.getValue()) S.studentCM.setValue(v);
-    });
+    }).then(es => { S._studentSyncES = es; });
 
-    // Listen for lock state
-    S._lockES = fbListen('rooms/' + S.roomCode + '/locked', v => {
+    fbListen('rooms/' + S.roomCode + '/locked', v => {
       S.editorLocked = !!v;
       const overlay = document.getElementById('lockedOverlay');
       if (S.editorLocked) {
@@ -1485,7 +1483,7 @@ function setupFirebaseSync() {
         S.studentCM.setOption('readOnly', false);
         overlay.style.display = 'none';
       }
-    });
+    }).then(es => { S._lockES = es; });
   }
 }
 
@@ -1606,11 +1604,11 @@ async function setupPresence() {
       }
     }
   }
-  S._presenceES = fbListen('rooms/' + S.roomCode + '/presence', p => {
+  fbListen('rooms/' + S.roomCode + '/presence', p => {
     if (p && typeof p === 'object') {
       document.getElementById('userCount').textContent = Object.keys(p).length;
     }
-  });
+  }).then(es => { S._presenceES = es; });
 }
 
 /* ══════ PYODIDE ══════ */
@@ -1625,36 +1623,156 @@ async function initPyodide() {
     lt.textContent = 'Setting up environment...';
     S.pyodide.runPython('import sys\nfrom io import StringIO');
     S.pyodideReady = true;
-    setupInputSupport();
+    setupRuntime();
     document.getElementById('btnRun').disabled = false;
     document.getElementById('pyodideVersion').textContent = 'Python ' + S.pyodide.runPython('import sys; sys.version.split()[0]');
     overlay.classList.add('hidden');
   } catch(e) { lt.textContent = 'Failed to load Python. Refresh page.'; console.error(e); }
 }
 
-/* ══════ INPUT() SUPPORT ══════ */
-function setupInputSupport() {
+/* ══════ RUNTIME: streaming terminal + inline input ══════ */
+function termWrite(text, isErr) {
+  const out = document.getElementById('outputArea');
+  if (!out) return;
+  S._runWrote = true;
+  const span = document.createElement('span');
+  if (isErr) span.className = 'error';
+  span.textContent = text;
+  out.appendChild(span);
+  out.scrollTop = out.scrollHeight;
+}
+
+function termAsk() {
+  return new Promise(resolve => {
+    const out = document.getElementById('outputArea');
+    const inp = document.createElement('input');
+    inp.className = 'term-input';
+    inp.type = 'text';
+    inp.spellcheck = false;
+    inp.autocomplete = 'off';
+    inp.setAttribute('aria-label', 'Program input');
+    inp.size = 1;
+    out.appendChild(inp);
+    inp.focus();
+    out.scrollTop = out.scrollHeight;
+    S._activeInput = inp;
+    const grow = () => { inp.size = Math.max(1, inp.value.length + 1); };
+    const submit = () => {
+      const v = inp.value;
+      inp.removeEventListener('keydown', onKey);
+      inp.removeEventListener('input', grow);
+      const echo = document.createElement('span');
+      echo.className = 'term-echo';
+      echo.textContent = v + '\n';
+      inp.replaceWith(echo);
+      S._activeInput = null;
+      S._runWrote = true;
+      out.scrollTop = out.scrollHeight;
+      resolve(v);
+    };
+    const onKey = e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } };
+    inp.addEventListener('keydown', onKey);
+    inp.addEventListener('input', grow);
+  });
+}
+
+function setupRuntime() {
   if (!S.pyodideReady) return;
+  window.__pyTermWrite = termWrite;
+  window.__pyAsk = termAsk;
   S.pyodide.runPython(`
-import builtins
-from js import prompt as js_prompt
-_orig_input = builtins.input
-def _browser_input(p=''):
-    import sys
-    if p:
-        sys.stdout.write(str(p))
-    result = js_prompt(str(p) if p else 'Enter input:')
-    if result is None:
+import sys, ast, time, builtins, traceback, linecache
+from js import __pyTermWrite as _js_write, __pyAsk as _js_ask
+
+class _TermOut:
+    def __init__(self, is_err):
+        self.is_err = is_err
+    def write(self, s):
+        if s:
+            _js_write(s, self.is_err)
+        return len(s)
+    def flush(self):
+        pass
+    def isatty(self):
+        return False
+
+_guard_state = [0.0]
+
+async def __ainput(prompt=''):
+    if prompt:
+        sys.stdout.write(str(prompt))
+    res = await _js_ask()
+    _guard_state[0] = time.time()
+    if res is None:
         raise EOFError('Input cancelled')
-    sys.stdout.write(result + '\\n')
-    return result
-builtins.input = _browser_input
+    return str(res)
+
+def _sync_input(prompt=''):
+    if prompt:
+        sys.stdout.write(str(prompt))
+    from js import prompt as _p
+    r = _p(str(prompt) if prompt else 'Enter input:')
+    if r is None:
+        raise EOFError('Input cancelled')
+    sys.stdout.write(str(r) + '\\n')
+    return str(r)
+builtins.input = _sync_input
+
+class _InputT(ast.NodeTransformer):
+    def visit_Call(self, node):
+        self.generic_visit(node)
+        if isinstance(node.func, ast.Name) and node.func.id == 'input':
+            new = ast.Await(value=ast.Call(
+                func=ast.Name(id='__ainput', ctx=ast.Load()),
+                args=node.args, keywords=node.keywords))
+            return ast.copy_location(new, node)
+        return node
+
+def _print_user_tb(exc):
+    frames = [f for f in traceback.extract_tb(exc.__traceback__) if f.filename == '<program>']
+    parts = []
+    if frames:
+        parts.append('Traceback (most recent call last):\\n')
+        parts.extend(traceback.format_list(frames))
+    parts.extend(traceback.format_exception_only(type(exc), exc))
+    sys.stderr.write(''.join(parts))
+
+async def __run_user_code(src):
+    old_out, old_err = sys.stdout, sys.stderr
+    sys.stdout = _TermOut(False)
+    sys.stderr = _TermOut(True)
+    linecache.cache['<program>'] = (len(src), None, src.splitlines(keepends=True), '<program>')
+    _guard_state[0] = time.time()
+    def _guard(frame, event, arg):
+        if time.time() - _guard_state[0] > 10:
+            sys.settrace(None)
+            raise TimeoutError('Program took too long (possible infinite loop). Check your while/for loops.')
+        return _guard
+    ok = True
+    try:
+        tree = _InputT().visit(ast.parse(src))
+        ast.fix_missing_locations(tree)
+        code_obj = compile(tree, '<program>', 'exec', flags=ast.PyCF_ALLOW_TOP_LEVEL_AWAIT)
+        ns = {'__name__': '__main__', '__ainput': __ainput}
+        sys.settrace(_guard)
+        result = eval(code_obj, ns)
+        if result is not None:
+            await result
+    except BaseException as e:
+        ok = False
+        sys.settrace(None)
+        _print_user_tb(e)
+    finally:
+        sys.settrace(None)
+        sys.stdout = old_out
+        sys.stderr = old_err
+    return ok
 `);
 }
 
 /* ══════ RUN CODE ══════ */
-function runCode() {
-  if (!S.pyodideReady) return;
+async function runCode() {
+  if (!S.pyodideReady || S._running) return;
   let code;
   if (S.ideMode === 'solo') {
     code = S.studentCM.getValue();
@@ -1666,6 +1784,8 @@ function runCode() {
   const out = document.getElementById('outputArea');
   const btn = document.getElementById('btnRun');
   const et = document.getElementById('execTime');
+  S._running = true;
+  S._runWrote = false;
   btn.disabled = true; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><circle cx="12" cy="12" r="3"/></svg> Running...'; out.innerHTML = '';
   const t0 = performance.now();
 
@@ -1673,34 +1793,20 @@ function runCode() {
     fbRest.update('rooms/' + S.roomCode + '/students/' + S.studentUser.uid, { status: 'running' });
   }
 
+  let ok = true;
   try {
-    S.pyodide.runPython('import sys, time\nfrom io import StringIO\nsys.stdout = StringIO()\nsys.stderr = StringIO()');
-    S.pyodide.runPython(`
-_t0 = time.time()
-def _guard(frame, event, arg):
-    if time.time() - _t0 > 10:
-        sys.settrace(None)
-        raise TimeoutError('Program took too long (possible infinite loop). Check your while/for loops.')
-    return _guard
-sys.settrace(_guard)
-`);
-    S.pyodide.runPython(code);
-    S.pyodide.runPython('sys.settrace(None)');
-    const so = S.pyodide.runPython('sys.stdout.getvalue()'), se = S.pyodide.runPython('sys.stderr.getvalue()');
-    et.textContent = ((performance.now()-t0)/1000).toFixed(3)+'s';
-    if (so) out.textContent = so;
-    if (se) out.innerHTML += '<span class="error">'+esc(se)+'</span>';
-    if (!so && !se) out.innerHTML = '<span class="system">Program finished with no output.</span>';
-    if (S.role === 'student' && S.roomCode) {
-      fbRest.update('rooms/' + S.roomCode + '/students/' + S.studentUser.uid, { status: 'done' });
-    }
+    S.pyodide.globals.set('__user_src', code);
+    ok = await S.pyodide.runPythonAsync('await __run_user_code(__user_src)');
   } catch(e) {
-    et.textContent = ((performance.now()-t0)/1000).toFixed(3)+'s';
-    out.innerHTML += '<span class="error">'+esc(e.message)+'</span>';
-    if (S.role === 'student' && S.roomCode) {
-      fbRest.update('rooms/' + S.roomCode + '/students/' + S.studentUser.uid, { status: 'error' });
-    }
+    ok = false;
+    termWrite(e.message, true);
   }
+  et.textContent = ((performance.now()-t0)/1000).toFixed(3)+'s';
+  if (ok && !S._runWrote) out.innerHTML = '<span class="system">Program finished with no output.</span>';
+  if (S.role === 'student' && S.roomCode) {
+    fbRest.update('rooms/' + S.roomCode + '/students/' + S.studentUser.uid, { status: ok ? 'done' : 'error' });
+  }
+  S._running = false;
   btn.disabled = false; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run';
 }
 
