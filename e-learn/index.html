@@ -800,6 +800,19 @@ function loadFacultyDashboard(user, data) {
       });
     }
 
+    // 6. Auto-discover from Live Rooms
+    if (rawRooms && typeof rawRooms === 'object') {
+      Object.values(rawRooms).forEach(r => {
+        if (r && r.students && typeof r.students === 'object') {
+          Object.entries(r.students).forEach(([uid, st]) => {
+            if (st && !allUsersCache[uid]) {
+              allUsersCache[uid] = { name: st.name || 'Student (' + uid.slice(0, 6) + ')', email: st.email || 'Enrolled in Live Room', role: 'student', status: 'approved', courses: { python: true, typing: true } };
+            }
+          });
+        }
+      });
+    }
+
     // Standardize roles and active flags
     Object.entries(allUsersCache).forEach(([uid, u]) => {
       if (!u || typeof u !== 'object') return;
@@ -822,12 +835,14 @@ function loadFacultyDashboard(user, data) {
   // Initial immediate render
   mergeAndRender();
 
+  let rawRooms = {};
   // Listeners on all collections with error fallbacks
   db.ref('users').on('value', snap => { rawUsers = snap.val() || {}; mergeAndRender(); }, err => { console.warn('users notice:', err); mergeAndRender(); });
   db.ref('students').on('value', snap => { rawStudents = snap.val() || {}; mergeAndRender(); }, err => { console.warn('students notice:', err); mergeAndRender(); });
   db.ref('teachers').on('value', snap => { rawTeachers = snap.val() || {}; mergeAndRender(); }, err => { console.warn('teachers notice:', err); mergeAndRender(); });
   db.ref('projects').on('value', snap => { allProjectsCache = snap.val() || {}; mergeAndRender(); }, err => { console.warn('projects notice:', err); mergeAndRender(); });
   db.ref('typingProgress').on('value', snap => { typingProgressCache = snap.val() || {}; mergeAndRender(); }, err => { console.warn('typingProgress notice:', err); mergeAndRender(); });
+  db.ref('rooms').on('value', snap => { rawRooms = snap.val() || {}; mergeAndRender(); }, () => {});
 }
 
 function renderFacultyPanels() {
