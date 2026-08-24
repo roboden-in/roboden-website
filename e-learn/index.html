@@ -799,10 +799,19 @@ function renderFacultyPanels() {
   });
 
   Object.entries(allUsersCache).forEach(([uid, u]) => {
+    if (!u || typeof u !== 'object') return;
     u.uid = uid;
-    if (u.role === 'admin' || u.role === 'teacher') teachers.push(u);
-    else if (u.status === 'pending') pending.push(u);
-    else if (u.status === 'approved') students.push(u);
+    const email = u.email || '';
+    const isFaculty = u.role === 'admin' || u.role === 'teacher' || email === ADMIN_EMAIL || email.endsWith('@roboden.in');
+
+    if (isFaculty) {
+      teachers.push(u);
+    } else if (u.status === 'pending') {
+      pending.push(u);
+    } else {
+      if (!u.courses) u.courses = { python: true, typing: true };
+      students.push(u);
+    }
   });
 
   $('statStudents').textContent = students.length;
@@ -813,16 +822,19 @@ function renderFacultyPanels() {
   $('studentsChip').textContent = students.length;
   $('teachersChip').textContent = teachers.length;
 
-  // Pending
+  // Pending Requests Table
   $('pendingBody').innerHTML = pending.length ? pending.map(s => `
     <tr>
       <td><div class="cell-user"><div class="cell-avatar">${escapeHtml((s.name || 'S').charAt(0).toUpperCase())}</div><div class="cell-meta"><strong>${escapeHtml(s.name || 'Student')}</strong></div></div></td>
       <td class="mono">${escapeHtml(s.email)}</td>
       <td>${s.createdAt ? escapeHtml(new Date(s.createdAt).toLocaleDateString()) : 'Recent'}</td>
-      <td style="text-align:right"><button class="btn-sm approve" onclick="approveStudent('${escapeHtml(s.uid)}')">Approve</button> <button class="btn-sm reject" onclick="rejectStudent('${escapeHtml(s.uid)}')">Decline</button></td>
-    </tr>`).join('') : '<tr><td colspan="4" class="empty-row">No pending requests.</td></tr>';
+      <td style="text-align:right">
+        <button class="btn-sm approve" onclick="approveStudent('${escapeHtml(s.uid)}')">Approve All Courses</button>
+        <button class="btn-sm reject" onclick="rejectStudent('${escapeHtml(s.uid)}')">Decline</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="4" class="empty-row">No pending student requests.</td></tr>';
 
-  // Students
+  // Approved Students Table (with individual Course Toggles)
   $('studentsBody').innerHTML = students.length ? students.map(s => {
     const pOn = s.courses && s.courses.python;
     const tOn = s.courses && s.courses.typing;
@@ -834,15 +846,15 @@ function renderFacultyPanels() {
     return `
     <tr>
       <td><div class="cell-user"><div class="cell-avatar">${escapeHtml((s.name || 'S').charAt(0).toUpperCase())}</div><div class="cell-meta"><strong>${escapeHtml(s.name || 'Student')}</strong><small>${escapeHtml(s.email)}</small></div></div></td>
-      <td><button class="toggle ${pOn ? 'on' : ''}" onclick="toggleCourse('${escapeHtml(s.uid)}','python',${!pOn})" title="Toggle Python"></button></td>
-      <td><button class="toggle ${tOn ? 'on' : ''}" onclick="toggleCourse('${escapeHtml(s.uid)}','typing',${!tOn})" title="Toggle Typing"></button></td>
+      <td><button class="toggle ${pOn ? 'on' : ''}" onclick="toggleCourse('${escapeHtml(s.uid)}','python',${!pOn})" title="${pOn ? 'Enabled (click to revoke)' : 'Disabled (click to grant)'}"></button></td>
+      <td><button class="toggle ${tOn ? 'on' : ''}" onclick="toggleCourse('${escapeHtml(s.uid)}','typing',${!tOn})" title="${tOn ? 'Enabled (click to revoke)' : 'Disabled (click to grant)'}"></button></td>
       <td class="mono">${escapeHtml(dayStr)}</td>
       <td>${pc > 0 ? `<button class="btn-sm projects" onclick="inspectProjects('${escapeHtml(s.uid)}','${encodeURIComponent(s.name || 'Student')}','${escapeHtml(s.email)}')">&lt;/&gt; ${pc}</button>` : '<span style="color:var(--muted);font-size:12px">0</span>'}</td>
       <td style="text-align:right"><button class="btn-sm revoke" onclick="rejectStudent('${escapeHtml(s.uid)}')">Revoke</button></td>
     </tr>`;
-  }).join('') : '<tr><td colspan="6" class="empty-row">No approved students yet.</td></tr>';
+  }).join('') : '<tr><td colspan="6" class="empty-row">No approved students yet. Approve pending students above.</td></tr>';
 
-  // Faculty
+  // Faculty Table
   $('teachersBody').innerHTML = teachers.length ? teachers.map(t => `
     <tr>
       <td><div class="cell-user"><div class="cell-avatar">${escapeHtml((t.name || 'F').charAt(0).toUpperCase())}</div><div class="cell-meta"><strong>${escapeHtml(t.name || 'Faculty')}</strong></div></div></td>
@@ -852,17 +864,42 @@ function renderFacultyPanels() {
     </tr>`).join('') : '<tr><td colspan="4" class="empty-row">No faculty found.</td></tr>';
 }
 
-/* ── ACTIONS ── */
+/* ── ACTIONS (Optimistic + Realtime) ── */
 window.approveStudent = function(uid) {
-  db.ref('users/' + uid).update({ status: 'approved', courses: { python: true, typing: true } }).then(() => showToast('Student approved.'));
+  if (allUsersCache[uid]) {
+    allUsersCache[uid].status = 'approved';
+    allUsersCache[uid].courses = { python: true, typing: true };
+    renderFacultyPanels();
+  }
+  db.ref('users/' + uid).update({ status: 'approved', courses: { python: true, typing: true } }).then(() => {
+    showToast('Student approved with full course access.');
+  }).catch(err => {
+    showToast('Update notice: ' + err.message);
+  });
 };
+
 window.rejectStudent = function(uid) {
-  if (confirm('Revoke or decline access for this user?')) {
-    db.ref('users/' + uid).update({ status: 'rejected', courses: { python: false, typing: false } }).then(() => showToast('Access revoked.'));
+  if (confirm('Revoke access for this user?')) {
+    if (allUsersCache[uid]) {
+      allUsersCache[uid].status = 'rejected';
+      allUsersCache[uid].courses = { python: false, typing: false };
+      renderFacultyPanels();
+    }
+    db.ref('users/' + uid).update({ status: 'rejected', courses: { python: false, typing: false } }).then(() => {
+      showToast('Access revoked.');
+    });
   }
 };
+
 window.toggleCourse = function(uid, course, val) {
-  db.ref('users/' + uid + '/courses/' + course).set(val).then(() => showToast(course + ' access ' + (val ? 'enabled' : 'disabled') + '.'));
+  if (allUsersCache[uid]) {
+    if (!allUsersCache[uid].courses) allUsersCache[uid].courses = {};
+    allUsersCache[uid].courses[course] = val;
+    renderFacultyPanels();
+  }
+  db.ref('users/' + uid + '/courses/' + course).set(val).then(() => {
+    showToast(course.charAt(0).toUpperCase() + course.slice(1) + ' access ' + (val ? 'granted' : 'revoked') + '.');
+  });
 };
 
 /* ── CODE INSPECTOR ── */
