@@ -58,9 +58,10 @@ body { background: var(--bg); color: var(--ink); font-family: Nunito, Arial, san
 .btn-email-submit:hover { background: var(--primary-dark); }
 
 /* ── LOADING ── */
-.loading-gate { position: fixed; inset: 0; background: var(--bg); display: grid; place-items: center; z-index: 60; }
-.loading-gate img { width: 48px; height: 48px; border-radius: 12px; margin-bottom: 12px; object-fit: contain; }
-.spinner { width: 26px; height: 26px; border: 3px solid var(--line); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; }
+.loading-gate { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 60; }
+.loading-box { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; }
+.loading-gate img { width: 56px; height: 56px; border-radius: 12px; object-fit: contain; margin: 0 auto; display: block; }
+.spinner { width: 30px; height: 30px; border: 3px solid var(--line); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto; display: block; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── APP SHELL ── */
@@ -252,7 +253,7 @@ body { background: var(--bg); color: var(--ink); font-family: Nunito, Arial, san
 
   <!-- LOADING GATE -->
   <div class="loading-gate" id="loadingGate">
-    <div style="text-align:center">
+    <div class="loading-box">
       <img src="images/roboden-logo.png" alt="Roboden">
       <div class="spinner"></div>
     </div>
@@ -517,7 +518,17 @@ $('signOutBtn').addEventListener('click', () => {
 });
 
 /* ── AUTH STATE ── */
+let authResolved = false;
+const authTimeout = setTimeout(() => {
+  if (!authResolved) {
+    $('loadingGate').classList.add('hidden');
+    showLoggedOut();
+  }
+}, 2500);
+
 auth.onAuthStateChanged(user => {
+  authResolved = true;
+  clearTimeout(authTimeout);
   $('loadingGate').classList.add('hidden');
   if (!user) {
     showLoggedOut();
