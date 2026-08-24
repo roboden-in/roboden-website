@@ -3,31 +3,31 @@
     "users": {
       ".read": "auth != null",
       "$uid": {
-        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in')"
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')"
       }
     },
     "students": {
       ".read": "auth != null",
       "$uid": {
-        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in')"
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')"
       }
     },
     "teachers": {
       ".read": "auth != null",
       "$uid": {
-        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in')"
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin')"
       }
     },
     "projects": {
       ".read": "auth != null",
       "$uid": {
-        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in')"
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')"
       }
     },
     "typingProgress": {
       ".read": "auth != null",
       "$uid": {
-        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in')"
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')"
       }
     },
     "rooms": {
