@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#6828c9">
+  <title>E-Learn | Roboden</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="images/roboden-logo.png">
+  <style>
+:root {
+  --primary: #6828c9;
+  --primary-hover: #591fae;
+  --primary-dark: #4f199d;
+  --primary-light: #7c3aed;
+  --primary-tint: #f3edff;
+  --primary-tint-hover: #e8dbff;
+  --ink: #24163d;
+  --muted: #716a82;
+  --line: #e5dff0;
+  --line-subtle: #f0ecf7;
+  --bg: #fbfaff;
+  --card: #fff;
+  --yellow: #ffe99b;
+  --yellow-dark: #8c6815;
+  --coral: #ffd8ce;
+  --blue: #dfe8ff;
+  --mint: #d4f5e2;
+  --green: #16a34a;
+  --shadow: 0 12px 30px rgba(48,28,78,.09);
+  --shadow-sm: 0 2px 8px rgba(48,28,78,.04);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--ink); font-family: Nunito, Arial, sans-serif; font-size: 16px; min-height: 100vh; }
+.hidden { display: none !important; }
+
+/* ── AUTH GATE ── */
+.auth-gate { position: fixed; inset: 0; background: var(--bg); display: grid; place-items: center; z-index: 50; padding: 20px; }
+.auth-card { text-align: center; max-width: 420px; width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 40px 36px; box-shadow: var(--shadow); }
+.auth-card img { width: 56px; height: 56px; border-radius: 12px; margin-bottom: 18px; object-fit: contain; }
+.auth-card h2 { font-size: 24px; font-weight: 900; margin: 0 0 6px; color: var(--ink); }
+.auth-card > p { color: var(--muted); font-size: 14px; margin: 0 0 28px; line-height: 1.5; }
+.auth-error { background: #fff0ee; border: 1px solid #ffd4cc; color: #b44436; padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; text-align: left; margin-bottom: 16px; display: none; }
+.btn-google { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--card); border: 1px solid var(--line); padding: 13px 20px; border-radius: 8px; font: 700 14px Nunito; color: var(--ink); cursor: pointer; transition: border-color .15s, background .15s; }
+.btn-google:hover { border-color: var(--primary); background: var(--primary-tint); }
+.btn-google svg { width: 18px; height: 18px; flex-shrink: 0; }
+.auth-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .8px; }
+.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.email-toggle { background: none; border: none; color: var(--muted); font: 600 12px Nunito; cursor: pointer; transition: color .15s; }
+.email-toggle:hover { color: var(--primary); }
+.email-form { display: none; text-align: left; margin-top: 16px; }
+.email-form.open { display: block; }
+.email-form label { display: block; font-size: 11px; font-weight: 800; color: var(--muted); margin: 12px 0 5px; letter-spacing: .5px; }
+.email-form input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 11px 14px; font: 600 14px Nunito; outline-color: var(--primary); color: var(--ink); }
+.btn-email-submit { width: 100%; margin-top: 14px; border: 0; border-radius: 8px; padding: 12px; background: var(--primary); color: #fff; font: 800 14px Nunito; cursor: pointer; transition: background .15s; }
+.btn-email-submit:hover { background: var(--primary-dark); }
+
+/* ── LOADING ── */
+.loading-gate { position: fixed; inset: 0; background: var(--bg); display: grid; place-items: center; z-index: 60; }
+.loading-gate img { width: 48px; height: 48px; border-radius: 12px; margin-bottom: 12px; object-fit: contain; }
+.spinner { width: 26px; height: 26px; border: 3px solid var(--line); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── APP SHELL ── */
+.app-shell { display: flex; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar { background: #fff; width: 255px; border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: 28px 16px 18px; position: fixed; inset: 0 auto 0 0; z-index: 10; }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--ink); font-size: 22px; font-weight: 900; text-decoration: none; padding: 0 10px 32px; }
+.brand > span:last-child span { color: var(--primary); }
+.brand-logo { width: 36px; height: 36px; object-fit: contain; border-radius: 8px; }
+.brand > span:last-child { line-height: .95; }
+.brand > span:last-child small { display: block; color: var(--muted); font-size: 8px; font-weight: 700; letter-spacing: .06em; margin-top: 5px; }
+.side-nav { display: grid; gap: 6px; }
+.nav-item { border: 0; background: transparent; color: #5a4d6b; font: 700 15px Nunito; display: flex; align-items: center; gap: 13px; padding: 12px; border-radius: 8px; text-align: left; cursor: pointer; transition: background .15s, color .15s; }
+.nav-item:hover, .nav-item.active { background: var(--primary-tint); color: var(--primary); }
+.nav-icon { width: 19px; text-align: center; font: 500 19px "DM Mono"; }
+.sidebar-bottom { margin-top: auto; }
+.sidebar-progress { margin: 0 9px 16px; color: #667c85; font-size: 13px; }
+.sidebar-progress span { color: var(--primary); margin-right: 5px; font-weight: 800; }
+.student-card { width: 100%; border: 0; background: var(--primary-tint); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; text-align: left; color: var(--ink); cursor: default; }
+.student-card strong, .student-card small { display: block; }
+.student-card strong { font-size: 14px; font-weight: 800; }
+.student-card small { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.avatar { width: 34px; height: 34px; background: var(--yellow); border-radius: 50%; display: grid; place-items: center; font-weight: 900; color: var(--yellow-dark); font-size: 13px; flex-shrink: 0; }
+.btn-signout { margin-top: 10px; width: 100%; border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 9px; font: 700 12px Nunito; color: var(--muted); cursor: pointer; transition: color .15s, border-color .15s; }
+.btn-signout:hover { color: #b44436; border-color: #ffd4cc; background: #fff8f7; }
+
+/* ── MAIN CONTENT ── */
+.main-content { margin-left: 255px; width: calc(100% - 255px); padding: 34px min(6vw,78px) 60px; max-width: 1540px; }
+.topbar { display: flex; align-items: start; justify-content: space-between; margin-bottom: 30px; }
+.eyebrow { font-size: 11px; font-weight: 900; letter-spacing: 1.3px; color: var(--primary); margin: 0 0 6px; text-transform: uppercase; }
+.topbar h1 { font-size: 28px; line-height: 1.1; margin: 0; font-weight: 900; }
+.topbar-mobile-profile { display: none; }
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── STUDENT: HERO CARD ── */
+.hero-card { background: var(--primary); border-radius: 12px; color: #fff; padding: 32px 38px; position: relative; overflow: hidden; margin-bottom: 28px; box-shadow: var(--shadow); }
+.hero-card .eyebrow { color: #d8c4fa; }
+.hero-card h2 { font-size: 28px; line-height: 1.15; margin: 8px 0 8px; }
+.hero-card p { margin: 0; color: #ebdfff; font-size: 15px; }
+.hero-meta { display: flex; align-items: center; gap: 10px; margin: 16px 0 20px; font-size: 13px; color: #d8c4fa; }
+.hero-meta i { width: 4px; height: 4px; border-radius: 50%; background: #c4b5fd; display: inline-block; }
+.primary-button { border: 0; border-radius: 8px; cursor: pointer; font: 800 14px Nunito; padding: 12px 18px; transition: transform .15s, background .15s; color: var(--primary-dark); background: var(--yellow); box-shadow: 0 2px 0 #d9bb55; text-decoration: none; display: inline-flex; align-items: center; }
+.primary-button:hover { transform: translateY(-1px); background: #ffef9f; }
+.primary-button span { font-size: 18px; line-height: 10px; margin-left: 6px; }
+.outline-button { background: #fff; border: 1px solid var(--line); color: var(--primary); border-radius: 8px; font: 800 14px Nunito; padding: 12px 16px; cursor: pointer; transition: background .15s; text-decoration: none; }
+.outline-button:hover { background: var(--primary-tint); }
+
+/* ── STUDENT: COURSE GRID ── */
+.section-heading { display: flex; align-items: end; justify-content: space-between; margin: 34px 0 14px; }
+.section-heading h2 { font-size: 21px; margin: 0; }
+.course-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.course-card { border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 26px; display: flex; flex-direction: column; cursor: default; transition: border-color .15s, transform .15s, box-shadow .15s; box-shadow: var(--shadow-sm); }
+.course-card:hover { border-color: #c4b5e0; transform: translateY(-2px); box-shadow: var(--shadow); }
+.course-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.course-icon { width: 44px; height: 44px; background: var(--primary-tint); border-radius: 10px; display: grid; place-items: center; color: var(--primary); font: 700 20px "DM Mono"; }
+.course-badge { font: 800 10px Nunito; letter-spacing: .5px; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; }
+.course-badge.active { background: #e6f7ee; color: #16a34a; }
+.course-badge.locked { background: #f0ebf7; color: var(--muted); }
+.course-badge.pending { background: #fff6e0; color: #a67c00; }
+.course-card h3 { font-size: 18px; font-weight: 800; margin: 0 0 6px; }
+.course-card > p { color: var(--muted); font-size: 13px; line-height: 1.55; margin: 0 0 18px; min-height: 40px; }
+.course-progress { margin-bottom: 18px; }
+.progress-track { height: 6px; background: #f0ebf7; border-radius: 20px; overflow: hidden; margin-bottom: 6px; }
+.progress-fill { height: 100%; background: var(--primary); border-radius: 20px; transition: width .3s; }
+.progress-fill.fill-yellow { background: #e8b830; }
+.progress-labels { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: var(--muted); }
+.btn-course-open { display: block; width: 100%; text-align: center; text-decoration: none; border: 0; border-radius: 8px; padding: 12px; font: 800 14px Nunito; cursor: pointer; transition: background .15s, transform .15s; color: var(--primary-dark); background: var(--yellow); box-shadow: 0 2px 0 #d9bb55; }
+.btn-course-open:hover { transform: translateY(-1px); background: #ffef9f; }
+.btn-course-open.locked { opacity: .5; cursor: not-allowed; transform: none; background: #e8e3f0; color: var(--muted); box-shadow: none; }
+
+/* ── STUDENT: METRICS ── */
+.metric-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 14px; }
+.metric-card { border-radius: 12px; padding: 20px; min-height: 110px; border: 1px solid var(--line-subtle); box-shadow: var(--shadow-sm); }
+.metric-card.mint { background: var(--primary-tint); }
+.metric-card.yellow { background: var(--yellow); }
+.metric-card.coral { background: var(--coral); }
+.metric-icon { float: right; font-size: 20px; color: var(--primary); }
+.metric-card p { clear: both; margin: 8px 0 2px; color: #4a3e61; font-size: 12px; font-weight: 800; }
+.metric-card strong { font-size: 28px; line-height: 1.05; font-weight: 900; }
+.metric-card strong small { font-size: 13px; font-weight: 700; }
+.metric-card em { display: block; font-style: normal; font-size: 11px; color: var(--muted); margin-top: 7px; }
+
+/* ── FACULTY: STATS ROW ── */
+.faculty-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+.stat-card { border-radius: 12px; padding: 18px 20px; border: 1px solid var(--line); background: #fff; box-shadow: var(--shadow-sm); }
+.stat-card span { display: block; font-size: 11px; font-weight: 800; color: var(--muted); margin-bottom: 4px; letter-spacing: .5px; text-transform: uppercase; }
+.stat-card strong { font-size: 26px; font-weight: 900; color: var(--ink); }
+
+/* ── FACULTY: TABBED PANEL ── */
+.panel { border: 1px solid var(--line); background: var(--card); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+.panel-tabs { display: flex; border-bottom: 1px solid var(--line); background: #fbf9fe; padding: 0 12px; gap: 4px; overflow-x: auto; }
+.panel-tab { border: 0; background: transparent; color: var(--muted); font: 700 13px Nunito; padding: 14px 18px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.panel-tab:hover { color: var(--ink); }
+.panel-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.tab-chip { background: #e8e3f0; color: var(--muted); font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 10px; }
+.panel-tab.active .tab-chip { background: var(--primary); color: #fff; }
+.panel-body { padding: 0; }
+.panel-section { display: none; }
+.panel-section.active { display: block; }
+
+/* ── FACULTY: TABLE ── */
+.table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+.data-table th { padding: 13px 20px; font-size: 10px; font-weight: 900; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; border-bottom: 1px solid var(--line); background: #faf9fe; white-space: nowrap; }
+.data-table td { padding: 13px 20px; border-bottom: 1px solid #f0ecf7; vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: #faf8ff; }
+.cell-user { display: flex; align-items: center; gap: 10px; }
+.cell-avatar { width: 32px; height: 32px; background: var(--primary-tint); border-radius: 50%; display: grid; place-items: center; font: 800 12px Nunito; color: var(--primary); flex-shrink: 0; }
+.cell-meta strong { display: block; font-size: 13px; font-weight: 700; }
+.cell-meta small { font-size: 11px; color: var(--muted); }
+.empty-row { text-align: center; padding: 36px 20px; color: var(--muted); font-size: 13px; font-weight: 600; }
+
+/* ── FACULTY: TOGGLE SWITCH ── */
+.toggle { position: relative; width: 36px; height: 20px; background: #d8d3e3; border: none; border-radius: 20px; cursor: pointer; transition: background .2s; }
+.toggle.on { background: var(--primary); }
+.toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+.toggle.on::after { transform: translateX(16px); }
+
+/* ── FACULTY: ACTION BUTTONS ── */
+.btn-sm { border: 0; padding: 6px 14px; border-radius: 6px; font: 700 11px Nunito; cursor: pointer; transition: opacity .15s; letter-spacing: .3px; }
+.btn-sm:hover { opacity: .85; }
+.btn-sm.approve { background: #e5f5eb; color: #16a34a; }
+.btn-sm.reject { background: #fff0ee; color: #b44436; }
+.btn-sm.revoke { background: #f0ebf7; color: var(--muted); }
+.btn-sm.projects { background: var(--primary-tint); color: var(--primary); display: inline-flex; align-items: center; gap: 5px; }
+.role-chip { font-size: 10px; font-weight: 900; padding: 3px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: .5px; }
+.role-chip.admin { background: var(--yellow); color: var(--yellow-dark); }
+.role-chip.teacher { background: var(--primary-tint); color: var(--primary); }
+.mono { font-family: "DM Mono", monospace; font-size: 12px; }
+
+/* ── FACULTY: ADD TEACHER BAR ── */
+.add-bar { display: flex; gap: 10px; padding: 18px 20px; background: #faf9fe; border-top: 1px solid var(--line); align-items: flex-end; }
+.add-bar .field { flex: 1; }
+.add-bar label { display: block; font-size: 10px; font-weight: 800; color: var(--muted); margin-bottom: 5px; letter-spacing: .5px; }
+.add-bar input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font: 600 13px Nunito; outline-color: var(--primary); color: var(--ink); }
+.btn-add { background: var(--primary); color: #fff; border: 0; border-radius: 8px; padding: 10px 20px; font: 800 13px Nunito; cursor: pointer; white-space: nowrap; height: 42px; transition: background .15s; }
+.btn-add:hover { background: var(--primary-dark); }
+
+/* ── CODE INSPECTOR MODAL ── */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(36,22,61,0.55); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 20px; z-index: 30; }
+.modal-card { max-width: 800px; width: 100%; background: var(--card); border-radius: 12px; box-shadow: var(--shadow); max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--line); background: #faf9fe; }
+.modal-head strong { font-size: 16px; font-weight: 800; }
+.modal-head small { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
+.modal-close { background: none; border: 1px solid var(--line); border-radius: 6px; padding: 6px 14px; font: 700 13px Nunito; color: var(--muted); cursor: pointer; transition: color .15s; }
+.modal-close:hover { color: #b44436; border-color: #ffd4cc; }
+.modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 16px; }
+.project-item { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.project-head { padding: 10px 16px; background: #faf9fe; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+.project-name { font: 600 13px "DM Mono"; color: var(--primary); }
+.project-date { font-size: 11px; color: var(--muted); }
+.project-code { padding: 14px 16px; background: #1e1e2e; font: 400 12px/1.7 "DM Mono"; color: #cdd6f4; overflow-x: auto; white-space: pre-wrap; }
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 8px; font: 700 13px Nunito; box-shadow: var(--shadow); z-index: 40; display: none; border: 1px solid rgba(255,255,255,0.1); }
+
+/* ── RESPONSIVE ── */
+@media(max-width:1000px){
+  .metric-grid { grid-template-columns: repeat(2,1fr); }
+  .faculty-stats { grid-template-columns: 1fr 1fr; }
+  .main-content { padding-left: 34px; padding-right: 34px; }
+}
+@media(max-width:768px){
+  .sidebar { position: fixed; z-index: 10; width: 100%; height: 64px; padding: 10px 16px; flex-direction: row; align-items: center; border-right: 0; border-bottom: 1px solid var(--line); background: #fff; }
+  .brand { padding: 0; font-size: 19px; }
+  .side-nav { display: flex; margin-left: auto; gap: 4px; }
+  .nav-item { font-size: 0; padding: 8px; }
+  .nav-icon { font-size: 20px; }
+  .sidebar-bottom { display: none; }
+  .main-content { margin-left: 0; width: 100%; padding: 84px 16px 40px; }
+  .topbar-mobile-profile { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding: 8px 12px; background: #fff; border: 1px solid var(--line); border-radius: 8px; justify-content: space-between; }
+  .topbar-mobile-profile .user-info { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
+  .topbar-mobile-profile .btn-mob-signout { border: 0; background: transparent; color: #b44436; font: 700 12px Nunito; cursor: pointer; }
+  .topbar h1 { font-size: 24px; }
+  .hero-card { padding: 26px; }
+  .hero-card h2 { font-size: 24px; }
+  .course-grid { grid-template-columns: 1fr; }
+  .metric-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .metric-card { padding: 14px; min-height: 90px; }
+  .faculty-stats { grid-template-columns: 1fr 1fr; }
+  .add-bar { flex-direction: column; }
+}
+  </style>
+</head>
+<body>
+
+  <!-- LOADING GATE -->
+  <div class="loading-gate" id="loadingGate">
+    <div style="text-align:center">
+      <img src="images/roboden-logo.png" alt="Roboden">
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <!-- AUTH GATE -->
+  <div class="auth-gate hidden" id="authGate">
+    <div class="auth-card">
+      <img src="images/roboden-logo.png" alt="Roboden">
+      <h2>Welcome to Roboden</h2>
+      <p>Your interactive workspace for robotics, coding, and keyboard mastery.</p>
+
+      <div class="auth-error" id="authError"></div>
+
+      <button class="btn-google" id="googleSignInBtn">
+        <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Continue with Google
+      </button>
+
+      <div class="auth-divider">OR</div>
+
+      <button class="email-toggle" id="emailToggle">Sign in with email instead</button>
+
+      <form class="email-form" id="emailForm" onsubmit="return false;">
+        <label>Email address</label>
+        <input type="email" id="emailInput" placeholder="name@roboden.in" autocomplete="email">
+        <label>Password</label>
+        <input type="password" id="passwordInput" placeholder="Password" autocomplete="current-password">
+        <button class="btn-email-submit" id="emailSignInBtn">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- APP SHELL -->
+  <div class="app-shell hidden" id="appShell">
+    <aside class="sidebar">
+      <a class="brand" href="e-learn.html" aria-label="Roboden E-Learn">
+        <img class="brand-logo" src="images/roboden-logo.png" alt="Roboden">
+        <span>e-<span>learn</span><small>by Roboden</small></span>
+      </a>
+
+      <nav class="side-nav" id="sideNav">
+        <!-- Populated by JS based on role -->
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="student-card" id="profileCard">
+          <span class="avatar" id="userAvatar">S</span>
+          <span><strong id="userName">Student</strong><small id="userRole">Student</small></span>
+        </div>
+        <button class="btn-signout" id="signOutBtn">Sign out</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <!-- Mobile Profile & Signout Bar -->
+      <div class="topbar-mobile-profile" id="topbarMobileProfile">
+        <div class="user-info">
+          <span class="avatar" id="mobUserAvatar" style="width:28px;height:28px;font-size:11px;">S</span>
+          <span id="mobUserName">Student</span>
+        </div>
+        <button class="btn-mob-signout" onclick="auth.signOut()">Sign out</button>
+      </div>
+
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="viewEyebrow">MY COURSES</p>
+          <h1 id="viewTitle">Welcome!</h1>
+        </div>
+      </header>
+
+      <!-- ═══ STUDENT: MY COURSES ═══ -->
+      <section class="view active" id="coursesView">
+        <!-- Hero continue card -->
+        <div class="hero-card" id="heroCard">
+          <p class="eyebrow">CONTINUE LEARNING</p>
+          <h2 id="heroTitle">Ready for your daily practice</h2>
+          <p id="heroDesc">Continue your progress in interactive touch typing.</p>
+          <div class="hero-meta"><span id="heroStatus">Enrolled</span><i></i><span>15 min recommended</span></div>
+          <a href="typing-lab.html" class="primary-button" id="heroAction">Continue lesson <span>&rarr;</span></a>
+        </div>
+
+        <!-- Course cards -->
+        <div class="section-heading"><div><p class="eyebrow">YOUR LABS</p><h2>Available Courses</h2></div></div>
+        <div class="course-grid">
+          <!-- Python Lab -->
+          <article class="course-card" id="pythonCard">
+            <div class="course-card-head">
+              <div class="course-icon">&lt;/&gt;</div>
+              <span class="course-badge active" id="pythonBadge">ACTIVE</span>
+            </div>
+            <h3>Python Lab</h3>
+            <p>Interactive in-browser coding environment with live collaborative teacher support.</p>
+            <div class="course-progress">
+              <div class="progress-track"><div class="progress-fill" id="pythonProgress" style="width:25%"></div></div>
+              <div class="progress-labels"><span>Robotics Curriculum</span><span>4 Modules</span></div>
+            </div>
+            <a href="python-lab.html" class="btn-course-open" id="pythonAction">Open Python Lab <span>&rarr;</span></a>
+          </article>
+
+          <!-- Typing Lab -->
+          <article class="course-card" id="typingCard">
+            <div class="course-card-head">
+              <div class="course-icon">&#9000;</div>
+              <span class="course-badge active" id="typingBadge">ACTIVE</span>
+            </div>
+            <h3>Typing Lab</h3>
+            <p>30-day guided touch-typing track to build tactile keyboard muscle memory.</p>
+            <div class="course-progress">
+              <div class="progress-track"><div class="progress-fill fill-yellow" id="typingProgress" style="width:4%"></div></div>
+              <div class="progress-labels"><span id="typingDayLabel">Day 1 of 30</span><span id="typingPctLabel">0%</span></div>
+            </div>
+            <a href="typing-lab.html" class="btn-course-open" id="typingAction">Open Typing Lab <span>&rarr;</span></a>
+          </article>
+        </div>
+
+        <!-- Metrics -->
+        <div class="section-heading"><div><p class="eyebrow">YOUR STATS</p><h2>Keep it up!</h2></div></div>
+        <div class="metric-grid">
+          <article class="metric-card mint"><span class="metric-icon">&#10003;</span><p>Daily Streak</p><strong id="streakVal">0 <small>Days</small></strong><em>Consistency is key</em></article>
+          <article class="metric-card yellow"><span class="metric-icon">&#9678;</span><p>Active Labs</p><strong id="activeLabsVal">0</strong><em>Courses enrolled</em></article>
+          <article class="metric-card coral"><span class="metric-icon">&#8599;</span><p>Certificate</p><strong id="certVal" style="font-size:18px">In Progress</strong><em>Complete all lessons</em></article>
+        </div>
+      </section>
+
+      <!-- ═══ FACULTY: CLASSROOM VIEW ═══ -->
+      <section class="view" id="classroomView">
+        <div class="faculty-stats">
+          <div class="stat-card"><span>Total Students</span><strong id="statStudents">0</strong></div>
+          <div class="stat-card"><span>Pending Requests</span><strong id="statPending">0</strong></div>
+          <div class="stat-card"><span>Total Projects</span><strong id="statProjects">0</strong></div>
+          <div class="stat-card"><span>Active Today</span><strong id="statActive">0</strong></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-tabs">
+            <button class="panel-tab active" data-panel="pendingPanel">Pending <span class="tab-chip" id="pendingChip">0</span></button>
+            <button class="panel-tab" data-panel="studentsPanel">Students <span class="tab-chip" id="studentsChip">0</span></button>
+            <button class="panel-tab" data-panel="teachersPanel">Faculty <span class="tab-chip" id="teachersChip">0</span></button>
+          </div>
+          <div class="panel-body">
+            <!-- Pending -->
+            <div class="panel-section active" id="pendingPanel">
+              <div class="table-wrap">
+                <table class="data-table"><thead><tr><th>Student</th><th>Email</th><th>Requested</th><th style="text-align:right">Actions</th></tr></thead>
+                <tbody id="pendingBody"><tr><td colspan="4" class="empty-row">No pending requests.</td></tr></tbody></table>
+              </div>
+            </div>
+            <!-- Students -->
+            <div class="panel-section" id="studentsPanel">
+              <div class="table-wrap">
+                <table class="data-table"><thead><tr><th>Student</th><th>Python</th><th>Typing</th><th>Typing Day</th><th>Projects</th><th style="text-align:right">Action</th></tr></thead>
+                <tbody id="studentsBody"><tr><td colspan="6" class="empty-row">Loading students...</td></tr></tbody></table>
+              </div>
+            </div>
+            <!-- Faculty -->
+            <div class="panel-section" id="teachersPanel">
+              <div class="table-wrap">
+                <table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th style="text-align:right">Action</th></tr></thead>
+                <tbody id="teachersBody"><tr><td colspan="4" class="empty-row">Loading faculty...</td></tr></tbody></table>
+              </div>
+              <div class="add-bar" id="addTeacherBar">
+                <div class="field"><label>NAME</label><input type="text" id="newTName" placeholder="Instructor name"></div>
+                <div class="field"><label>EMAIL</label><input type="email" id="newTEmail" placeholder="teacher@roboden.in"></div>
+                <div class="field"><label>PASSWORD</label><input type="password" id="newTPass" placeholder="Min 6 chars"></div>
+                <button class="btn-add" id="addTeacherBtn">Add Instructor</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- CODE INSPECTOR MODAL -->
+  <div class="modal-backdrop hidden" id="codeModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div><strong id="modalTitle">Student Projects</strong><small id="modalEmail"></small></div>
+        <button class="modal-close" onclick="closeCodeModal()">Close</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- FIREBASE -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+  <script>
+const firebaseConfig = {
+  apiKey: 'AIzaSyAGx7D_SRt3M0ca3jetRvFtrHxj49lvB0U',
+  authDomain: 'roboden-python-lab.firebaseapp.com',
+  databaseURL: 'https://roboden-python-lab-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId: 'roboden-python-lab',
+  storageBucket: 'roboden-python-lab.firebasestorage.app',
+  messagingSenderId: '795159494955',
+  appId: '1:795159494955:web:7cf697dc4a5509b03b856e'
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+const $ = id => document.getElementById(id);
+const ADMIN_EMAIL = 'surya@roboden.in';
+
+let allUsersCache = {};
+let allProjectsCache = {};
+let typingProgressCache = {};
+let currentRole = 'student';
+
+function showToast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+function showAuthError(msg) {
+  const e = $('authError');
+  e.textContent = msg;
+  e.style.display = 'block';
+}
+function hideAuthError() {
+  $('authError').style.display = 'none';
+}
+
+function escapeHtml(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/* ── AUTH UI ── */
+$('emailToggle').addEventListener('click', () => {
+  const f = $('emailForm');
+  f.classList.toggle('open');
+  $('emailToggle').textContent = f.classList.contains('open') ? 'Hide email login' : 'Sign in with email instead';
+});
+
+$('googleSignInBtn').addEventListener('click', () => {
+  hideAuthError();
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => showAuthError(e.message));
+});
+
+$('emailSignInBtn').addEventListener('click', () => {
+  hideAuthError();
+  const email = $('emailInput').value.trim();
+  const pass = $('passwordInput').value;
+  if (!email || !pass) { showAuthError('Please enter email and password.'); return; }
+  auth.signInWithEmailAndPassword(email, pass).catch(e => showAuthError(e.message));
+});
+
+$('signOutBtn').addEventListener('click', () => {
+  localStorage.removeItem('teacherSession');
+  auth.signOut();
+});
+
+/* ── AUTH STATE ── */
+auth.onAuthStateChanged(user => {
+  $('loadingGate').classList.add('hidden');
+  if (!user) {
+    showLoggedOut();
+    return;
+  }
+  resolveUser(user);
+});
+
+function showLoggedOut() {
+  $('authGate').classList.remove('hidden');
+  $('appShell').classList.add('hidden');
+}
+
+function resolveUser(user) {
+  const email = user.email || '';
+  db.ref('users/' + user.uid).once('value').then(snap => {
+    let data = snap.val();
+    if (data) { routeUser(user, data); return; }
+    // Legacy fallback check
+    db.ref('students/' + user.uid).once('value').then(sSnap => {
+      const old = sSnap.val();
+      const role = email === ADMIN_EMAIL ? 'admin' : (email.endsWith('@roboden.in') ? 'teacher' : 'student');
+      const isStaff = role === 'admin' || role === 'teacher';
+      data = {
+        name: (old && old.name) || user.displayName || (isStaff ? email.split('@')[0] : 'Student'),
+        email: email,
+        role: role,
+        status: (old && old.status) || (isStaff ? 'approved' : 'pending'),
+        courses: (old && old.courses) || { python: isStaff, typing: isStaff },
+        createdAt: (old && old.createdAt) || Date.now()
+      };
+      db.ref('users/' + user.uid).set(data).then(() => routeUser(user, data)).catch(e => showAuthError(e.message));
+    });
+  });
+}
+
+function routeUser(user, data) {
+  $('authGate').classList.add('hidden');
+  $('appShell').classList.remove('hidden');
+
+  const fullName = data.name || user.displayName || 'User';
+  const firstName = fullName.split(' ')[0];
+  const initial = firstName.charAt(0).toUpperCase();
+
+  $('userName').textContent = fullName;
+  $('userAvatar').textContent = initial;
+  $('mobUserName').textContent = fullName;
+  $('mobUserAvatar').textContent = initial;
+
+  const isFaculty = data.role === 'admin' || data.role === 'teacher';
+  currentRole = isFaculty ? 'faculty' : 'student';
+
+  if (isFaculty) {
+    $('userRole').textContent = data.role === 'admin' ? 'Admin' : 'Faculty';
+    buildFacultyNav();
+    switchView('classroomView', 'CLASSROOM', 'Management Console');
+    loadFacultyDashboard(user, data);
+  } else {
+    $('userRole').textContent = 'Student';
+    buildStudentNav();
+    switchView('coursesView', 'MY COURSES', 'Welcome, ' + firstName + '!');
+    loadStudentDashboard(user, data);
+  }
+}
+
+/* ── NAV BUILDER ── */
+function buildStudentNav() {
+  $('sideNav').innerHTML = `
+    <button class="nav-item active" data-view="coursesView" data-eye="MY COURSES" data-title="My Courses">
+      <span class="nav-icon">&#9638;</span>Courses
+    </button>`;
+  bindNavClicks();
+}
+
+function buildFacultyNav() {
+  $('sideNav').innerHTML = `
+    <button class="nav-item" data-view="coursesView" data-eye="MY COURSES" data-title="My Courses">
+      <span class="nav-icon">&#9638;</span>Courses
+    </button>
+    <button class="nav-item active" data-view="classroomView" data-eye="CLASSROOM" data-title="Management Console">
+      <span class="nav-icon">&#9776;</span>Classroom
+    </button>`;
+  bindNavClicks();
+}
+
+function bindNavClicks() {
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      switchView(btn.dataset.view, btn.dataset.eye, btn.dataset.title);
+    });
+  });
+}
+
+function switchView(viewId, eyebrow, title) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  $(viewId).classList.add('active');
+  $('viewEyebrow').textContent = eyebrow || '';
+  $('viewTitle').textContent = title || '';
+}
+
+/* ── STUDENT DASHBOARD ── */
+function loadStudentDashboard(user, data) {
+  const courses = data.courses || {};
+  const isApproved = data.status === 'approved';
+  const pythonOk = isApproved && !!courses.python;
+  const typingOk = isApproved && !!courses.typing;
+
+  // Python card
+  if (pythonOk) {
+    $('pythonBadge').textContent = 'ACTIVE'; $('pythonBadge').className = 'course-badge active';
+    $('pythonAction').className = 'btn-course-open'; $('pythonAction').href = 'python-lab.html';
+    $('pythonAction').textContent = 'Open Python Lab →';
+  } else {
+    $('pythonBadge').textContent = isApproved ? 'NOT ENROLLED' : 'PENDING';
+    $('pythonBadge').className = 'course-badge ' + (isApproved ? 'locked' : 'pending');
+    $('pythonAction').className = 'btn-course-open locked'; $('pythonAction').removeAttribute('href');
+    $('pythonAction').textContent = isApproved ? 'Contact Teacher' : 'Awaiting Approval';
+  }
+
+  // Typing card
+  if (typingOk) {
+    $('typingBadge').textContent = 'ACTIVE'; $('typingBadge').className = 'course-badge active';
+    $('typingAction').className = 'btn-course-open'; $('typingAction').href = 'typing-lab.html';
+    $('typingAction').textContent = 'Open Typing Lab →';
+  } else {
+    $('typingBadge').textContent = isApproved ? 'NOT ENROLLED' : 'PENDING';
+    $('typingBadge').className = 'course-badge ' + (isApproved ? 'locked' : 'pending');
+    $('typingAction').className = 'btn-course-open locked'; $('typingAction').removeAttribute('href');
+    $('typingAction').textContent = isApproved ? 'Contact Teacher' : 'Awaiting Approval';
+  }
+
+  // Metrics
+  const activeCount = [pythonOk, typingOk].filter(Boolean).length;
+  $('activeLabsVal').textContent = activeCount;
+
+  // Typing progress sync
+  if (typingOk) {
+    db.ref('typingProgress/' + user.uid).once('value').then(snap => {
+      const tp = snap.val() || {};
+      const day = Math.max(1, tp.currentDay || (tp.currentLesson ? tp.currentLesson + 1 : 1));
+      const pct = Math.min(100, Math.round(((day - 1) / 30) * 100));
+      $('typingProgress').style.width = Math.max(4, pct) + '%';
+      $('typingDayLabel').textContent = 'Day ' + day + ' of 30';
+      $('typingPctLabel').textContent = pct + '%';
+      $('streakVal').innerHTML = (tp.streak || 0) + ' <small>Days</small>';
+      $('heroTitle').textContent = 'Continue Touch Typing \u2014 Day ' + day;
+      $('heroDesc').textContent = 'Lesson ' + day + ': Practice tactile key combinations to build speed & accuracy.';
+      $('heroAction').href = 'typing-lab.html';
+      $('heroStatus').textContent = 'In Progress';
+    }).catch(() => {});
+  } else if (!isApproved) {
+    $('heroTitle').textContent = 'Account Pending Approval';
+    $('heroDesc').textContent = 'Your classroom teacher has been notified and will grant access shortly.';
+    $('heroAction').style.display = 'none';
+    $('heroStatus').textContent = 'Verification Queue';
+  }
+}
+
+/* ── FACULTY DASHBOARD ── */
+function loadFacultyDashboard(user, data) {
+  // Panel tab switcher
+  document.querySelectorAll('.panel-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.panel-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const target = btn.dataset.panel;
+      document.querySelectorAll('.panel-section').forEach(s => s.classList.remove('active'));
+      $(target).classList.add('active');
+    });
+  });
+
+  // Admin-only: show add teacher bar
+  if (data.role !== 'admin') { $('addTeacherBar').style.display = 'none'; }
+
+  // Clean previous listeners
+  db.ref('users').off();
+  db.ref('projects').off();
+  db.ref('typingProgress').off();
+
+  // Load all data with safe fallbacks
+  const safeOnce = path => db.ref(path).once('value').then(snap => snap.val() || {}).catch(() => ({}));
+  Promise.all([
+    safeOnce('users'),
+    safeOnce('students'),
+    safeOnce('projects'),
+    safeOnce('typingProgress')
+  ]).then(([usersData, studentsData, projData, tpData]) => {
+    allUsersCache = usersData;
+    const legacy = studentsData;
+    allProjectsCache = projData;
+    typingProgressCache = tpData;
+
+    // Merge legacy students
+    Object.entries(legacy).forEach(([uid, st]) => {
+      if (!allUsersCache[uid]) {
+        const email = st.email || '';
+        const role = email === ADMIN_EMAIL ? 'admin' : (email.endsWith('@roboden.in') ? 'teacher' : 'student');
+        allUsersCache[uid] = {
+          name: st.name || 'Student',
+          email: email,
+          role: role,
+          status: st.status || 'approved',
+          courses: { python: st.status === 'approved', typing: st.status === 'approved' },
+          createdAt: st.createdAt || Date.now()
+        };
+        db.ref('users/' + uid).set(allUsersCache[uid]).catch(() => {});
+      }
+    });
+    renderFacultyPanels();
+  }).catch(err => {
+    console.error('Error loading faculty data:', err);
+    renderFacultyPanels();
+  });
+
+  // Realtime listeners
+  db.ref('users').on('value', snap => { allUsersCache = snap.val() || {}; renderFacultyPanels(); }, () => {});
+  db.ref('projects').on('value', snap => { allProjectsCache = snap.val() || {}; renderFacultyPanels(); }, () => {});
+  db.ref('typingProgress').on('value', snap => { typingProgressCache = snap.val() || {}; renderFacultyPanels(); }, () => {});
+}
+
+function renderFacultyPanels() {
+  let pending = [], students = [], teachers = [];
+  let totalProjects = 0, activeToday = 0;
+  const today = new Date().toISOString().slice(0, 10);
+
+  Object.values(allProjectsCache).forEach(pMap => {
+    if (pMap && typeof pMap === 'object') totalProjects += Object.keys(pMap).length;
+  });
+  Object.values(typingProgressCache).forEach(tp => {
+    if (tp && tp.lastPractice === today) activeToday++;
+  });
+
+  Object.entries(allUsersCache).forEach(([uid, u]) => {
+    u.uid = uid;
+    if (u.role === 'admin' || u.role === 'teacher') teachers.push(u);
+    else if (u.status === 'pending') pending.push(u);
+    else if (u.status === 'approved') students.push(u);
+  });
+
+  $('statStudents').textContent = students.length;
+  $('statPending').textContent = pending.length;
+  $('statProjects').textContent = totalProjects;
+  $('statActive').textContent = activeToday;
+  $('pendingChip').textContent = pending.length;
+  $('studentsChip').textContent = students.length;
+  $('teachersChip').textContent = teachers.length;
+
+  // Pending
+  $('pendingBody').innerHTML = pending.length ? pending.map(s => `
+    <tr>
+      <td><div class="cell-user"><div class="cell-avatar">${escapeHtml((s.name || 'S').charAt(0).toUpperCase())}</div><div class="cell-meta"><strong>${escapeHtml(s.name || 'Student')}</strong></div></div></td>
+      <td class="mono">${escapeHtml(s.email)}</td>
+      <td>${s.createdAt ? escapeHtml(new Date(s.createdAt).toLocaleDateString()) : 'Recent'}</td>
+      <td style="text-align:right"><button class="btn-sm approve" onclick="approveStudent('${escapeHtml(s.uid)}')">Approve</button> <button class="btn-sm reject" onclick="rejectStudent('${escapeHtml(s.uid)}')">Decline</button></td>
+    </tr>`).join('') : '<tr><td colspan="4" class="empty-row">No pending requests.</td></tr>';
+
+  // Students
+  $('studentsBody').innerHTML = students.length ? students.map(s => {
+    const pOn = s.courses && s.courses.python;
+    const tOn = s.courses && s.courses.typing;
+    const tp = typingProgressCache[s.uid] || {};
+    const dayVal = tp.currentDay || (tp.currentLesson ? tp.currentLesson + 1 : null);
+    const dayStr = dayVal ? 'Day ' + dayVal : 'Not started';
+    const prjs = allProjectsCache[s.uid] || {};
+    const pc = Object.keys(prjs).length;
+    return `
+    <tr>
+      <td><div class="cell-user"><div class="cell-avatar">${escapeHtml((s.name || 'S').charAt(0).toUpperCase())}</div><div class="cell-meta"><strong>${escapeHtml(s.name || 'Student')}</strong><small>${escapeHtml(s.email)}</small></div></div></td>
+      <td><button class="toggle ${pOn ? 'on' : ''}" onclick="toggleCourse('${escapeHtml(s.uid)}','python',${!pOn})" title="Toggle Python"></button></td>
+      <td><button class="toggle ${tOn ? 'on' : ''}" onclick="toggleCourse('${escapeHtml(s.uid)}','typing',${!tOn})" title="Toggle Typing"></button></td>
+      <td class="mono">${escapeHtml(dayStr)}</td>
+      <td>${pc > 0 ? `<button class="btn-sm projects" onclick="inspectProjects('${escapeHtml(s.uid)}','${encodeURIComponent(s.name || 'Student')}','${escapeHtml(s.email)}')">&lt;/&gt; ${pc}</button>` : '<span style="color:var(--muted);font-size:12px">0</span>'}</td>
+      <td style="text-align:right"><button class="btn-sm revoke" onclick="rejectStudent('${escapeHtml(s.uid)}')">Revoke</button></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="6" class="empty-row">No approved students yet.</td></tr>';
+
+  // Faculty
+  $('teachersBody').innerHTML = teachers.length ? teachers.map(t => `
+    <tr>
+      <td><div class="cell-user"><div class="cell-avatar">${escapeHtml((t.name || 'F').charAt(0).toUpperCase())}</div><div class="cell-meta"><strong>${escapeHtml(t.name || 'Faculty')}</strong></div></div></td>
+      <td class="mono">${escapeHtml(t.email)}</td>
+      <td><span class="role-chip ${escapeHtml(t.role)}">${escapeHtml(t.role)}</span></td>
+      <td style="text-align:right">${t.role !== 'admin' ? `<button class="btn-sm revoke" onclick="rejectStudent('${escapeHtml(t.uid)}')">Remove</button>` : '<span style="color:var(--muted);font-size:11px">Primary Admin</span>'}</td>
+    </tr>`).join('') : '<tr><td colspan="4" class="empty-row">No faculty found.</td></tr>';
+}
+
+/* ── ACTIONS ── */
+window.approveStudent = function(uid) {
+  db.ref('users/' + uid).update({ status: 'approved', courses: { python: true, typing: true } }).then(() => showToast('Student approved.'));
+};
+window.rejectStudent = function(uid) {
+  if (confirm('Revoke or decline access for this user?')) {
+    db.ref('users/' + uid).update({ status: 'rejected', courses: { python: false, typing: false } }).then(() => showToast('Access revoked.'));
+  }
+};
+window.toggleCourse = function(uid, course, val) {
+  db.ref('users/' + uid + '/courses/' + course).set(val).then(() => showToast(course + ' access ' + (val ? 'enabled' : 'disabled') + '.'));
+};
+
+/* ── CODE INSPECTOR ── */
+window.inspectProjects = function(uid, encodedName, email) {
+  $('modalTitle').textContent = decodeURIComponent(encodedName) + "'s Python Projects";
+  $('modalEmail').textContent = email;
+  const prjs = allProjectsCache[uid] || {};
+  const keys = Object.keys(prjs);
+  $('modalBody').innerHTML = keys.length ? keys.map(pid => {
+    const p = prjs[pid];
+    const date = p.updatedAt ? new Date(p.updatedAt).toLocaleString() : 'Saved';
+    return `<div class="project-item"><div class="project-head"><span class="project-name">${escapeHtml(p.name || 'Untitled')}</span><span class="project-date">${escapeHtml(date)}</span></div><pre class="project-code"><code>${escapeHtml(p.code || '# Empty')}</code></pre></div>`;
+  }).join('') : '<div class="empty-row">No saved projects.</div>';
+  $('codeModal').classList.remove('hidden');
+};
+window.closeCodeModal = function() { $('codeModal').classList.add('hidden'); };
+
+/* ── ADD TEACHER (ISOLATED AUTH INSTANCE TO PREVENT SESSION HIJACK) ── */
+$('addTeacherBtn').addEventListener('click', async () => {
+  const name = $('newTName').value.trim();
+  const email = $('newTEmail').value.trim();
+  const pass = $('newTPass').value;
+  if (!name || !email || !pass) { showToast('Fill in all fields.'); return; }
+  if (pass.length < 6) { showToast('Password must be at least 6 characters.'); return; }
+
+  const tempAppName = 'tempAuth_' + Date.now();
+  const tempApp = firebase.initializeApp(firebaseConfig, tempAppName);
+  try {
+    const cred = await tempApp.auth().createUserWithEmailAndPassword(email, pass);
+    await db.ref('users/' + cred.user.uid).set({
+      name: name,
+      email: email,
+      role: 'teacher',
+      status: 'approved',
+      courses: { python: true, typing: true },
+      createdAt: Date.now()
+    });
+    $('newTName').value = ''; $('newTEmail').value = ''; $('newTPass').value = '';
+    showToast('Instructor ' + name + ' added successfully.');
+  } catch (err) {
+    showToast(err.message || 'Error creating instructor');
+  } finally {
+    try { await tempApp.delete(); } catch(e) {}
+  }
+});
+  </script>
+</body>
+</html>

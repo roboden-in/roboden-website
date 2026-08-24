@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#6828c9">
+  <title>Admin Dashboard | Roboden</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="images/roboden-logo.png">
+  <style>
+:root{
+  --ink:#24163d;
+  --muted:#716a82;
+  --paper:#fbfaff;
+  --line:#e5dff0;
+  --purple:#6828c9;
+  --purple-dark:#4f199d;
+  --violet:#8a55e8;
+  --lav:#f3edff;
+  --yellow:#ffe99b;
+  --yellow-dark:#8c6815;
+  --mint:#e6f7ee;
+  --coral:#ffd8ce;
+  --red:#dc2626;
+  --green:#16a34a;
+  --sans:Nunito,Arial,sans-serif;
+  --mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);color:var(--ink);background:var(--paper);min-height:100vh}
+
+.topbar{height:64px;display:flex;align-items:center;border-bottom:1px solid var(--line);padding:0 max(24px,5vw);background:#fff;gap:20px;position:sticky;top:0;z-index:100}
+.brand{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none}
+.brand img{width:36px;height:36px;object-fit:contain;border-radius:8px}
+.brand b,.brand small{display:block}
+.brand b{font-size:15px;font-weight:900;letter-spacing:.02em;line-height:1}
+.brand b span{color:var(--purple)}
+.brand small{font-size:8px;font-weight:700;color:var(--muted);margin-top:3px;letter-spacing:.08em;text-transform:uppercase}
+.admin-badge{background:var(--lav);color:var(--purple);font:800 11px var(--sans);padding:4px 10px;border-radius:6px;letter-spacing:.04em;border:1px solid #d8c4fa}
+.back-link{margin-left:auto;font:800 13px var(--sans);color:var(--purple);text-decoration:none;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;background:var(--lav);transition:background .15s}
+.back-link:hover{background:#e8dbff}
+.profile{display:flex;align-items:center;gap:8px}
+.avatar{width:32px;height:32px;display:grid;place-items:center;border-radius:8px;background:var(--yellow);font-weight:900;font-size:13px;color:var(--yellow-dark)}
+.profile b{font-size:13px;font-weight:800}
+.sign-out{border:1px solid var(--line);background:#fff;color:var(--muted);font:700 11px var(--sans);cursor:pointer;padding:5px 10px;border-radius:6px;transition:all .15s}
+.sign-out:hover{border-color:#ffd4cc;color:#b44436;background:#fff8f7}
+
+main{max-width:1200px;margin:auto;padding:32px max(24px,5vw) 64px}
+.eyebrow{font-size:11px;font-weight:900;letter-spacing:.12em;color:var(--purple);margin:0 0 6px;text-transform:uppercase}
+.page-head{margin-bottom:28px}
+.page-head h1{font-size:28px;font-weight:900;margin:0 0 4px}
+.page-head p{color:var(--muted);font-size:14px}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.stat-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:20px;box-shadow:0 2px 8px rgba(48,28,78,.04)}
+.stat-card .stat-label{font-size:11px;font-weight:800;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.stat-card .stat-value{font-size:28px;font-weight:900;color:var(--ink)}
+.stat-card .stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
+
+.tabs{display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid var(--line);padding-bottom:0}
+.tab{border:none;background:none;font:800 13px var(--sans);color:var(--muted);padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--purple);border-bottom-color:var(--purple)}
+.tab-count{background:var(--lav);color:var(--purple);font-size:11px;font-weight:900;padding:2px 8px;border-radius:10px;margin-left:6px}
+.tab-count.pending-count{background:#fff3e0;color:#b06a00}
+
+.panel{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(48,28,78,.04)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:10px;font-weight:900;letter-spacing:.08em;color:var(--muted);padding:14px 18px;border-bottom:1px solid var(--line);background:#faf9fc;text-transform:uppercase}
+td{padding:14px 18px;border-bottom:1px solid #f3f0f7;vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.user-cell{display:flex;align-items:center;gap:10px}
+.user-cell .avatar{width:32px;height:32px;font-size:12px}
+.user-cell div b,.user-cell div small{display:block}
+.user-cell div b{font-size:13px;font-weight:800;color:var(--ink)}
+.user-cell div small{font-size:11px;color:var(--muted);font-family:var(--mono)}
+
+.role-badge{font:800 10px var(--sans);padding:4px 10px;border-radius:4px;letter-spacing:.04em;display:inline-block;text-transform:uppercase}
+.role-student{background:var(--lav);color:var(--purple)}
+.role-teacher{background:var(--mint);color:var(--green)}
+.role-admin{background:var(--yellow);color:var(--yellow-dark)}
+
+.status-badge{font:800 10px var(--sans);padding:4px 10px;border-radius:4px;letter-spacing:.04em;text-transform:uppercase}
+.status-approved{background:#e6f7ee;color:#16a34a}
+.status-pending{background:#fff3e0;color:#b06a00}
+.status-rejected{background:#ffeaea;color:#b44436}
+
+.toggle{position:relative;width:38px;height:22px;border-radius:11px;border:none;cursor:pointer;transition:background .2s}
+.toggle.on{background:var(--green)}
+.toggle.off{background:#d5cfe0}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.toggle.on::after{transform:translateX(16px)}
+
+.action-btn{border:none;font:800 11px var(--sans);padding:6px 14px;border-radius:6px;cursor:pointer;transition:all .15s}
+.approve-btn{background:var(--green);color:#fff}
+.approve-btn:hover{background:#15803d}
+.reject-btn{background:#fff0ee;color:#b44436}
+.reject-btn:hover{background:#ffd4cc}
+.remove-btn{background:#faf9fe;border:1px solid var(--line);color:var(--muted)}
+.remove-btn:hover{border-color:#ffd4cc;color:#b44436;background:#fff0ee}
+.action-group{display:flex;gap:6px}
+
+.empty-state{padding:40px;text-align:center;color:var(--muted);font-size:13px;font-style:italic}
+
+.add-teacher-form{display:flex;gap:10px;padding:18px;border-top:1px solid var(--line);background:#faf9fc;align-items:end}
+.add-teacher-form .form-group{display:grid;gap:4px;flex:1}
+.add-teacher-form label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase}
+.add-teacher-form input{border:1px solid var(--line);border-radius:6px;padding:10px 12px;font:600 13px var(--sans);outline:none;background:#fff;color:var(--ink)}
+.add-teacher-form input:focus{border-color:var(--purple)}
+.add-teacher-form button{background:var(--purple);color:#fff;border:none;border-radius:6px;padding:10px 20px;font:800 13px var(--sans);cursor:pointer;white-space:nowrap;height:40px;transition:background .15s}
+.add-teacher-form button:hover{background:var(--purple-dark)}
+
+.access-gate{position:fixed;inset:0;background:var(--paper);display:grid;place-items:center;z-index:50}
+.gate-card{text-align:center;max-width:400px;background:#fff;border:1px solid var(--line);padding:36px;border-radius:12px;box-shadow:0 12px 30px rgba(48,28,78,.09)}
+.gate-card img{width:56px;height:56px;margin-bottom:16px}
+.gate-card h2{font-size:22px;font-weight:900;margin-bottom:8px}
+.gate-card p{color:var(--muted);font-size:13px;margin-bottom:20px;line-height:1.5}
+.gate-btn{display:inline-block;background:var(--purple);color:#fff;border:0;border-radius:6px;padding:12px 24px;font:800 13px var(--sans);cursor:pointer;text-decoration:none}
+.hidden{display:none!important}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:12px 20px;border-radius:8px;font:700 13px var(--sans);box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:100;display:none}
+
+@media(max-width:900px){
+  .stats-row{grid-template-columns:1fr 1fr}
+  .topbar{height:auto;padding:14px 18px;flex-wrap:wrap;gap:10px}
+  .back-link{margin-left:0}
+  .add-teacher-form{flex-direction:column}
+  main{padding:28px 18px}
+  .tabs{overflow-x:auto}
+}
+@media(max-width:600px){
+  .stats-row{grid-template-columns:1fr}
+  table{font-size:12px}
+  th,td{padding:10px 12px}
+}
+  </style>
+</head>
+<body>
+
+<div class="access-gate" id="accessGate">
+  <div class="gate-card">
+    <img src="images/roboden-logo.png" alt="Roboden">
+    <h2>Admin access required</h2>
+    <p>This page is restricted to administrators and authorized teachers only.</p>
+    <a class="gate-btn" href="e-learn.html">Back to E-Learn</a>
+  </div>
+</div>
+
+<div class="hidden" id="adminApp">
+  <header class="topbar">
+    <a class="brand" href="e-learn.html"><img src="images/roboden-logo.png" alt="Roboden"><span><b>ROBO<span>DEN</span></b><small>THINK &middot; BUILD &middot; INNOVATE</small></span></a>
+    <span class="admin-badge" id="adminBadge">ADMIN</span>
+    <a class="back-link" href="e-learn.html">&larr; Back to E-Learn</a>
+    <div class="profile">
+      <span class="avatar" id="avatar">A</span>
+      <b id="adminName">Admin</b>
+      <button class="sign-out" id="signOut">Sign out</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-head">
+      <p class="eyebrow">ADMINISTRATION</p>
+      <h1>Dashboard</h1>
+      <p>Manage students, teachers, and course access in real time.</p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-label">TOTAL STUDENTS</div><div class="stat-value" id="statStudents">0</div><div class="stat-sub">Approved accounts</div></div>
+      <div class="stat-card"><div class="stat-label">PENDING REQUESTS</div><div class="stat-value" id="statPending">0</div><div class="stat-sub">Awaiting approval</div></div>
+      <div class="stat-card"><div class="stat-label">FACULTY & TEACHERS</div><div class="stat-value" id="statTeachers">0</div><div class="stat-sub">Active instructors</div></div>
+      <div class="stat-card"><div class="stat-label">ACTIVE TODAY</div><div class="stat-value" id="statActive">0</div><div class="stat-sub">Practiced today</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="students">Students <span class="tab-count" id="studentCount">0</span></button>
+      <button class="tab" data-tab="pending">Pending <span class="tab-count pending-count" id="pendingCount">0</span></button>
+      <button class="tab" data-tab="teachers">Teachers <span class="tab-count" id="teacherCount">0</span></button>
+    </div>
+
+    <!-- Students Tab -->
+    <div class="tab-content active" id="tabStudents">
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>STUDENT</th><th>STATUS</th><th>PYTHON</th><th>TYPING</th><th>TYPING DAY</th><th>LAST ACTIVE</th><th>ACTIONS</th></tr></thead>
+            <tbody id="studentTable"><tr><td colspan="7" class="empty-state">Loading students...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Tab -->
+    <div class="tab-content" id="tabPending">
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>STUDENT</th><th>EMAIL</th><th>REQUESTED</th><th>ACTIONS</th></tr></thead>
+            <tbody id="pendingTable"><tr><td colspan="4" class="empty-state">No pending requests</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Teachers Tab -->
+    <div class="tab-content" id="tabTeachers">
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>TEACHER</th><th>EMAIL</th><th>ROLE</th><th>ACTIONS</th></tr></thead>
+            <tbody id="teacherTable"><tr><td colspan="4" class="empty-state">No teachers added</td></tr></tbody>
+          </table>
+        </div>
+        <div class="add-teacher-form">
+          <div class="form-group"><label>Name</label><input type="text" id="newTeacherName" placeholder="Instructor name"></div>
+          <div class="form-group"><label>Email</label><input type="email" id="newTeacherEmail" placeholder="teacher@roboden.in"></div>
+          <div class="form-group"><label>Password</label><input type="password" id="newTeacherPassword" placeholder="Set password (min 6 chars)"></div>
+          <button id="addTeacher">Add Instructor</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script>
+const firebaseConfig={
+  apiKey:'AIzaSyAGx7D_SRt3M0ca3jetRvFtrHxj49lvB0U',
+  authDomain:'roboden-python-lab.firebaseapp.com',
+  databaseURL:'https://roboden-python-lab-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId:'roboden-python-lab',
+  storageBucket:'roboden-python-lab.firebasestorage.app',
+  messagingSenderId:'795159494955',
+  appId:'1:795159494955:web:7cf697dc4a5509b03b856e'
+};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.database();
+const $=id=>document.getElementById(id);
+let allUsers={};
+
+function esc(s){
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ── TABS ──
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab'+tab.dataset.tab.charAt(0).toUpperCase()+tab.dataset.tab.slice(1)).classList.add('active');
+  });
+});
+
+// ── AUTH ──
+$('signOut').addEventListener('click',()=>auth.signOut().then(()=>location.href='e-learn.html'));
+
+const ADMIN_EMAIL='surya@roboden.in';
+auth.onAuthStateChanged(user=>{
+  if(!user){location.href='e-learn.html';return;}
+  db.ref('users/'+user.uid).once('value').then(snap=>{
+    let userData=snap.val();
+    if(!userData){
+      const email=user.email||'';
+      const role=email===ADMIN_EMAIL?'admin':email.endsWith('@roboden.in')?'teacher':null;
+      if(!role){$('accessGate').classList.remove('hidden');$('adminApp').classList.add('hidden');return;}
+      userData={name:user.displayName||email.split('@')[0],email:email,role:role,status:'approved',courses:{python:true,typing:true},createdAt:Date.now()};
+      db.ref('users/'+user.uid).set(userData);
+    }
+    if(!['admin','teacher'].includes(userData.role)){$('accessGate').classList.remove('hidden');$('adminApp').classList.add('hidden');return;}
+    $('accessGate').classList.add('hidden');
+    $('adminApp').classList.remove('hidden');
+    const isAdmin=userData.role==='admin';
+    $('adminName').textContent=userData.name||(isAdmin?'Admin':'Teacher');
+    $('avatar').textContent=(userData.name||'A').charAt(0).toUpperCase();
+    $('adminBadge').textContent=isAdmin?'ADMIN':'TEACHER';
+    loadAllUsers();
+  });
+});
+
+// ── LOAD USERS ──
+function loadAllUsers(){
+  db.ref('users').on('value',snap=>{
+    allUsers=snap.val()||{};
+    renderAll();
+  });
+}
+
+function renderAll(){
+  const students=[];
+  const pending=[];
+  const teachers=[];
+  let activeToday=0;
+  const today=new Date().toISOString().slice(0,10);
+
+  Object.entries(allUsers).forEach(([uid,user])=>{
+    user._uid=uid;
+    if(user.role==='teacher'||user.role==='admin'){teachers.push(user);}
+    if(user.role==='student'&&user.status==='approved'){students.push(user);}
+    if(user.role==='student'&&user.status==='pending'){pending.push(user);}
+  });
+
+  // Load typing progress for active count
+  db.ref('typingProgress').once('value').then(snap=>{
+    const progress=snap.val()||{};
+    Object.values(progress).forEach(p=>{if(p.lastPractice===today)activeToday++;});
+    $('statActive').textContent=activeToday;
+  });
+
+  $('statStudents').textContent=students.length;
+  $('statPending').textContent=pending.length;
+  $('statTeachers').textContent=teachers.filter(t=>t.role==='teacher').length;
+  $('studentCount').textContent=students.length;
+  $('pendingCount').textContent=pending.length;
+  $('teacherCount').textContent=teachers.length;
+
+  renderStudents(students);
+  renderPending(pending);
+  renderTeachers(teachers);
+}
+
+function renderStudents(students){
+  if(!students.length){$('studentTable').innerHTML='<tr><td colspan="7" class="empty-state">No approved students yet</td></tr>';return;}
+  $('studentTable').innerHTML=students.map(s=>{
+    const courses=s.courses||{};
+    return`<tr>
+      <td><div class="user-cell"><span class="avatar">${(s.name||'?').charAt(0).toUpperCase()}</span><div><b>${esc(s.name||'Unknown')}</b><small>${esc(s.email||'')}</small></div></div></td>
+      <td><span class="status-badge status-approved">Approved</span></td>
+      <td><button class="toggle ${courses.python?'on':'off'}" onclick="toggleCourse('${esc(s._uid)}','python',${!courses.python})" title="Toggle Python access"></button></td>
+      <td><button class="toggle ${courses.typing?'on':'off'}" onclick="toggleCourse('${esc(s._uid)}','typing',${!courses.typing})" title="Toggle Typing access"></button></td>
+      <td style="font:500 12px var(--mono);color:var(--muted)">${s._typingDay||'—'}</td>
+      <td style="font-size:11px;color:var(--muted);font-family:var(--mono)">${s.lastActive||'—'}</td>
+      <td><button class="action-btn remove-btn" onclick="removeUser('${esc(s._uid)}','${esc(s.name)}')">Revoke</button></td>
+    </tr>`;
+  }).join('');
+
+  // Load typing progress for each student
+  students.forEach(s=>{
+    db.ref('typingProgress/'+s._uid).once('value').then(snap=>{
+      const tp=snap.val();
+      if(tp){
+        s._typingDay=`Day ${tp.currentDay||1}`;
+        s.lastActive=tp.lastPractice||'—';
+        const row=document.querySelector(`[onclick*="${s._uid}"]`);
+        if(row){
+          const tr=row.closest('tr');
+          if(tr){
+            tr.children[4].textContent=s._typingDay;
+            tr.children[5].textContent=s.lastActive;
+          }
+        }
+      }
+    });
+  });
+}
+
+function renderPending(pending){
+  if(!pending.length){$('pendingTable').innerHTML='<tr><td colspan="4" class="empty-state">No pending requests</td></tr>';return;}
+  $('pendingTable').innerHTML=pending.map(s=>{
+    const date=s.createdAt?new Date(s.createdAt).toLocaleDateString():'Unknown';
+    return`<tr>
+      <td><div class="user-cell"><span class="avatar">${(s.name||'?').charAt(0).toUpperCase()}</span><div><b>${esc(s.name||'Unknown')}</b></div></div></td>
+      <td style="font-size:12px;font-family:var(--mono)">${esc(s.email||'')}</td>
+      <td style="font-size:12px;color:var(--muted);font-family:var(--mono)">${date}</td>
+      <td><div class="action-group"><button class="action-btn approve-btn" onclick="approveUser('${esc(s._uid)}')">Approve</button><button class="action-btn reject-btn" onclick="rejectUser('${esc(s._uid)}')">Reject</button></div></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTeachers(teachers){
+  if(!teachers.length){$('teacherTable').innerHTML='<tr><td colspan="4" class="empty-state">No teachers added</td></tr>';return;}
+  $('teacherTable').innerHTML=teachers.map(t=>`<tr>
+    <td><div class="user-cell"><span class="avatar">${(t.name||'?').charAt(0).toUpperCase()}</span><div><b>${esc(t.name||'Unknown')}</b></div></div></td>
+    <td style="font-size:12px;font-family:var(--mono)">${esc(t.email||'')}</td>
+    <td><span class="role-badge role-${t.role}">${t.role}</span></td>
+    <td>${t.role!=='admin'?`<button class="action-btn remove-btn" onclick="removeUser('${esc(t._uid)}','${esc(t.name)}')">Remove</button>`:''}</td>
+  </tr>`).join('');
+}
+
+// ── ACTIONS ──
+function toggleCourse(uid,course,value){
+  db.ref(`users/${uid}/courses/${course}`).set(value).then(()=>showToast(`${course} access ${value?'granted':'revoked'}.`));
+}
+
+function approveUser(uid){
+  db.ref(`users/${uid}`).update({status:'approved',courses:{python:true,typing:true}}).then(()=>showToast('Student approved with all courses.'));
+}
+
+function rejectUser(uid){
+  db.ref(`users/${uid}`).update({status:'rejected'}).then(()=>showToast('Student request rejected.'));
+}
+
+function removeUser(uid,name){
+  if(!confirm(`Remove ${name}? This will revoke their access.`))return;
+  db.ref(`users/${uid}`).remove().then(()=>showToast(`${name} removed.`));
+}
+
+// ── ADD TEACHER VIA SECONDARY APP INSTANCE (PREVENTS SESSION HIJACK) ──
+$('addTeacher').addEventListener('click',async()=>{
+  const name=$('newTeacherName').value.trim();
+  const email=$('newTeacherEmail').value.trim();
+  const password=$('newTeacherPassword').value;
+  if(!name||!email||!password){showToast('Fill in all fields.');return;}
+  if(password.length<6){showToast('Password must be at least 6 characters.');return;}
+
+  const tempApp=firebase.initializeApp(firebaseConfig,'tempAuth_'+Date.now());
+  try{
+    const cred=await tempApp.auth().createUserWithEmailAndPassword(email,password);
+    await db.ref('users/'+cred.user.uid).set({
+      name:name,
+      email:email,
+      role:'teacher',
+      status:'approved',
+      courses:{python:true,typing:true},
+      createdAt:Date.now()
+    });
+    $('newTeacherName').value='';
+    $('newTeacherEmail').value='';
+    $('newTeacherPassword').value='';
+    showToast(`${name} added as instructor.`);
+  }catch(err){
+    showToast('Error: '+err.message);
+  }finally{
+    try{await tempApp.delete();}catch(e){}
+  }
+});
+
+function showToast(msg){const t=$('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
+</script>
+</body>
+</html>

@@ -213,7 +213,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24
     <li><a href="about.html">About</a></li>
     <li><a href="contact.html">Contact</a></li>
     <li><a href="verify.html" class="active">Verify Certificate</a></li>
-    <li><a href="python-lab.html">Python Lab</a></li>
+    <li><a href="e-learn.html">E-Learn</a></li>
   </ul>
   <div class="nav-right">
     <!--<button class="btn-nav" onclick="window.open('https://wa.me/916281849683?text=Hi%21+I%27m+interested+in+Roboden+training.','_blank')">Book Free Demo</button> -->
@@ -228,7 +228,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24
   <a href="about.html">About</a>
   <a href="contact.html">Contact</a>
   <a href="verify.html">Verify Certificate</a>
-  <a href="python-lab.html">Python Lab</a>
+  <a href="e-learn.html">E-Learn</a>
 </div>
 
 <!-- PAGE -->
@@ -282,8 +282,6 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24
    below. Once the API URL is pasted and tested, stop publishing the CSV.
 */
 const VERIFY_API_URL = 'https://script.google.com/macros/s/AKfycbyudqoe5ETlKHnJVcwaOa6FgzMBQRYL0MrPaK9WwXi2Li8o3aDixrlLPdJSytQw7aE/exec';
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRPNlTAk9b9BFNMK7BBWvhT0pwtjiDKULlTriCkqwOD0iDMZIB7nWP7Zc0MBfZYFZIgd3EYOMwvtCJH/pub?gid=0&single=true&output=csv';
-// ─────────────────────────────────────────────
 
 /* COURSE DATA — projects and outcomes are fixed per course */
 const COURSE_DATA = {
@@ -356,38 +354,6 @@ function certInputKeydown(e) {
   if ((e.key === 'Backspace' || e.key === 'Delete') && atPrefix) e.preventDefault();
 }
 
-/* PARSE CSV — handles quoted fields containing commas */
-function parseCSVLine(line) {
-  const out = [];
-  let cur = '', inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (inQ) {
-      if (ch === '"') {
-        if (line[i + 1] === '"') { cur += '"'; i++; }
-        else inQ = false;
-      } else cur += ch;
-    } else {
-      if (ch === '"') inQ = true;
-      else if (ch === ',') { out.push(cur); cur = ''; }
-      else cur += ch;
-    }
-  }
-  out.push(cur);
-  return out.map(v => v.trim());
-}
-
-function parseCSV(text) {
-  const lines = text.trim().split(/\r?\n/);
-  const headers = parseCSVLine(lines[0]);
-  return lines.slice(1).map(line => {
-    const vals = parseCSVLine(line);
-    const obj = {};
-    headers.forEach((h, i) => obj[h] = vals[i] || '');
-    return obj;
-  });
-}
-
 /* VERIFY */
 async function verifyCert() {
   const input = document.getElementById('certInput').value.trim().toUpperCase();
@@ -401,28 +367,16 @@ async function verifyCert() {
 
   try {
     let match = null;
-    if (VERIFY_API_URL) {
-      // single-record lookup — the full list never leaves the backend
-      const res = await fetch(VERIFY_API_URL + '?id=' + encodeURIComponent(input) + '&t=' + Date.now());
-      if (!res.ok) throw new Error('Lookup failed');
-      const j = await res.json();
-      if (j.found) {
-        match = {
-          'Certificate ID': j.cert.id,
-          'Student Name':   j.cert.name,
-          'Course':         j.cert.course,
-          'Issue Date':     j.cert.date
-        };
-      }
-    } else {
-      // legacy fallback: published CSV (used until the API URL is configured)
-      const res = await fetch(SHEET_URL + '&t=' + Date.now());
-      if (!res.ok) throw new Error('Sheet fetch failed');
-      const csv = await res.text();
-      const records = parseCSV(csv);
-      match = records.find(r =>
-        (r['Certificate ID'] || '').trim().toUpperCase() === input
-      ) || null;
+    const res = await fetch(VERIFY_API_URL + '?id=' + encodeURIComponent(input) + '&t=' + Date.now());
+    if (!res.ok) throw new Error('Lookup failed');
+    const j = await res.json();
+    if (j.found) {
+      match = {
+        'Certificate ID': j.cert.id,
+        'Student Name':   j.cert.name,
+        'Course':         j.cert.course,
+        'Issue Date':     j.cert.date
+      };
     }
 
     loader.style.display = 'none';

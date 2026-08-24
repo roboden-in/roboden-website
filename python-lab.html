@@ -7,352 +7,254 @@
 <meta name="description" content="Live collaborative Python coding lab by Roboden. Teacher and student code side-by-side with real-time sync and in-browser Python execution.">
 <link rel="canonical" href="https://roboden.in/python-lab">
 <meta name="robots" content="index, follow">
-<meta name="theme-color" content="#0a0a0f">
+<meta name="theme-color" content="#6828c9">
 <link rel="icon" type="image/png" href="images/roboden-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <!-- CodeMirror 5 -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/theme/material-darker.min.css">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --p:#7c3aed;--pl:#6d28d9;--p3:#5b21b6;
-  --pa:rgba(124,58,237,0.12);--pa2:rgba(124,58,237,0.06);
-  --bg-nav:#07070c;
-  --bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;
-  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);
-  --text:#f0f0f5;--muted:rgba(255,255,255,0.45);--muted2:rgba(255,255,255,0.65);
-  --accent:#a78bfa;--accent2:#7c3aed;
-  --purple:#7c3aed;--purple-l:#a78bfa;--purple-bg:rgba(124,58,237,0.10);
-  --mono:'JetBrains Mono',monospace;--sans:'Inter',system-ui,sans-serif;
-  --editor-bg:#1e1e2e;
-  --success:#10b981;--error:#ef4444;--warning:#f59e0b;
-  --shadow-sm:0 1px 3px rgba(0,0,0,0.3),0 1px 2px rgba(0,0,0,0.2);
-  --shadow:0 2px 8px rgba(0,0,0,0.4),0 1px 3px rgba(0,0,0,0.3);
-  --shadow-md:0 4px 12px rgba(0,0,0,0.5),0 2px 4px rgba(0,0,0,0.3);
-  --shadow-lg:0 12px 40px rgba(0,0,0,0.6),0 4px 12px rgba(0,0,0,0.3);
-  --radius:10px;--radius-lg:16px;--radius-full:9999px;
+  --primary:#6828c9;
+  --primary-hover:#591fae;
+  --primary-dark:#4f199d;
+  --primary-light:#7c3aed;
+  --primary-tint:#f3edff;
+  --primary-tint-hover:#e8dbff;
+  --ink:#24163d;
+  --muted:#716a82;
+  --line:#e5dff0;
+  --line-subtle:#f0ecf7;
+  --bg:#fbfaff;
+  --card:#ffffff;
+  --yellow:#ffe99b;
+  --yellow-dark:#8c6815;
+  --coral:#ffd8ce;
+  --blue:#dfe8ff;
+  --mint:#d4f5e2;
+  --green:#16a34a;
+  --error:#dc2626;
+  --error-bg:#fff0ee;
+  --shadow:0 12px 30px rgba(48,28,78,.09);
+  --shadow-sm:0 2px 8px rgba(48,28,78,.04);
+  --radius-sm:6px;
+  --radius:8px;
+  --radius-lg:12px;
+  --radius-full:9999px;
+  --sans:Nunito,Arial,sans-serif;
+  --mono:'DM Mono',monospace;
 }
-html{scroll-behavior:smooth;zoom:1.05;}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:4px;}
-::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.2);}
+::-webkit-scrollbar-thumb{background:rgba(104,40,201,0.2);border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(104,40,201,0.4);}
 
-/* NAV */
-nav{display:flex;align-items:center;justify-content:space-between;padding:0 52px;height:82px;position:sticky;top:0;z-index:9001;background:rgba(7,7,12,0.9);backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,0.07);}
-nav .logo{min-width:160px;}
-nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items:center;gap:10px;}
-.logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff;}
-.logo-img{width:80px;height:80px;object-fit:contain;border-radius:10px;}
+/* ── NAV BAR ── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:64px;position:sticky;top:0;z-index:9001;background:#fff;border-bottom:1px solid var(--line);box-shadow:var(--shadow-sm);}
+nav .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);}
+.logo-img{width:36px;height:36px;object-fit:contain;border-radius:8px;}
 .logo-text{display:flex;flex-direction:column;gap:1px;}
-.logo-title{font-size:1.15rem;font-weight:800;color:#fff;white-space:nowrap;line-height:1;letter-spacing:.04em;}
-.logo-tagline{font-size:.62rem;font-weight:500;color:rgba(255,255,255,0.52);letter-spacing:.06em;text-transform:uppercase;}
-.nav-links{display:flex;align-items:center;gap:6px;list-style:none;}
-.nav-links>li{position:relative;}
-.nav-links a{color:rgba(255,255,255,0.52);text-decoration:none;font-size:0.875rem;font-weight:500;padding:8px 14px;border-radius:8px;display:flex;align-items:center;gap:4px;transition:color .2s,background .2s;white-space:nowrap;}
-.nav-links a:hover{color:#fff;background:rgba(255,255,255,0.05);}
-.nav-links a.active{color:#a78bfa;}
+.logo-title{font-size:1.1rem;font-weight:900;color:var(--ink);letter-spacing:.02em;line-height:1;}
+.logo-title span{color:var(--primary);}
+.logo-tagline{font-size:.62rem;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;}
+.nav-links{display:flex;align-items:center;gap:10px;list-style:none;}
+.back-dash-link{color:var(--primary);text-decoration:none;font-size:0.875rem;font-weight:800;padding:8px 16px;border-radius:8px;background:var(--primary-tint);display:flex;align-items:center;gap:6px;transition:background .15s,color .15s;}
+.back-dash-link:hover{background:var(--primary-tint-hover);color:var(--primary-dark);}
+nav .nav-right{display:flex;align-items:center;gap:10px;}
+.user-chip{display:flex;align-items:center;gap:8px;background:var(--primary-tint);border:1px solid var(--line);border-radius:8px;padding:4px 12px 4px 4px;}
+.user-avatar{width:30px;height:30px;border-radius:6px;background:var(--yellow);color:var(--yellow-dark);display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:900;flex-shrink:0;}
+.user-chip-name{font-size:.82rem;font-weight:800;color:var(--ink);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.btn-signout{background:none;border:1px solid var(--line);border-radius:6px;padding:6px 12px;color:var(--muted);font-family:var(--sans);font-size:.75rem;font-weight:700;cursor:pointer;transition:all .15s;}
+.btn-signout:hover{border-color:#ffd4cc;color:#b44436;background:#fff8f7;}
 .hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;background:none;border:none;cursor:pointer;padding:6px;}
-.hamburger span{display:block;width:22px;height:2px;background:#fff;border-radius:2px;transition:transform .3s,opacity .3s;}
-.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
-.hamburger.open span:nth-child(2){opacity:0;}
-.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
-.mobile-menu{display:none;position:fixed;inset:0;background:rgba(7,7,12,.98);backdrop-filter:blur(20px);padding:80px 28px 32px;flex-direction:column;gap:4px;z-index:9000;transform:translateY(-105%);transition:transform .38s cubic-bezier(.4,0,.2,1);}
-.mobile-menu.open{transform:none;display:flex;}
-.mobile-menu a{color:rgba(255,255,255,0.52);text-decoration:none;font-size:1.05rem;font-weight:500;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.07);display:block;transition:color .2s;}
-.mobile-menu a:hover{color:#fff;}
+.hamburger span{display:block;width:22px;height:2px;background:var(--ink);border-radius:2px;transition:transform .3s,opacity .3s;}
+.mobile-menu{display:none;position:fixed;inset:64px 0 0 0;background:#fff;padding:24px;flex-direction:column;gap:12px;z-index:9000;}
+.mobile-menu.open{display:flex;}
+.mobile-menu a{color:var(--ink);text-decoration:none;font-size:1.05rem;font-weight:700;padding:12px 0;border-bottom:1px solid var(--line);}
 
-/* USER CHIP */
-.user-chip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.13);border-radius:10px;padding:4px 12px 4px 4px;}
-.user-avatar{width:32px;height:32px;border-radius:8px;object-fit:cover;background:var(--p);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff;flex-shrink:0;}
-.user-chip-name{font-size:.78rem;font-weight:600;color:rgba(255,255,255,0.78);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.btn-signout{background:none;border:1px solid rgba(255,255,255,0.13);border-radius:8px;padding:6px 12px;color:rgba(255,255,255,0.52);font-family:var(--sans);font-size:.72rem;font-weight:500;cursor:pointer;transition:all .2s;}
-.btn-signout:hover{border-color:#dc2626;color:#f87171;}
-
-/* SCREENS */
-.screen{display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:60px 24px;text-align:center;min-height:calc(100vh - 82px);background:var(--bg);position:relative;}
-.screen::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(124,58,237,0.08) 0%,transparent 70%);pointer-events:none;}
+/* ── SCREENS ── */
+.screen{display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:40px 24px 60px;text-align:center;min-height:calc(100vh - 64px);background:var(--bg);position:relative;}
 .screen.active{display:flex;}
-.screen.active-scroll{display:flex;justify-content:flex-start;padding-top:40px;overflow-y:auto;}
 
-/* SPLIT LOGIN LAYOUT */
-.login-screen{flex-direction:row !important;padding:0 !important;gap:0;align-items:stretch !important;min-height:calc(100vh - 82px) !important;height:calc(100vh - 82px);overflow:hidden;}
-.login-screen::before{display:none;}
-.login-hero{flex:1;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#120a20 0%,#1e1038 35%,#180d2a 70%,#12081f 100%);position:relative;overflow:hidden;padding:60px 48px;border-right:1px solid rgba(124,58,237,0.15);}
-.login-hero::before{content:'';position:absolute;top:-20%;right:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(124,58,237,0.2) 0%,rgba(124,58,237,0.05) 50%,transparent 70%);pointer-events:none;}
-.login-hero::after{content:'';position:absolute;bottom:-15%;left:10%;width:500px;height:500px;background:radial-gradient(circle,rgba(167,139,250,0.12) 0%,rgba(167,139,250,0.03) 50%,transparent 70%);pointer-events:none;}
-.login-hero-content{position:relative;z-index:1;max-width:560px;width:100%;display:flex;flex-direction:column;gap:32px;}
-.hero-text{text-align:left;}
-.login-hero-title{font-size:2.2rem;font-weight:800;color:#fff;letter-spacing:-.04em;line-height:1.1;margin-bottom:10px;}
-.login-hero-sub{font-size:.95rem;color:rgba(255,255,255,0.45);line-height:1.7;font-weight:400;}
+/* ── LOBBY CARDS ── */
+.lobby-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);padding:40px 44px;max-width:480px;width:100%;box-shadow:var(--shadow);position:relative;z-index:1;text-align:center;}
+.lobby-card.wide{max-width:760px;padding:40px;}
+.lobby-icon{width:56px;height:56px;background:var(--primary-tint);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:var(--primary);}
+.lobby-icon svg{width:28px;height:28px;}
+.lobby-card h1{font-size:1.8rem;font-weight:900;margin-bottom:8px;color:var(--ink);}
+.lobby-card h2{font-size:1.45rem;font-weight:900;margin-bottom:6px;color:var(--ink);}
+.lobby-card p{font-size:.9rem;color:var(--muted);margin-bottom:24px;line-height:1.6;}
 
-/* IDE MOCKUP */
-.hero-mockup{width:100%;}
-.mockup-window{background:#11111b;border-radius:12px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;box-shadow:0 24px 48px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.03);}
-.mockup-titlebar{display:flex;align-items:center;gap:12px;padding:10px 14px;background:#181825;border-bottom:1px solid rgba(255,255,255,0.05);}
-.mockup-dots{display:flex;gap:6px;}
-.mockup-dots span{width:10px;height:10px;border-radius:50%;}
-.mockup-dots span:nth-child(1){background:#f87171;}
-.mockup-dots span:nth-child(2){background:#fbbf24;}
-.mockup-dots span:nth-child(3){background:#34d399;}
-.mockup-tab{font-size:.68rem;color:rgba(255,255,255,0.5);font-family:var(--sans);display:flex;align-items:center;gap:6px;padding:3px 10px;background:rgba(255,255,255,0.04);border-radius:5px;}
-.mockup-toolbar{display:flex;align-items:center;gap:8px;padding:6px 14px;background:#181825;border-bottom:1px solid rgba(255,255,255,0.05);}
-.mockup-badge-room{font-size:.62rem;font-weight:600;font-family:var(--mono);color:#a78bfa;background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);padding:2px 8px;border-radius:4px;letter-spacing:.05em;}
-.mockup-badge-users{font-size:.62rem;font-weight:500;color:#34d399;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.15);padding:2px 8px;border-radius:4px;}
-.mockup-role{font-size:.58rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fbbf24;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2);padding:2px 8px;border-radius:3px;margin-left:auto;}
-.mockup-editors{display:flex;min-height:140px;}
-.mockup-panel{flex:1;display:flex;flex-direction:column;}
-.mockup-panel+.mockup-panel{border-left:1px solid rgba(255,255,255,0.05);}
-.mockup-panel-head{font-size:.62rem;font-weight:600;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.06em;padding:5px 14px;background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:6px;}
-.mdot{width:6px;height:6px;border-radius:50%;display:inline-block;}
-.mockup-code{padding:8px 0;font-family:var(--mono);font-size:.72rem;line-height:1.8;flex:1;}
-.code-line{padding:0 14px;display:flex;white-space:pre;}
-.code-line:hover{background:rgba(255,255,255,0.02);}
-.ln{color:rgba(255,255,255,0.15);width:22px;margin-right:12px;text-align:right;user-select:none;flex-shrink:0;}
-.kw{color:#c678dd;}.fn{color:#61afef;}.st{color:#98c379;}.arg{color:#e06c75;}.num{color:#d19a66;}.cm{color:rgba(255,255,255,0.25);font-style:italic;}.br{color:#56b6c2;}
-.cursor-line::after{content:'';display:inline-block;width:7px;height:14px;background:rgba(167,139,250,0.6);animation:blink-cursor 1s step-end infinite;vertical-align:middle;}
-@keyframes blink-cursor{0%,100%{opacity:1;}50%{opacity:0;}}
-.mockup-output{border-top:1px solid rgba(255,255,255,0.05);}
-.mockup-output-text{padding:8px 14px;font-family:var(--mono);font-size:.7rem;line-height:1.7;color:rgba(255,255,255,0.6);}
-.out-line{display:block;}
-.login-form-side{display:flex;align-items:center;justify-content:center;padding:48px;min-width:420px;max-width:480px;background:#0d0d14;border-left:1px solid rgba(124,58,237,0.1);}
-.login-form-side .lobby-card{border:none;background:none;padding:0;backdrop-filter:none;max-width:380px;text-align:left;}
-.login-form-side .lobby-card h2{text-align:left;}
-.login-form-side .lobby-card p{text-align:left;}
-.login-form-side .lobby-tabs{margin-top:0;}
-@media(max-width:900px){
-  .login-screen{flex-direction:column !important;height:auto !important;overflow:auto !important;}
-  .login-hero{padding:48px 24px 36px;min-height:auto;}
-  .login-hero-title{font-size:1.8rem;}
-  .hero-text{text-align:center;}
-  .hero-mockup{display:none;}
-  .login-form-side{min-width:auto;max-width:none;padding:36px 24px 48px;flex:1;border-left:none;border-top:1px solid rgba(255,255,255,0.04);}
-  .login-form-side .lobby-card{max-width:400px;width:100%;margin:0 auto;}
-}
-
-/* LOBBY CARD */
-.lobby-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius-lg);padding:48px 52px;max-width:480px;width:100%;backdrop-filter:blur(20px);position:relative;z-index:1;}
-.lobby-card.wide{max-width:760px;padding:44px 48px;}
-.lobby-icon{width:56px;height:56px;background:linear-gradient(135deg,var(--p),#a78bfa);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 8px 24px rgba(124,58,237,0.25);}
-.lobby-icon svg{width:26px;height:26px;color:#fff;stroke-width:1.5;}
-.lobby-card h1{font-size:1.75rem;font-weight:800;margin-bottom:8px;letter-spacing:-.03em;color:#fff;}
-.lobby-card h2{font-size:1.35rem;font-weight:700;margin-bottom:8px;color:#fff;letter-spacing:-.02em;}
-.lobby-card p{font-size:.9rem;color:rgba(255,255,255,0.5);margin-bottom:28px;line-height:1.7;font-weight:400;}
-
-/* LOGIN TABS */
-.lobby-tabs{display:flex;gap:0;border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-full);padding:3px;margin-bottom:32px;background:rgba(255,255,255,0.03);}
-.lobby-tab{flex:1;padding:11px;border-radius:var(--radius-full);border:none;background:none;color:rgba(255,255,255,0.4);font-family:var(--sans);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .25s;}
-.lobby-tab:hover{color:rgba(255,255,255,0.6);}
-.lobby-tab.active{background:linear-gradient(135deg,var(--p),#a78bfa);color:#fff;box-shadow:0 4px 14px rgba(124,58,237,0.3);}
-
-/* INPUT GROUPS */
-.input-group{margin-bottom:18px;text-align:left;}
-.input-group label{font-size:.72rem;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px;display:block;font-family:var(--sans);}
-.input-group input{width:100%;padding:13px 16px;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:#fff;font-family:var(--sans);font-size:.9rem;outline:none;transition:border-color .2s,box-shadow .2s;}
-.input-group input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,0.15);}
-.input-group input::placeholder{color:rgba(255,255,255,0.2);}
+/* ── LOGIN TABS & INPUTS ── */
+.lobby-tabs{display:flex;gap:4px;border:1px solid var(--line);border-radius:8px;padding:4px;margin-bottom:24px;background:#faf9fe;}
+.lobby-tab{flex:1;padding:10px;border-radius:6px;border:none;background:none;color:var(--muted);font-family:var(--sans);font-size:.85rem;font-weight:800;cursor:pointer;transition:all .15s;}
+.lobby-tab.active{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(104,40,201,0.25);}
+.input-group{margin-bottom:16px;text-align:left;}
+.input-group label{font-size:.72rem;font-weight:800;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;display:block;}
+.input-group input{width:100%;padding:12px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);font-family:var(--sans);font-size:.9rem;outline:none;transition:border-color .15s;}
+.input-group input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-tint);}
 .input-group.pw-group{position:relative;}
 .input-group.pw-group input{padding-right:42px;}
-.btn-pw-toggle{position:absolute;right:10px;top:26px;background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.35);padding:4px;display:flex;align-items:center;justify-content:center;transition:color .2s;}
-.btn-pw-toggle:hover{color:rgba(255,255,255,0.7);}
+.btn-pw-toggle{position:absolute;right:10px;top:28px;background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;display:flex;align-items:center;justify-content:center;}
 .btn-pw-toggle svg{width:18px;height:18px;}
 
-/* BUTTONS */
-.btn-primary{width:100%;padding:14px;border-radius:var(--radius-full);border:none;background:linear-gradient(135deg,var(--p),#a78bfa);color:#fff;font-family:var(--sans);font-size:.9rem;font-weight:700;cursor:pointer;transition:all .25s;margin-top:10px;box-shadow:0 4px 14px rgba(124,58,237,0.25);letter-spacing:.01em;}
-.btn-primary:hover{box-shadow:0 6px 20px rgba(124,58,237,0.4);transform:translateY(-1px);}
+/* ── BUTTONS ── */
+.btn-primary{width:100%;padding:13px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-family:var(--sans);font-size:.9rem;font-weight:800;cursor:pointer;transition:all .15s;margin-top:8px;box-shadow:0 2px 8px rgba(104,40,201,0.2);}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px);}
 .btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none;}
-.btn-google{width:100%;padding:14px;border-radius:var(--radius-full);border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-family:var(--sans);font-size:.9rem;font-weight:600;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px;}
-.btn-google:hover{border-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.07);transform:translateY(-1px);}
-.btn-google svg{width:20px;height:20px;flex-shrink:0;}
+.btn-google{width:100%;padding:13px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);font-family:var(--sans);font-size:.9rem;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:10px;}
+.btn-google:hover{border-color:var(--primary);background:var(--primary-tint);transform:translateY(-1px);}
+.btn-google svg{width:18px;height:18px;flex-shrink:0;}
 
-/* ROOM CODE */
-.room-code-display{font-family:var(--mono);font-size:2rem;font-weight:700;color:var(--accent);letter-spacing:.2em;padding:18px;background:rgba(124,58,237,0.06);border-radius:var(--radius-lg);border:2px dashed rgba(124,58,237,0.2);margin:16px 0;user-select:all;cursor:pointer;}
+/* ── ROOM CODE ── */
+.room-code-display{font-family:var(--mono);font-size:2.2rem;font-weight:700;color:var(--primary);letter-spacing:.2em;padding:16px;background:var(--primary-tint);border-radius:var(--radius);border:2px dashed #c4b5fd;margin:16px 0;user-select:all;cursor:pointer;}
 .copy-hint{font-size:.75rem;color:var(--muted);margin-bottom:16px;}
-.divider{height:1px;background:rgba(255,255,255,0.06);margin:24px 0;}
+.divider{height:1px;background:var(--line);margin:20px 0;}
 
-/* MESSAGE BOXES */
-.msg-box{padding:16px;border-radius:var(--radius);font-size:.85rem;line-height:1.6;margin:12px 0;}
-.msg-pending{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:#fbbf24;}
-.msg-rejected{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;}
-.msg-success{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:#34d399;}
+/* ── MESSAGES ── */
+.msg-box{padding:16px;border-radius:8px;font-size:.88rem;line-height:1.6;margin:12px 0;text-align:left;}
+.msg-pending{background:#fff9e6;border:1px solid #ffe99b;color:#8c6815;}
+.msg-rejected{background:#fff0ee;border:1px solid #ffd4cc;color:#b44436;}
+.msg-success{background:#e6f7ee;border:1px solid #bbf0d3;color:#16a34a;}
 
-/* DASHBOARD CARDS */
-.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px;}
-.dash-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius-lg);padding:22px;cursor:pointer;transition:all .25s;text-align:left;}
-.dash-card:hover{border-color:rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);transform:translateY(-2px);}
-.dash-card-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
-.dash-card-icon svg{width:18px;height:18px;}
-.dash-card h3{font-size:.95rem;font-weight:700;margin-bottom:4px;color:#fff;}
-.dash-card p{font-size:.8rem;color:rgba(255,255,255,0.4);margin-bottom:0;line-height:1.5;}
-.ic-room{background:rgba(124,58,237,.12);color:var(--accent);}
-.ic-students{background:rgba(124,58,237,.08);color:var(--purple-l);}
-.ic-projects{background:rgba(124,58,237,.08);color:var(--purple-l);}
-.ic-teachers{background:rgba(124,58,237,.08);color:var(--purple-l);}
-.ic-code{background:rgba(124,58,237,.12);color:var(--accent);}
-.ic-join{background:rgba(124,58,237,.08);color:var(--purple-l);}
+/* ── DASHBOARD GRID ── */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+.dash-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;cursor:pointer;transition:all .15s;text-align:left;}
+.dash-card:hover{border-color:#c4b5e0;background:var(--primary-tint);transform:translateY(-2px);box-shadow:var(--shadow-sm);}
+.dash-card-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;background:var(--primary-tint);color:var(--primary);}
+.dash-card-icon svg{width:20px;height:20px;}
+.dash-card h3{font-size:.95rem;font-weight:800;margin-bottom:3px;color:var(--ink);}
+.dash-card p{font-size:.8rem;color:var(--muted);margin-bottom:0;line-height:1.5;}
 
-/* ADMIN PANELS */
-.admin-panel{text-align:left;margin-top:20px;}
-.admin-panel h3{font-size:.85rem;font-weight:700;color:#fff;letter-spacing:-.01em;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
-.admin-list{display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;}
-.admin-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);gap:10px;transition:all .2s;}
-.admin-item:hover{border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);}
+/* ── ADMIN / LIST PANELS ── */
+.admin-panel{text-align:left;margin-top:16px;}
+.admin-panel h3{font-size:.9rem;font-weight:800;color:var(--ink);letter-spacing:-.01em;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.admin-list{display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto;}
+.admin-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:var(--radius);border:1px solid var(--line);background:#faf9fe;gap:10px;transition:all .15s;}
+.admin-item:hover{background:#f3edff;border-color:#d8c4fa;}
 .admin-item-info{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
-.admin-item-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid rgba(255,255,255,0.1);}
+.admin-item-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid var(--line);}
 .admin-item-text{min-width:0;flex:1;}
-.admin-item-name{font-size:.9rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;}
-.admin-item-email{font-size:.78rem;color:rgba(255,255,255,0.4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.admin-item-badge{font-size:.65rem;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;}
-.badge-pending{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2);}
-.badge-approved{background:rgba(16,185,129,.1);color:#34d399;border:1px solid rgba(16,185,129,.2);}
+.admin-item-name{font-size:.88rem;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);}
+.admin-item-email{font-size:.76rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono);}
+.admin-item-badge{font-size:.65rem;font-weight:800;padding:3px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;}
+.badge-pending{background:#fff3e0;color:#b06a00;}
+.badge-approved{background:#e6f7ee;color:#16a34a;}
 .admin-item-actions{display:flex;gap:6px;flex-shrink:0;}
-.btn-approve{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);color:#34d399;border-radius:var(--radius-full);padding:7px 16px;font-family:var(--sans);font-size:.72rem;font-weight:600;cursor:pointer;transition:all .2s;}
-.btn-approve:hover{background:#10b981;color:#fff;}
-.btn-reject{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);color:#f87171;border-radius:var(--radius-full);padding:7px 16px;font-family:var(--sans);font-size:.72rem;font-weight:600;cursor:pointer;transition:all .2s;}
-.btn-reject:hover{background:#ef4444;color:#fff;}
-.btn-remove{background:none;border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-full);padding:7px 16px;color:rgba(255,255,255,0.4);font-family:var(--sans);font-size:.72rem;font-weight:500;cursor:pointer;transition:all .2s;}
-.btn-remove:hover{border-color:rgba(239,68,68,.3);color:#f87171;}
-.no-items{font-size:.82rem;color:rgba(255,255,255,0.3);font-style:italic;padding:20px 0;text-align:center;}
-.btn-back{background:none;border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-full);padding:8px 18px;color:rgba(255,255,255,0.5);font-family:var(--sans);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;margin-bottom:20px;display:inline-flex;align-items:center;gap:6px;}
-.btn-back:hover{border-color:var(--accent);color:var(--accent);}
+.btn-approve{background:#e6f7ee;border:none;color:#16a34a;border-radius:6px;padding:6px 14px;font-family:var(--sans);font-size:.75rem;font-weight:800;cursor:pointer;}
+.btn-approve:hover{background:#c6f2da;}
+.btn-reject{background:#fff0ee;border:none;color:#b44436;border-radius:6px;padding:6px 14px;font-family:var(--sans);font-size:.75rem;font-weight:800;cursor:pointer;}
+.btn-reject:hover{background:#ffd4cc;}
+.btn-remove{background:none;border:1px solid var(--line);border-radius:6px;padding:6px 12px;color:var(--muted);font-family:var(--sans);font-size:.75rem;font-weight:700;cursor:pointer;}
+.btn-remove:hover{border-color:#ffd4cc;color:#b44436;}
+.no-items{font-size:.82rem;color:var(--muted);font-style:italic;padding:20px 0;text-align:center;}
+.btn-back{background:none;border:1px solid var(--line);border-radius:6px;padding:8px 16px;color:var(--muted);font-family:var(--sans);font-size:.8rem;font-weight:700;cursor:pointer;transition:all .15s;margin-bottom:16px;display:inline-flex;align-items:center;gap:6px;}
+.btn-back:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-tint);}
 .btn-back svg{width:16px;height:16px;}
 .inline-form{display:flex;gap:8px;margin-top:12px;}
-.inline-form input{flex:1;padding:10px 14px;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:#fff;font-family:var(--sans);font-size:.85rem;outline:none;transition:border-color .2s,box-shadow .2s;}
-.inline-form input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,0.15);}
-.inline-form button{padding:10px 22px;border-radius:var(--radius-full);border:none;background:linear-gradient(135deg,var(--p),#a78bfa);color:#fff;font-family:var(--sans);font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;}
-.inline-form button:hover{box-shadow:0 4px 14px rgba(124,58,237,0.3);}
+.inline-form input{flex:1;padding:10px 12px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--ink);font-family:var(--sans);font-size:.85rem;outline:none;}
+.inline-form input:focus{border-color:var(--primary);}
+.inline-form button{padding:10px 20px;border-radius:6px;border:none;background:var(--primary);color:#fff;font-family:var(--sans);font-size:.8rem;font-weight:800;cursor:pointer;white-space:nowrap;}
+.inline-form button:hover{background:var(--primary-dark);}
 
-/* STUDENT PROJECT LIST */
-.project-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .2s;}
-.project-item:hover{border-color:rgba(124,58,237,0.3);background:rgba(124,58,237,0.05);transform:translateY(-1px);}
+/* ── STUDENT PROJECTS LIST ── */
+.project-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;transition:all .15s;}
+.project-item:hover{border-color:#c4b5e0;background:var(--primary-tint);transform:translateY(-1px);}
 .project-info{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;}
-.project-name{font-size:.85rem;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.project-date{font-size:.7rem;color:rgba(255,255,255,0.35);font-family:var(--mono);}
+.project-name{font-size:.88rem;font-weight:800;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.project-date{font-size:.7rem;color:var(--muted);font-family:var(--mono);}
 .project-actions{display:flex;gap:4px;}
-.project-btn{background:none;border:none;color:rgba(255,255,255,0.35);cursor:pointer;padding:6px;border-radius:6px;transition:all .2s;display:flex;align-items:center;}
-.project-btn:hover{color:#f87171;background:rgba(239,68,68,.1);}
+.project-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:6px;border-radius:6px;display:flex;align-items:center;}
+.project-btn:hover{color:#b44436;background:#fff0ee;}
 .project-btn svg{width:14px;height:14px;}
 
-/* STUDENT EXPANDABLE */
-.student-item{border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius);background:rgba(255,255,255,0.03);overflow:hidden;transition:all .2s;}
-.student-item:hover{border-color:rgba(255,255,255,0.1);}
-.student-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;transition:all .2s;}
-.student-header:hover{background:rgba(255,255,255,0.03);}
-.student-name{font-size:.85rem;font-weight:600;color:#fff;flex:1;}
-.student-count{font-size:.7rem;color:rgba(255,255,255,0.4);font-family:var(--mono);}
-.student-arrow{color:rgba(255,255,255,0.4);transition:transform .2s;flex-shrink:0;}
-.student-item.open .student-arrow{transform:rotate(180deg);}
-.student-projects{display:none;padding:4px 14px 12px;border-top:1px solid rgba(255,255,255,0.06);}
-.student-item.open .student-projects{display:block;}
-.student-project{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;cursor:pointer;transition:all .2s;margin-top:4px;}
-.student-project:hover{background:rgba(255,255,255,0.04);}
-.student-project-name{font-size:.8rem;color:rgba(255,255,255,0.6);}
-.student-project-date{font-size:.68rem;color:rgba(255,255,255,0.35);font-family:var(--mono);}
-.btn-view{background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,0.2);border-radius:var(--radius-full);padding:5px 14px;color:var(--accent);font-family:var(--sans);font-size:.7rem;font-weight:600;cursor:pointer;transition:all .2s;}
-.btn-view:hover{background:var(--p);color:#fff;}
-
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);z-index:10000;display:none;align-items:center;justify-content:center;padding:24px;}
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(36,22,61,0.55);backdrop-filter:blur(4px);z-index:10000;display:none;align-items:center;justify-content:center;padding:24px;}
 .modal-overlay.active{display:flex;}
-.modal{background:var(--bg2);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-lg);max-width:700px;width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 48px rgba(0,0,0,0.5);}
-.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.06);}
-.modal-title{font-size:.95rem;font-weight:700;color:#fff;}
-.modal-sub{font-size:.72rem;color:rgba(255,255,255,0.4);margin-top:2px;}
-.btn-modal-close{background:none;border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius-full);padding:6px 16px;color:rgba(255,255,255,0.5);font-family:var(--sans);font-size:.78rem;cursor:pointer;transition:all .2s;}
-.btn-modal-close:hover{border-color:rgba(239,68,68,.3);color:#f87171;}
+.modal{background:#fff;border-radius:12px;max-width:700px;width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow);}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line);background:#faf9fe;}
+.modal-title{font-size:.95rem;font-weight:800;color:var(--ink);}
+.modal-sub{font-size:.72rem;color:var(--muted);margin-top:2px;}
+.btn-modal-close{background:none;border:1px solid var(--line);border-radius:6px;padding:6px 14px;color:var(--muted);font-family:var(--sans);font-size:.78rem;font-weight:700;cursor:pointer;}
+.btn-modal-close:hover{border-color:#ffd4cc;color:#b44436;}
 .modal-body{flex:1;overflow:auto;}
 .modal-code{width:100%;min-height:300px;background:#1e1e2e;color:#cdd6f4;font-family:var(--mono);font-size:13px;line-height:1.7;padding:16px;border:none;outline:none;resize:none;}
 
-/* IDE LAYOUT */
-#ide{display:none;flex:1;flex-direction:column;height:calc(100vh - 82px);background:#1e1e2e;}
-
-.ide-toolbar{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:48px;background:#181825;border-bottom:1px solid rgba(255,255,255,0.06);gap:12px;flex-shrink:0;}
+/* ══════ IDE WORKSPACE (HIGH CONTRAST DARK MODE) ══════ */
+#ide{display:none;flex:1;flex-direction:column;height:calc(100vh - 64px);background:#1e1e2e;}
+.ide-toolbar{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:48px;background:#181825;border-bottom:1px solid rgba(255,255,255,0.08);gap:12px;flex-shrink:0;}
 .toolbar-left{display:flex;align-items:center;gap:10px;}
 .toolbar-right{display:flex;align-items:center;gap:6px;}
-
-.room-badge{display:flex;align-items:center;gap:6px;background:rgba(109,40,217,0.12);border:1px solid rgba(109,40,217,0.2);border-radius:6px;padding:4px 10px;font-family:var(--mono);font-size:.72rem;color:#a78bfa;}
+.room-badge{display:flex;align-items:center;gap:6px;background:rgba(104,40,201,0.18);border:1px solid rgba(167,139,250,0.3);border-radius:6px;padding:4px 10px;font-family:var(--mono);font-size:.72rem;color:#c4b5fd;}
 .room-badge svg{width:13px;height:13px;}
-.users-badge{display:flex;align-items:center;gap:5px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.18);border-radius:6px;padding:4px 10px;font-size:.72rem;color:#34d399;}
+.users-badge{display:flex;align-items:center;gap:5px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);border-radius:6px;padding:4px 10px;font-size:.72rem;color:#34d399;}
 .users-badge svg{width:13px;height:13px;}
-.role-badge{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:4px;}
-.role-teacher{background:rgba(251,191,36,0.12);color:#fbbf24;border:1px solid rgba(251,191,36,0.2);}
-.role-student{background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.2);}
+.role-badge{font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:4px;}
+.role-teacher{background:rgba(251,191,36,0.12);color:#fbbf24;border:1px solid rgba(251,191,36,0.25);}
+.role-student{background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.25);}
 
-.btn-run{display:flex;align-items:center;gap:5px;padding:6px 18px;border-radius:var(--radius-full);border:none;background:#059669;color:#fff;font-family:var(--sans);font-size:.78rem;font-weight:700;cursor:pointer;transition:all .15s;}
-.btn-run:hover{background:#10b981;box-shadow:0 2px 8px rgba(5,150,105,0.3);}
+.btn-run{display:flex;align-items:center;gap:6px;padding:6px 18px;border-radius:6px;border:none;background:#16a34a;color:#fff;font-family:var(--sans);font-size:.78rem;font-weight:800;cursor:pointer;transition:all .15s;}
+.btn-run:hover{background:#15803d;box-shadow:0 2px 8px rgba(22,163,74,0.3);}
 .btn-run:disabled{opacity:0.4;cursor:not-allowed;}
 .btn-run svg{width:12px;height:12px;}
-.btn-save{display:flex;align-items:center;gap:4px;padding:6px 14px;border-radius:var(--radius-full);border:1px solid rgba(52,211,153,.2);background:rgba(52,211,153,0.08);color:#34d399;font-family:var(--sans);font-size:.75rem;font-weight:600;cursor:pointer;transition:all .15s;}
-.btn-save:hover{background:rgba(52,211,153,0.15);}
+.btn-save{display:flex;align-items:center;gap:4px;padding:6px 14px;border-radius:6px;border:1px solid rgba(52,211,153,.25);background:rgba(52,211,153,0.08);color:#34d399;font-family:var(--sans);font-size:.75rem;font-weight:700;cursor:pointer;transition:all .15s;}
+.btn-save:hover{background:rgba(52,211,153,0.18);}
 .btn-save svg{width:13px;height:13px;}
-.btn-toolbar{display:flex;align-items:center;gap:4px;padding:6px 14px;border-radius:var(--radius-full);border:1px solid rgba(255,255,255,0.1);background:none;color:rgba(255,255,255,0.5);font-family:var(--sans);font-size:.75rem;font-weight:500;cursor:pointer;transition:all .15s;}
-.btn-toolbar:hover{border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);}
-.btn-leave{display:flex;align-items:center;gap:4px;padding:6px 14px;border-radius:var(--radius-full);border:1px solid rgba(255,255,255,0.1);background:none;color:rgba(255,255,255,0.5);font-family:var(--sans);font-size:.75rem;font-weight:500;cursor:pointer;transition:all .15s;}
+.btn-toolbar{display:flex;align-items:center;gap:4px;padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:none;color:rgba(255,255,255,0.6);font-family:var(--sans);font-size:.75rem;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-toolbar:hover{border-color:rgba(255,255,255,0.25);color:#fff;}
+.btn-leave{display:flex;align-items:center;gap:4px;padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:none;color:rgba(255,255,255,0.6);font-family:var(--sans);font-size:.75rem;font-weight:600;cursor:pointer;transition:all .15s;}
 .btn-leave:hover{border-color:rgba(248,113,113,0.4);color:#f87171;}
 .save-indicator{font-size:.68rem;color:#34d399;font-family:var(--mono);opacity:0;transition:opacity .3s;}
 .save-indicator.show{opacity:1;}
 
+.btn-send-all{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,0.1);color:#fbbf24;font-family:var(--sans);font-size:.68rem;font-weight:700;cursor:pointer;transition:all .15s;}
+.btn-send-all:hover{background:rgba(251,191,36,0.2);}
+.btn-send-all svg{width:12px;height:12px;}
+.btn-lock{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:none;color:rgba(255,255,255,0.6);font-family:var(--sans);font-size:.68rem;font-weight:700;cursor:pointer;transition:all .15s;}
+.btn-lock:hover{border-color:rgba(255,255,255,0.3);color:#fff;}
+.btn-lock.locked{border-color:rgba(248,113,113,.4);color:#f87171;background:rgba(248,113,113,0.1);}
+.btn-lock svg{width:12px;height:12px;}
+.btn-download{display:flex;align-items:center;gap:4px;padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:none;color:rgba(255,255,255,0.6);font-family:var(--sans);font-size:.75rem;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-download:hover{border-color:rgba(255,255,255,0.25);color:#fff;}
+.btn-download svg{width:13px;height:13px;}
+
 .editors-container{display:flex;flex:1;overflow:hidden;background:#1e1e2e;}
 .editor-panel{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
-.editor-panel+.editor-panel{border-left:1px solid rgba(255,255,255,0.06);}
-.panel-header{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:36px;background:#181825;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;}
-.panel-title{font-size:.7rem;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:6px;}
+.editor-panel+.editor-panel{border-left:1px solid rgba(255,255,255,0.08);}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:36px;background:#181825;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;}
+.panel-title{font-size:.7rem;font-weight:800;color:rgba(255,255,255,0.45);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:6px;}
 .panel-title .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 .dot-teacher{background:#fbbf24;}
 .dot-student{background:#34d399;}
 .dot-output{background:#a78bfa;}
 
-/* Output source toggle */
-.output-source-toggle{display:flex;border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius-full);padding:2px;gap:0;}
-.output-src-btn{padding:4px 12px;border-radius:var(--radius-full);border:none;background:none;color:rgba(255,255,255,0.35);font-family:var(--mono);font-size:.65rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;letter-spacing:.02em;}
-.output-src-btn:hover{color:rgba(255,255,255,0.6);}
-.output-src-btn.active{background:rgba(167,139,250,0.15);color:#a78bfa;}
+.output-source-toggle{display:flex;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:2px;gap:2px;}
+.output-src-btn{padding:3px 10px;border-radius:4px;border:none;background:none;color:rgba(255,255,255,0.4);font-family:var(--mono);font-size:.65rem;font-weight:700;cursor:pointer;transition:all .15s;}
+.output-src-btn:hover{color:#fff;}
+.output-src-btn.active{background:rgba(167,139,250,0.2);color:#c4b5fd;}
 
-/* Student selector dropdown (teacher in room) */
 .student-selector{display:flex;align-items:center;gap:6px;}
-.student-selector select{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:#a78bfa;font-family:var(--mono);font-size:.72rem;padding:4px 8px;outline:none;cursor:pointer;max-width:160px;}
+.student-selector select{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#c4b5fd;font-family:var(--mono);font-size:.72rem;padding:4px 8px;outline:none;cursor:pointer;max-width:160px;}
 .student-selector select option{background:#181825;color:#cdd6f4;}
 
-/* Student status dot */
-.student-status{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;flex-shrink:0;}
-.st-idle{background:rgba(255,255,255,0.2);}
-.st-typing{background:#fbbf24;animation:pulse-status 1s infinite;}
-.st-running{background:#a78bfa;animation:pulse-status .5s infinite;}
-.st-error{background:#f87171;}
-.st-done{background:#34d399;}
-@keyframes pulse-status{0%,100%{opacity:1;}50%{opacity:.4;}}
-
-/* Teacher control buttons */
-.btn-send-all{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--radius-full);border:1px solid rgba(251,191,36,.25);background:rgba(251,191,36,0.08);color:#fbbf24;font-family:var(--sans);font-size:.68rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;}
-.btn-send-all:hover{background:rgba(251,191,36,0.2);}
-.btn-send-all svg{width:12px;height:12px;}
-.btn-lock{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--radius-full);border:1px solid rgba(255,255,255,0.1);background:none;color:rgba(255,255,255,0.45);font-family:var(--sans);font-size:.68rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;}
-.btn-lock:hover{border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);}
-.btn-lock.locked{border-color:rgba(248,113,113,.3);color:#f87171;background:rgba(248,113,113,0.08);}
-.btn-lock svg{width:12px;height:12px;}
-.btn-download{display:flex;align-items:center;gap:4px;padding:6px 14px;border-radius:var(--radius-full);border:1px solid rgba(255,255,255,0.1);background:none;color:rgba(255,255,255,0.5);font-family:var(--sans);font-size:.75rem;font-weight:500;cursor:pointer;transition:all .15s;}
-.btn-download:hover{border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);}
-.btn-download svg{width:13px;height:13px;}
-
-
 .editor-wrap{flex:1;position:relative;overflow:hidden;}
-.editor-wrap .CodeMirror{height:100%;font-family:var(--mono);font-size:14px;line-height:1.7;}
-.editor-area{width:100%;height:100%;background:#1e1e2e;color:#cdd6f4;font-family:var(--mono);font-size:14px;line-height:1.7;padding:16px;border:none;outline:none;resize:none;tab-size:4;overflow:auto;}
-.editor-area:read-only{opacity:0.85;cursor:default;}
-.editor-area::placeholder{color:rgba(255,255,255,0.2);}
+.editor-wrap .CodeMirror{height:100%;font-family:var(--mono);font-size:14px;line-height:1.5;}
+.editor-wrap .CodeMirror .CodeMirror-cursor{border-left:2px solid #a78bfa;height:1em!important;}
+.editor-area{width:100%;height:100%;background:#1e1e2e;color:#cdd6f4;font-family:var(--mono);font-size:14px;line-height:1.5;padding:16px;border:none;outline:none;resize:none;tab-size:4;overflow:auto;}
 
-.resize-handle{width:4px;background:rgba(255,255,255,0.04);cursor:col-resize;flex-shrink:0;transition:background .2s;position:relative;}
-.resize-handle:hover,.resize-handle.active{background:#7c3aed;}
+.resize-handle{width:4px;background:rgba(255,255,255,0.06);cursor:col-resize;flex-shrink:0;transition:background .2s;position:relative;}
+.resize-handle:hover,.resize-handle.active{background:var(--primary);}
 .resize-handle::after{content:'';position:absolute;inset:-2px;cursor:col-resize;}
 
-.output-container{border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;height:200px;flex-shrink:0;position:relative;}
-.output-resize{height:4px;background:rgba(255,255,255,0.04);cursor:row-resize;flex-shrink:0;transition:background .2s;}
-.output-resize:hover,.output-resize.active{background:#7c3aed;}
-.output-area{flex:1;background:#11111b;padding:12px 16px;font-family:var(--mono);font-size:13px;line-height:1.65;overflow:auto;white-space:pre-wrap;color:rgba(255,255,255,0.72);}
+.output-container{border-top:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;height:200px;flex-shrink:0;position:relative;}
+.output-resize{height:4px;background:rgba(255,255,255,0.06);cursor:row-resize;flex-shrink:0;transition:background .2s;}
+.output-resize:hover,.output-resize.active{background:var(--primary);}
+.output-area{flex:1;background:#11111b;padding:12px 16px;font-family:var(--mono);font-size:13px;line-height:1.65;overflow:auto;white-space:pre-wrap;color:rgba(255,255,255,0.78);}
 .output-area .error{color:#f87171;}
 .output-area .system{color:#a78bfa;font-style:italic;}
 .output-area .term-input{background:transparent;border:none;outline:none;color:#fff;font-family:var(--mono);font-size:13px;line-height:1.65;padding:0;margin:0;caret-color:#a78bfa;vertical-align:baseline;}
@@ -361,130 +263,83 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 .loading-overlay{position:absolute;inset:0;background:rgba(17,17,27,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;gap:12px;}
 .loading-overlay.hidden{display:none;}
 .spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,0.1);border-top-color:#a78bfa;border-radius:50%;animation:spin .8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{font-size:.82rem;color:rgba(255,255,255,0.5);font-family:var(--mono);}
-
-.status-bar{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:24px;background:#11111b;border-top:1px solid rgba(255,255,255,0.04);flex-shrink:0;font-size:.68rem;color:rgba(255,255,255,0.35);font-family:var(--mono);}
+.status-bar{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:24px;background:#11111b;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0;font-size:.68rem;color:rgba(255,255,255,0.4);font-family:var(--mono);}
 .status-dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:6px;}
 .status-connected{background:#34d399;}
 .status-disconnected{background:#f87171;}
-
-/* Locked editor overlay */
 .editor-locked-overlay{position:absolute;inset:0;background:rgba(17,17,27,0.6);display:flex;align-items:center;justify-content:center;z-index:10;pointer-events:none;}
-.editor-locked-overlay span{background:rgba(248,113,113,0.15);border:1px solid rgba(248,113,113,0.3);color:#f87171;font-family:var(--mono);font-size:.75rem;font-weight:600;padding:6px 16px;border-radius:var(--radius-full);letter-spacing:.04em;}
+.editor-locked-overlay span{background:rgba(248,113,113,0.15);border:1px solid rgba(248,113,113,0.3);color:#f87171;font-family:var(--mono);font-size:.75rem;font-weight:700;padding:6px 16px;border-radius:var(--radius-full);letter-spacing:.04em;}
 
-/* RESPONSIVE */
-@media(max-width:640px){
-  nav{padding:0 20px;height:56px;}
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  nav{padding:0 16px;height:60px;}
   .nav-links{display:none;}
   .hamburger{display:flex;}
   .editors-container{flex-direction:column;}
-  .editor-panel+.editor-panel{border-left:none;border-top:1px solid rgba(255,255,255,0.06);}
+  .editor-panel+.editor-panel{border-left:none;border-top:1px solid rgba(255,255,255,0.08);}
   .resize-handle{display:none;}
   .ide-toolbar{flex-wrap:wrap;gap:8px;height:auto;padding:8px 12px;}
-  .lobby-card{padding:32px 24px;}
+  .lobby-card{padding:28px 20px;}
   .dash-grid{grid-template-columns:1fr;}
   .user-chip-name{display:none;}
-}
-@media(max-width:480px){
-  nav{padding:0 16px;}
-  .ide-toolbar{padding:8px 12px;}
-  .panel-header{padding:0 12px;}
-  .inline-form{flex-direction:column;}
 }
 </style>
 </head>
 <body>
 
 <nav>
-  <a class="logo" href="index.html">
+  <a class="logo" href="e-learn.html">
     <img class="logo-img" src="images/roboden-logo.png" alt="Roboden" onerror="this.style.display='none'">
     <div class="logo-text">
-      <span class="logo-title">ROBODEN</span>
+      <span class="logo-title">ROBO<span>DEN</span></span>
       <span class="logo-tagline">Think &bull; Build &bull; Innovate</span>
     </div>
   </a>
   <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
+    <li><a href="e-learn.html" class="back-dash-link">&larr; Back to Dashboard</a></li>
   </ul>
   <div class="nav-right">
     <div class="user-chip" id="userChip" style="display:none;">
-      <div class="user-avatar" id="userAvatar"></div>
-      <span class="user-chip-name" id="userChipName"></span>
+      <div class="user-avatar" id="userAvatar">S</div>
+      <span class="user-chip-name" id="userChipName">Student</span>
     </div>
     <button class="btn-signout" id="btnSignOut" style="display:none;" onclick="logout()">Sign Out</button>
-    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu"><span></span><span></span><span></span></button>
   </div>
 </nav>
 <div class="mobile-menu" id="mobileMenu">
-  <a href="index.html">Home</a>
+  <a href="e-learn.html">&larr; Back to Dashboard</a>
 </div>
 
 <!-- SCREEN: LOGIN -->
-<div class="screen active login-screen" id="screenLogin">
-  <div class="login-hero">
-    <div class="login-hero-content">
-      <div class="hero-text">
-        <h1 class="login-hero-title">Python Lab</h1>
-        <p class="login-hero-sub">Write, run, and learn Python — together in real time.</p>
-      </div>
-      <div class="hero-mockup">
-        <div class="mockup-window">
-          <div class="mockup-titlebar">
-            <div class="mockup-dots"><span></span><span></span><span></span></div>
-            <div class="mockup-tab active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:10px;height:10px;"><polygon points="5 3 19 12 5 21 5 3"/></svg> Python Lab — Roboden</div>
-          </div>
-          <div class="mockup-toolbar">
-            <span class="mockup-badge-room">ROOM: A7X3</span>
-            <span class="mockup-badge-users">2 online</span>
-            <span class="mockup-role">TEACHER</span>
-          </div>
-          <div class="mockup-editors">
-            <div class="mockup-panel">
-              <div class="mockup-panel-head"><span class="mdot" style="background:#fbbf24"></span> Teacher's Code</div>
-              <div class="mockup-code">
-                <div class="code-line"><span class="ln">1</span><span class="kw">def</span> <span class="fn">greet</span>(<span class="arg">name</span>):</div>
-                <div class="code-line"><span class="ln">2</span>    <span class="kw">return</span> <span class="st">f"Hello, </span><span class="br">{</span><span class="arg">name</span><span class="br">}</span><span class="st">!"</span></div>
-                <div class="code-line"><span class="ln">3</span></div>
-                <div class="code-line"><span class="ln">4</span><span class="arg">student</span> = <span class="fn">input</span>(<span class="st">"Your name: "</span>)</div>
-                <div class="code-line"><span class="ln">5</span><span class="fn">print</span>(<span class="fn">greet</span>(<span class="arg">student</span>))</div>
-              </div>
-            </div>
-            <div class="mockup-panel">
-              <div class="mockup-panel-head"><span class="mdot" style="background:#34d399"></span> Student's Code</div>
-              <div class="mockup-code">
-                <div class="code-line"><span class="ln">1</span><span class="cm"># My solution</span></div>
-                <div class="code-line"><span class="ln">2</span><span class="kw">for</span> <span class="arg">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):</div>
-                <div class="code-line"><span class="ln">3</span>    <span class="fn">print</span>(<span class="st">f"</span><span class="br">{</span><span class="arg">i</span>+<span class="num">1</span><span class="br">}</span><span class="st">. Hello!"</span>)</div>
-                <div class="code-line"><span class="ln">4</span><span class="cursor-line"></span></div>
-              </div>
-            </div>
-          </div>
-          <div class="mockup-output">
-            <div class="mockup-panel-head"><span class="mdot" style="background:#a78bfa"></span> Output</div>
-            <div class="mockup-output-text">
-              <span class="out-line">Your name: <span style="color:#a78bfa">Aarna</span></span>
-              <span class="out-line">Hello, Aarna!</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="login-form-side">
+<div class="screen" id="screenLogin">
   <div class="lobby-card">
-    <h2>Get Started</h2>
-    <p>Sign in to start coding.</p>
+    <div class="lobby-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+    </div>
+    <h1>Python Lab</h1>
+    <p>Sign in to enter the collaborative interactive Python environment.</p>
 
     <div class="lobby-tabs">
-      <button class="lobby-tab active" onclick="switchLoginTab('teacher',this)">Teacher</button>
-      <button class="lobby-tab" onclick="switchLoginTab('student',this)">Student</button>
+      <button class="lobby-tab active" onclick="switchLoginTab('student',this)">Student</button>
+      <button class="lobby-tab" onclick="switchLoginTab('teacher',this)">Instructor</button>
+    </div>
+
+    <!-- STUDENT LOGIN -->
+    <div id="loginStudent">
+      <button class="btn-google" onclick="studentSignIn()">
+        <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Continue with Google
+      </button>
+      <div class="divider"></div>
+      <p style="font-size:.8rem;color:var(--muted);margin-bottom:0;">Enrollment required: Ensure your classroom instructor has approved your access on E-Learn.</p>
     </div>
 
     <!-- TEACHER LOGIN -->
-    <div id="loginTeacher">
+    <div id="loginTeacher" style="display:none;">
       <div class="input-group">
-        <label>Email / ID</label>
+        <label>Email Address</label>
         <input type="text" id="teacherEmail" placeholder="teacher@roboden.in">
       </div>
       <div class="input-group pw-group">
@@ -495,20 +350,9 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
           <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
         </button>
       </div>
-      <button class="btn-primary" onclick="teacherLogin()">Sign In</button>
-      <div id="teacherLoginError" style="color:#f87171;font-size:.8rem;margin-top:10px;display:none;"></div>
+      <button class="btn-primary" onclick="teacherLogin()">Sign In as Instructor</button>
+      <div id="teacherLoginError" style="color:#b44436;font-size:.8rem;margin-top:10px;display:none;"></div>
     </div>
-
-    <!-- STUDENT LOGIN -->
-    <div id="loginStudent" style="display:none;">
-      <button class="btn-google" onclick="studentSignIn()">
-        <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-        Sign in with Google
-      </button>
-      <div class="divider"></div>
-      <p style="font-size:.8rem;color:rgba(255,255,255,0.4);margin-bottom:0;">First time? Click above to register. Your teacher will approve your access.</p>
-    </div>
-  </div>
   </div>
 </div>
 
@@ -518,63 +362,63 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
     <div class="lobby-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     </div>
-    <h1>Registration Sent</h1>
-    <div class="msg-box msg-pending">Your registration request has been sent to your teacher. Once approved, you can sign in and start coding. Please check back later.</div>
-    <button class="btn-primary" onclick="logout()" style="margin-top:16px;">Sign Out</button>
+    <h1>Approval Pending</h1>
+    <div class="msg-box msg-pending">Your account or Python Lab enrollment is currently pending approval. Please ask your instructor to grant access in the E-Learn Classroom console.</div>
+    <a href="e-learn.html" class="btn-primary" style="display:block;text-decoration:none;margin-top:16px;">Back to Dashboard</a>
   </div>
 </div>
 
 <!-- SCREEN: TEACHER DASHBOARD -->
 <div class="screen" id="screenTeacherDash">
   <div class="lobby-card wide">
-    <h2>Teacher Dashboard</h2>
-    <p>Welcome back, <span id="teacherWelcomeName"></span>.</p>
+    <h2>Instructor Console</h2>
+    <p>Welcome back, <span id="teacherWelcomeName">Instructor</span>.</p>
 
     <div class="dash-grid">
       <div class="dash-card" onclick="teacherCreateRoom()">
-        <div class="dash-card-icon ic-room"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><circle cx="12" cy="10" r="2" fill="currentColor" opacity="0.3"/></svg></div>
-        <h3>Create Room</h3>
-        <p>Start a live coding session</p>
+        <div class="dash-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+        <h3>Create Live Room</h3>
+        <p>Start a collaborative coding session with students</p>
       </div>
       <div class="dash-card" id="studentRequestsCard" onclick="showTeacherPanel('students')">
-        <div class="dash-card-icon ic-students"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/><path d="M19 8v6"/><path d="M16 11h6"/></svg></div>
-        <h3>Student Requests</h3>
+        <div class="dash-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/><path d="M19 8v6"/><path d="M16 11h6"/></svg></div>
+        <h3>Student Approvals</h3>
         <p id="pendingCountLabel">Approve new students</p>
       </div>
       <div class="dash-card" onclick="showTeacherPanel('projects')">
-        <div class="dash-card-icon ic-projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M2 8h20"/><path d="M10 4v4"/></svg></div>
+        <div class="dash-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M2 8h20"/><path d="M10 4v4"/></svg></div>
         <h3>Student Projects</h3>
-        <p>Review all student work</p>
+        <p>Review submitted Python code</p>
       </div>
       <div class="dash-card" id="manageTeachersCard" onclick="showTeacherPanel('teachers')">
-        <div class="dash-card-icon ic-teachers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-1a4 4 0 0 0-3-3.87"/><circle cx="12" cy="7" r="4"/><path d="M4 21v-1a4 4 0 0 1 4-4h4"/><path d="M18 14l2 2 4-4"/></svg></div>
-        <h3>Manage Teachers</h3>
-        <p>Add or remove teachers</p>
+        <div class="dash-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-1a4 4 0 0 0-3-3.87"/><circle cx="12" cy="7" r="4"/><path d="M4 21v-1a4 4 0 0 1 4-4h4"/><path d="M18 14l2 2 4-4"/></svg></div>
+        <h3>Faculty Accounts</h3>
+        <p>Add or manage teachers</p>
       </div>
     </div>
 
     <div id="roomCreatedTeacher" style="display:none;">
-      <label style="font-size:.72rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;">Room Code — share with students</label>
+      <label style="font-size:.72rem;font-weight:800;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;">Room Code — Share with students</label>
       <div class="room-code-display" id="roomCodeDisplayT"></div>
       <p class="copy-hint">Click code to copy</p>
-      <button class="btn-primary" onclick="enterIDE()">Enter Lab</button>
+      <button class="btn-primary" onclick="enterIDE()">Enter Coding Lab &rarr;</button>
     </div>
 
     <div id="rejoinRoomTeacher" style="display:none;margin-top:16px;">
       <div class="divider"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
         <div style="text-align:left;">
-          <div style="font-size:.72rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-family:var(--mono);">Last room</div>
-          <div style="font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--accent);letter-spacing:.15em;margin-top:4px;" id="lastRoomCode"></div>
+          <div style="font-size:.72rem;font-weight:800;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-family:var(--mono);">Active session</div>
+          <div style="font-family:var(--mono);font-size:1.1rem;font-weight:800;color:var(--primary);letter-spacing:.15em;margin-top:2px;" id="lastRoomCode"></div>
         </div>
-        <button class="btn-primary" onclick="rejoinRoom()" style="width:auto;padding:10px 28px;">Rejoin Room</button>
+        <button class="btn-primary" onclick="rejoinRoom()" style="width:auto;padding:10px 24px;">Rejoin Room</button>
       </div>
     </div>
 
     <!-- SUB-PANELS -->
     <div id="panelStudents" class="admin-panel" style="display:none;">
       <button class="btn-back" onclick="hideTeacherPanels()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back</button>
-      <h3>Pending Requests <span id="pendingBadge" style="font-weight:400;color:var(--warning);"></span></h3>
+      <h3>Pending Requests <span id="pendingBadge" style="font-weight:400;color:#b06a00;"></span></h3>
       <div class="admin-list" id="pendingList"><div class="no-items">No pending requests</div></div>
       <div style="margin-top:24px;">
         <h3>Approved Students</h3>
@@ -590,11 +434,11 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 
     <div id="panelTeachers" class="admin-panel" style="display:none;">
       <button class="btn-back" onclick="hideTeacherPanels()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back</button>
-      <h3>Teacher Accounts</h3>
-      <div class="admin-list" id="teachersList"><div class="no-items">No teachers added</div></div>
+      <h3>Instructor Accounts</h3>
+      <div class="admin-list" id="teachersList"><div class="no-items">No instructors added</div></div>
       <div class="inline-form" id="addTeacherForm">
-        <input type="text" id="newTeacherName" placeholder="Name">
-        <input type="text" id="newTeacherEmail" placeholder="Email / ID">
+        <input type="text" id="newTeacherName" placeholder="Instructor Name">
+        <input type="text" id="newTeacherEmail" placeholder="teacher@roboden.in">
         <div style="position:relative;flex:1;display:flex;">
           <input type="password" id="newTeacherPass" placeholder="Password" style="padding-right:36px;">
           <button type="button" class="btn-pw-toggle" onclick="togglePassword('newTeacherPass',this)" style="top:50%;transform:translateY(-50%);right:8px;" aria-label="Toggle password visibility">
@@ -602,7 +446,7 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
             <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
           </button>
         </div>
-        <button onclick="addTeacher()">Add</button>
+        <button onclick="addTeacher()">Add Instructor</button>
       </div>
     </div>
   </div>
@@ -611,39 +455,39 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
 <!-- SCREEN: STUDENT DASHBOARD -->
 <div class="screen" id="screenStudentDash">
   <div class="lobby-card">
-    <h2 id="studentWelcomeTitle">Welcome back!</h2>
-    <p>Practice anytime or join a live class.</p>
+    <h2 id="studentWelcomeTitle">Welcome to Python Lab!</h2>
+    <p>Practice in your personal workspace or join a live classroom session.</p>
 
     <div class="dash-grid">
       <div class="dash-card" onclick="studentStartCoding()">
-        <div class="dash-card-icon ic-code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-        <h3>My Code</h3>
-        <p>Practice Python on your own</p>
+        <div class="dash-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+        <h3>Solo Workspace</h3>
+        <p>Write & execute Python scripts independently</p>
       </div>
       <div class="dash-card" onclick="showJoinRoom()">
-        <div class="dash-card-icon ic-join"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg></div>
-        <h3>Join Room</h3>
-        <p>Enter live class session</p>
+        <div class="dash-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg></div>
+        <h3>Join Live Room</h3>
+        <p>Connect with your instructor in real time</p>
       </div>
     </div>
 
-    <div id="joinRoomSection" style="display:none;">
+    <div id="joinRoomSection" style="display:none;margin-top:16px;">
       <div class="input-group">
-        <label>Room Code</label>
-        <input type="text" id="studentRoomCode" placeholder="Enter 6-digit code" maxlength="6" style="text-transform:uppercase;letter-spacing:.15em;text-align:center;">
+        <label>Enter 6-Digit Room Code</label>
+        <input type="text" id="studentRoomCode" placeholder="ABC123" maxlength="6" style="text-transform:uppercase;letter-spacing:.15em;text-align:center;font-family:var(--mono);font-size:1.1rem;font-weight:700;">
       </div>
-      <button class="btn-primary" onclick="studentJoinRoom()">Join Room</button>
+      <button class="btn-primary" onclick="studentJoinRoom()">Join Classroom &rarr;</button>
     </div>
 
     <div class="divider"></div>
     <div class="admin-panel">
-      <h3>My Projects <span id="myProjectCount" style="font-weight:400;color:var(--accent);"></span></h3>
-      <div class="admin-list" id="myProjectsList"><div class="no-items">No saved projects yet. Start coding!</div></div>
+      <h3>Saved Projects <span id="myProjectCount" style="font-weight:700;color:var(--primary);"></span></h3>
+      <div class="admin-list" id="myProjectsList"><div class="no-items">No saved scripts yet. Start coding!</div></div>
     </div>
   </div>
 </div>
 
-<!-- IDE -->
+<!-- ══════ IDE WORKSPACE ══════ -->
 <div id="ide">
   <div class="ide-toolbar">
     <div class="toolbar-left">
@@ -659,14 +503,13 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
       <span class="save-indicator" id="saveIndicator">Saved</span>
     </div>
     <div class="toolbar-right">
-      <!-- Teacher controls: send code, lock -->
-      <button class="btn-send-all" id="btnSendAll" onclick="sendCodeToAll()" style="display:none;" title="Send your code to all students">
+      <button class="btn-send-all" id="btnSendAll" onclick="sendCodeToAll()" style="display:none;" title="Broadcast your code to all students">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         Send to All
       </button>
-      <button class="btn-lock" id="btnLock" onclick="toggleLock()" style="display:none;" title="Lock/unlock student editors">
+      <button class="btn-lock" id="btnLock" onclick="toggleLock()" style="display:none;" title="Lock or unlock student editors">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        Unlock
+        Lock
       </button>
       <button class="btn-save" id="btnSave" onclick="saveProject()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -675,12 +518,12 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
       <button class="btn-run" id="btnRun" onclick="runCode()" disabled>
         <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run
       </button>
-      <button class="btn-download" id="btnDownload" onclick="downloadCode()" title="Download as .py file">
+      <button class="btn-download" id="btnDownload" onclick="downloadCode()" title="Download code as .py file">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         .py
       </button>
       <button class="btn-toolbar" onclick="clearOutput()">Clear</button>
-      <button class="btn-leave" onclick="leaveIDE()">Leave</button>
+      <button class="btn-leave" onclick="leaveIDE()">Leave Lab</button>
     </div>
   </div>
   <div class="editors-container" id="editorsContainer">
@@ -709,19 +552,19 @@ nav .nav-right{min-width:160px;justify-content:flex-end;display:flex;align-items
   <div class="output-container" id="outputContainer">
     <div class="output-resize" id="outputResize"></div>
     <div class="panel-header">
-      <span class="panel-title"><span class="dot dot-output"></span> Output</span>
+      <span class="panel-title"><span class="dot dot-output"></span> Output Terminal</span>
       <div style="display:flex;align-items:center;gap:8px;">
         <div class="output-source-toggle" id="outputSourceToggle" style="display:none;">
           <button class="output-src-btn active" data-src="own" onclick="switchOutputSource('own')">My code</button>
           <button class="output-src-btn" data-src="student" onclick="switchOutputSource('student')">Student code</button>
         </div>
-        <span id="execTime" style="font-size:.68rem;color:rgba(255,255,255,0.35);font-family:var(--mono);"></span>
+        <span id="execTime" style="font-size:.68rem;color:rgba(255,255,255,0.4);font-family:var(--mono);"></span>
       </div>
     </div>
-    <div class="output-area" id="outputArea" onclick="if(S._activeInput)S._activeInput.focus();"><span class="system">Python Lab ready. Press Run or Ctrl+Enter to execute your code.</span></div>
+    <div class="output-area" id="outputArea"><span class="system">Python Lab ready. Press Run or Ctrl+Enter to execute your code.</span></div>
   </div>
   <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div><div class="loading-text" id="loadingText">Loading Python engine...</div></div>
-  <div class="status-bar"><span><span class="status-dot status-connected" id="statusDot"></span><span id="statusText">Connected</span></span><span id="pyodideVersion">Pyodide loading...</span></div>
+  <div class="status-bar"><span><span class="status-dot status-connected" id="statusDot"></span><span id="statusText">Connected</span></span><span id="pyodideVersion">Python 3.11</span></div>
 </div>
 
 <!-- MODAL -->
@@ -751,7 +594,7 @@ const firebaseConfig = {
   messagingSenderId: "795159494955",
   appId: "1:795159494955:web:7cf697dc4a5509b03b856e"
 };
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
@@ -786,12 +629,12 @@ const fbRest = {
     if (!r.ok) throw new Error('DB update failed: ' + r.status);
     return r.json();
   },
-  async push(path, data) {
+  async remove(path) {
     let url = DB_BASE + '/' + path + '.json';
     const tok = await getAuthToken();
     if (tok) url += '?auth=' + tok;
-    const r = await fetch(url, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
-    if (!r.ok) throw new Error('DB push failed: ' + r.status);
+    const r = await fetch(url, { method: 'DELETE' });
+    if (!r.ok) throw new Error('DB delete failed: ' + r.status);
     return r.json();
   }
 };
@@ -806,6 +649,25 @@ let S = {
   selectedStudentUid: null, studentsInRoom: {},
   editorLocked: false, currentProjectName: null
 };
+
+/* ══════ ESCAPE HELPER (HTML & ATTRIBUTES) ══════ */
+function esc(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function safeImgSrc(url) {
+  if (!url || typeof url !== 'string') return '';
+  const trimmed = url.trim();
+  if (trimmed.startsWith('https://lh3.googleusercontent.com/') || trimmed.startsWith('https://graph.facebook.com/')) {
+    return esc(trimmed);
+  }
+  return '';
+}
 
 /* ══════ CODEMIRROR SETUP ══════ */
 function createCM(element, options) {
@@ -861,13 +723,13 @@ function initEditors() {
 function switchOutputSource(src) {
   S.outputSource = src;
   document.querySelectorAll('#outputSourceToggle .output-src-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('#outputSourceToggle .output-src-btn[data-src="'+src+'"]').classList.add('active');
+  const target = document.querySelector('#outputSourceToggle .output-src-btn[data-src="'+src+'"]');
+  if (target) target.classList.add('active');
 }
 
 /* ══════ HAMBURGER ══════ */
 const ham = document.getElementById('hamburger'), mob = document.getElementById('mobileMenu');
 ham.addEventListener('click', () => { mob.classList.toggle('open'); ham.classList.toggle('open'); });
-mob.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { mob.classList.remove('open'); ham.classList.remove('open'); }));
 
 /* ══════ PASSWORD TOGGLE ══════ */
 function togglePassword(inputId, btn) {
@@ -893,6 +755,7 @@ function showNav(name, initial) {
   document.getElementById('userChipName').textContent = name;
   document.getElementById('btnSignOut').style.display = 'block';
 }
+
 function hideNav() {
   document.getElementById('userChip').style.display = 'none';
   document.getElementById('btnSignOut').style.display = 'none';
@@ -906,7 +769,7 @@ function switchLoginTab(tab, btn) {
   document.getElementById('loginStudent').style.display = tab === 'student' ? 'block' : 'none';
 }
 
-/* ══════ TEACHER LOGIN (Firebase Auth email/password) ══════ */
+/* ══════ TEACHER LOGIN ══════ */
 async function teacherLogin() {
   const email = document.getElementById('teacherEmail').value.trim().toLowerCase();
   const pass = document.getElementById('teacherPassword').value;
@@ -915,30 +778,27 @@ async function teacherLogin() {
   if (!email || !pass) { errEl.textContent = 'Enter email and password.'; errEl.style.display = 'block'; return; }
 
   try {
-    S.role = 'teacher';
     const cred = await auth.signInWithEmailAndPassword(email, pass);
     const uid = cred.user.uid;
 
-    const teacherData = await fbRest.get('teachers/' + uid);
-    if (!teacherData) { S.role = null; await auth.signOut(); errEl.textContent = 'Not registered as a teacher.'; errEl.style.display = 'block'; return; }
+    const snap = await db.ref('users/' + uid).once('value'); const userData = snap.val();
+    if (!userData || (userData.role !== 'admin' && userData.role !== 'teacher')) {
+      S.role = null;
+      await auth.signOut();
+      errEl.textContent = 'Not registered as an instructor.';
+      errEl.style.display = 'block';
+      return;
+    }
 
-    S.teacherSession = { id: uid, name: teacherData.name, email: teacherData.email, isAdmin: !!teacherData.isAdmin };
+    S.teacherSession = { id: uid, name: userData.name || 'Instructor', email: userData.email || email, isAdmin: userData.role === 'admin' };
     localStorage.setItem('teacherSession', JSON.stringify(S.teacherSession));
     S.role = 'teacher';
-    showNav(teacherData.name, teacherData.name[0]);
+    showNav(S.teacherSession.name, S.teacherSession.name[0]);
     showTeacherDashboard();
   } catch(e) {
     S.role = null;
     console.error('Teacher login error:', e);
-    if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
-      errEl.textContent = 'Invalid email or password.';
-    } else if (e.code === 'auth/wrong-password') {
-      errEl.textContent = 'Incorrect password.';
-    } else if (e.code === 'auth/too-many-requests') {
-      errEl.textContent = 'Too many failed attempts. Try again later.';
-    } else {
-      errEl.textContent = 'Login failed: ' + e.message;
-    }
+    errEl.textContent = 'Login failed: ' + (e.message || 'Invalid credentials');
     errEl.style.display = 'block';
   }
 }
@@ -972,54 +832,49 @@ function studentSignIn() {
 }
 
 auth.onAuthStateChanged(async user => {
-  if (!user) { localStorage.removeItem('teacherSession'); return; }
-  if (S.role) return;
-
-  const savedTeacher = localStorage.getItem('teacherSession');
-  if (savedTeacher) {
-    try {
-      const parsed = JSON.parse(savedTeacher);
-      const teacherData = await fbRest.get('teachers/' + user.uid);
-      if (teacherData) {
-        S.teacherSession = { id: user.uid, name: teacherData.name, email: teacherData.email, isAdmin: !!teacherData.isAdmin };
-        localStorage.setItem('teacherSession', JSON.stringify(S.teacherSession));
-        S.role = 'teacher';
-        showNav(S.teacherSession.name, S.teacherSession.name[0]);
-        showTeacherDashboard();
-        return;
-      }
-    } catch(e) { localStorage.removeItem('teacherSession'); }
+  if (!user) {
+    localStorage.removeItem('teacherSession');
+    showScreen('screenLogin');
+    hideNav();
+    return;
   }
+  if (S.role) return;
 
   try {
     S.studentUser = user;
-    const data = await fbRest.get('students/' + user.uid);
+    const snap = await db.ref('users/' + user.uid).once('value'); const userData = snap.val();
 
-    if (!data) {
-      await fbRest.set('students/' + user.uid, {
-        name: user.displayName || 'Student',
-        email: user.email,
-        photoURL: user.photoURL || '',
-        status: 'pending',
-        registeredAt: { '.sv': 'timestamp' }
-      });
-      showScreen('screenPending');
-      showNav(user.displayName || 'Student', (user.displayName || 'S')[0]);
+    if (userData && (userData.role === 'admin' || userData.role === 'teacher')) {
+      S.teacherSession = { id: user.uid, name: userData.name || user.displayName || 'Instructor', email: userData.email || user.email, isAdmin: userData.role === 'admin' };
+      localStorage.setItem('teacherSession', JSON.stringify(S.teacherSession));
+      S.role = 'teacher';
+      showNav(S.teacherSession.name, S.teacherSession.name[0]);
+      showTeacherDashboard();
       return;
     }
 
-    if (data.status === 'pending') {
-      showScreen('screenPending');
-      showNav(data.name, data.name[0]);
-      return;
-    }
-
-    if (data.status === 'approved') {
+    if (userData && userData.status === 'approved') {
+      if (userData.courses && !userData.courses.python) {
+        alert('Python Lab is not enabled for your account. Please contact your instructor on E-Learn.');
+        location.href = 'e-learn.html';
+        return;
+      }
       S.role = 'student';
-      showNav(data.name, data.name[0]);
+      showNav(userData.name || user.displayName || 'Student', (userData.name || 'S')[0]);
       showStudentDashboard();
       return;
     }
+
+    const sSnap = await db.ref('students/' + user.uid).once('value'); const data = sSnap.val();
+    if (data && data.status === 'approved') {
+      S.role = 'student';
+      showNav(data.name || user.displayName || 'Student', (data.name || 'S')[0]);
+      showStudentDashboard();
+      return;
+    }
+
+    showScreen('screenPending');
+    showNav(user.displayName || 'Student', (user.displayName || 'S')[0]);
   } catch(e) {
     console.error('Auth state error:', e);
   }
@@ -1040,14 +895,14 @@ function logout() {
   S.role = null;
   localStorage.removeItem('teacherSession');
   auth.signOut();
-  hideNav();
-  showScreen('screenLogin');
+  location.href = 'e-learn.html';
 }
 
 /* ══════ TEACHER: MANAGE STUDENTS ══════ */
 function showTeacherPanel(panel) {
   hideTeacherPanels();
-  document.getElementById('panel' + panel.charAt(0).toUpperCase() + panel.slice(1)).style.display = 'block';
+  const target = document.getElementById('panel' + panel.charAt(0).toUpperCase() + panel.slice(1));
+  if (target) target.style.display = 'block';
   document.querySelector('#screenTeacherDash .dash-grid').style.display = 'none';
 }
 function hideTeacherPanels() {
@@ -1056,8 +911,8 @@ function hideTeacherPanels() {
 }
 
 async function loadPendingStudents() {
-  const all = await fbRest.get('students') || {};
-  const data = Object.fromEntries(Object.entries(all).filter(([,v]) => v.status === 'pending'));
+  const snap = await db.ref('users').once('value'); const all = snap.val() || {};
+  const data = Object.fromEntries(Object.entries(all).filter(([,v]) => v && v.status === 'pending'));
   const list = document.getElementById('pendingList');
   const entries = Object.entries(data);
   document.getElementById('pendingBadge').textContent = entries.length ? '(' + entries.length + ')' : '';
@@ -1067,570 +922,464 @@ async function loadPendingStudents() {
   list.innerHTML = entries.map(([uid, s]) => `
     <div class="admin-item">
       <div class="admin-item-info">
-        ${safeImgSrc(s.photoURL) ? '<img class="admin-item-avatar" src="'+safeImgSrc(s.photoURL)+'" onerror="this.style.display=\'none\'">' : ''}
         <div class="admin-item-text">
-          <div class="admin-item-name">${esc(s.name)}</div>
+          <div class="admin-item-name">${esc(s.name || 'Student')}</div>
           <div class="admin-item-email">${esc(s.email)}</div>
         </div>
       </div>
       <div class="admin-item-actions">
-        <button class="btn-approve" onclick="approveStudent('${uid}')">Approve</button>
-        <button class="btn-reject" onclick="rejectStudent('${uid}')">Reject</button>
+        <button class="btn-approve" onclick="approveStudent('${esc(uid)}')">Approve</button>
+        <button class="btn-reject" onclick="rejectStudent('${esc(uid)}')">Reject</button>
       </div>
     </div>
   `).join('');
 }
 
 async function loadApprovedStudents() {
-  const all = await fbRest.get('students') || {};
-  const data = Object.fromEntries(Object.entries(all).filter(([,v]) => v.status === 'approved'));
+  const snap = await db.ref('users').once('value'); const all = snap.val() || {};
+  const data = Object.fromEntries(Object.entries(all).filter(([,v]) => v && v.status === 'approved' && v.role === 'student'));
   const list = document.getElementById('approvedList');
   const entries = Object.entries(data);
   if (!entries.length) { list.innerHTML = '<div class="no-items">No approved students yet</div>'; return; }
   list.innerHTML = entries.map(([uid, s]) => `
     <div class="admin-item">
       <div class="admin-item-info">
-        ${safeImgSrc(s.photoURL) ? '<img class="admin-item-avatar" src="'+safeImgSrc(s.photoURL)+'" onerror="this.style.display=\'none\'">' : ''}
         <div class="admin-item-text">
-          <div class="admin-item-name">${esc(s.name)}</div>
+          <div class="admin-item-name">${esc(s.name || 'Student')}</div>
           <div class="admin-item-email">${esc(s.email)}</div>
         </div>
       </div>
       <span class="admin-item-badge badge-approved">Approved</span>
-      <button class="btn-remove" onclick="removeStudent('${uid}','${esc(s.name)}')">Remove</button>
+      <button class="btn-remove" onclick="removeStudent('${esc(uid)}')">Revoke</button>
     </div>
   `).join('');
 }
 
 async function approveStudent(uid) {
-  await fbRest.update('students/' + uid, { status: 'approved', approvedAt: {'.sv':'timestamp'} });
+  await db.ref('users/' + uid).update({ status: 'approved', courses: { python: true, typing: true } });
   loadPendingStudents(); loadApprovedStudents();
 }
+
 async function rejectStudent(uid) {
-  if (!confirm('Reject this student?')) return;
-  await fbRest.set('students/' + uid, null);
-  loadPendingStudents();
-}
-async function removeStudent(uid, name) {
-  if (!confirm('Remove ' + name + '? They will need to register again.')) return;
-  await fbRest.set('students/' + uid, null);
-  loadApprovedStudents();
+  if (confirm('Decline this student?')) {
+    await db.ref('users/' + uid).update({ status: 'rejected' });
+    loadPendingStudents(); loadApprovedStudents();
+  }
 }
 
-/* ══════ TEACHER: MANAGE TEACHERS ══════ */
+async function removeStudent(uid) {
+  if (confirm('Revoke access for this student?')) {
+    await db.ref('users/' + uid).update({ status: 'rejected', courses: { python: false, typing: false } });
+    loadApprovedStudents();
+  }
+}
+
 async function loadTeachersList() {
-  const data = await fbRest.get('teachers') || {};
+  const snap = await db.ref('users').once('value'); const all = snap.val() || {};
+  const teachers = Object.entries(all).filter(([,v]) => v && (v.role === 'teacher' || v.role === 'admin'));
   const list = document.getElementById('teachersList');
-  const entries = Object.entries(data);
-  if (!entries.length) { list.innerHTML = '<div class="no-items">No teachers. Add one below.</div>'; return; }
-  list.innerHTML = entries.map(([id, t]) => `
+  if (!teachers.length) { list.innerHTML = '<div class="no-items">No instructors found</div>'; return; }
+  list.innerHTML = teachers.map(([uid, t]) => `
     <div class="admin-item">
       <div class="admin-item-info">
         <div class="admin-item-text">
-          <div class="admin-item-name">${esc(t.name)}</div>
+          <div class="admin-item-name">${esc(t.name || 'Instructor')}</div>
           <div class="admin-item-email">${esc(t.email)}</div>
         </div>
       </div>
-      <button class="btn-remove" onclick="removeTeacher('${id}','${esc(t.name)}')">Remove</button>
+      <span class="admin-item-badge ${t.role === 'admin' ? 'badge-pending' : 'badge-approved'}">${esc(t.role)}</span>
     </div>
   `).join('');
 }
 
 async function addTeacher() {
   const name = document.getElementById('newTeacherName').value.trim();
-  const email = document.getElementById('newTeacherEmail').value.trim().toLowerCase();
+  const email = document.getElementById('newTeacherEmail').value.trim();
   const pass = document.getElementById('newTeacherPass').value;
-  if (!name || !email || !pass) { alert('Fill all fields.'); return; }
-  if (pass.length < 6) { alert('Password must be at least 6 characters (Firebase requirement).'); return; }
+  if (!name || !email || !pass) { alert('Please fill in all fields.'); return; }
+  if (pass.length < 6) { alert('Password must be at least 6 characters.'); return; }
 
+  const tempApp = firebase.initializeApp(firebaseConfig, 'tempAuth_' + Date.now());
   try {
-    const tempApp = firebase.initializeApp(firebaseConfig, 'temp_' + Date.now());
-    const tempAuth = tempApp.auth();
-    const cred = await tempAuth.createUserWithEmailAndPassword(email, pass);
-    const newUid = cred.user.uid;
-    await tempAuth.signOut();
-    await tempApp.delete();
-
-    await fbRest.set('teachers/' + newUid, { name, email, createdAt: {'.sv':'timestamp'} });
-
+    const cred = await tempApp.auth().createUserWithEmailAndPassword(email, pass);
+    await db.ref('users/' + cred.user.uid).set({
+      name: name, email: email, role: 'teacher', status: 'approved',
+      courses: { python: true, typing: true }, createdAt: Date.now()
+    });
     document.getElementById('newTeacherName').value = '';
     document.getElementById('newTeacherEmail').value = '';
     document.getElementById('newTeacherPass').value = '';
+    alert('Instructor ' + name + ' added successfully.');
     loadTeachersList();
   } catch(e) {
-    if (e.code === 'auth/email-already-in-use') {
-      alert('This email is already registered.');
-    } else {
-      alert('Failed to add teacher: ' + e.message);
-    }
+    alert('Failed to create instructor: ' + e.message);
+  } finally {
+    try { await tempApp.delete(); } catch(e) {}
   }
 }
 
-async function removeTeacher(id, name) {
-  if (S.teacherSession && S.teacherSession.id === id) { alert('Cannot remove yourself.'); return; }
-  if (!confirm('Remove teacher ' + name + '?')) return;
-  await fbRest.set('teachers/' + id, null);
-  loadTeachersList();
-}
-
-/* ══════ TEACHER: VIEW STUDENT PROJECTS ══════ */
+/* ══════ STUDENT PROJECTS ══════ */
 async function loadAllStudentProjects() {
-  const allStudents = await fbRest.get('students') || {};
-  const students = Object.fromEntries(Object.entries(allStudents).filter(([,v]) => v.status === 'approved'));
-  const allProjects = await fbRest.get('projects') || {};
-  const list = document.getElementById('allProjectsList');
+  Promise.all([
+    db.ref('projects').once('value'),
+    db.ref('users').once('value'),
+    db.ref('students').once('value')
+  ]).then(([projSnap, usersSnap, studentsSnap]) => {
+    const allProjects = projSnap.val() || {};
+    const allUsers = usersSnap.val() || {};
+    const allStudents = studentsSnap.val() || {};
+    const list = document.getElementById('allProjectsList');
+    const userIds = Object.keys(allProjects);
+    if (!userIds.length) { list.innerHTML = '<div class="no-items">No student projects submitted yet</div>'; return; }
 
-  const items = Object.entries(allProjects)
-    .filter(([uid]) => students[uid])
-    .map(([uid, projects]) => ({ uid, student: students[uid], projects: Object.entries(projects).sort((a,b) => (b[1].updatedAt||0) - (a[1].updatedAt||0)) }));
-
-  if (!items.length) { list.innerHTML = '<div class="no-items">No student projects yet</div>'; return; }
-  list.innerHTML = items.map(s => `
-    <div class="student-item" id="sp-${s.uid}">
-      <div class="student-header" onclick="document.getElementById('sp-${s.uid}').classList.toggle('open')">
-        ${safeImgSrc(s.student.photoURL) ? '<img class="admin-item-avatar" src="'+safeImgSrc(s.student.photoURL)+'" onerror="this.style.display=\'none\'">' : ''}
-        <span class="student-name">${esc(s.student.name)}</span>
-        <span class="student-count">${s.projects.length} project${s.projects.length!==1?'s':''}</span>
-        <svg class="student-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-      <div class="student-projects">
-        ${s.projects.map(([pid, p]) => `
-          <div class="student-project">
-            <div><div class="student-project-name">${esc(p.name)}</div><div class="student-project-date">${formatDate(p.updatedAt)}</div></div>
-            <button class="btn-view" onclick="viewProject('${s.uid}','${pid}','${esc(s.student.name)}')">View</button>
+    list.innerHTML = userIds.map(uid => {
+      const userPrjs = allProjects[uid] || {};
+      const uName = (allUsers[uid] && allUsers[uid].name) || (allStudents[uid] && allStudents[uid].name) || 'Student';
+      const keys = Object.keys(userPrjs);
+      return keys.map(pid => {
+        const p = userPrjs[pid];
+        return `
+        <div class="project-item" onclick="viewProject('${esc(p.name)}','${esc(uName)}',${JSON.stringify(p.code||'')})">
+          <div class="project-info">
+            <div class="project-name">${esc(p.name || 'Untitled Project')}</div>
+            <div class="project-date">${esc(uName)} &bull; ${p.updatedAt ? new Date(p.updatedAt).toLocaleDateString() : 'Saved'}</div>
           </div>
-        `).join('')}
-      </div>
-    </div>
-  `).join('');
+        </div>`;
+      }).join('');
+    }).join('');
+  }).catch(err => {
+    console.error('Error loading projects:', err);
+  });
 }
 
-async function viewProject(uid, pid, studentName) {
-  const d = await fbRest.get('projects/' + uid + '/' + pid);
-  if (!d) return;
-  document.getElementById('modalTitle').textContent = d.name || 'Untitled';
-  document.getElementById('modalSub').textContent = studentName + ' · ' + formatDate(d.updatedAt);
-  document.getElementById('modalCode').value = d.code || '';
+async function loadMyProjects() {
+  if (!S.studentUser) return;
+  const uid = S.studentUser.uid;
+  db.ref('projects/' + uid).once('value').then(snap => {
+    const prjs = snap.val() || {};
+    const list = document.getElementById('myProjectsList');
+    const countEl = document.getElementById('myProjectCount');
+    const keys = Object.keys(prjs);
+    if (countEl) countEl.textContent = keys.length ? '(' + keys.length + ')' : '';
+    if (!keys.length) { list.innerHTML = '<div class="no-items">No saved projects yet. Start coding!</div>'; return; }
+
+    list.innerHTML = keys.map(pid => {
+      const p = prjs[pid];
+      return `
+      <div class="project-item">
+        <div class="project-info" onclick="loadProjectCode('${esc(pid)}')">
+          <div class="project-name">${esc(p.name || 'Untitled')}</div>
+          <div class="project-date">${p.updatedAt ? new Date(p.updatedAt).toLocaleDateString() : 'Saved'}</div>
+        </div>
+        <div class="project-actions">
+          <button class="project-btn" onclick="deleteProject('${esc(pid)}',event)" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+        </div>
+      </div>`;
+    }).join('');
+  }).catch(err => {
+    console.error('Error loading student projects:', err);
+  });
+}
+
+function viewProject(title, sub, code) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalSub').textContent = sub;
+  document.getElementById('modalCode').value = code;
   document.getElementById('modalOverlay').classList.add('active');
 }
 function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); }
 
-/* ══════ TEACHER: CREATE ROOM ══════ */
-async function teacherCreateRoom() {
-  S.roomCode = genCode();
-  S.lastTeacherRoom = S.roomCode;
-  const name = S.teacherSession ? S.teacherSession.name : 'Teacher';
-  await fbRest.set('rooms/' + S.roomCode, {
-    teacherName: name, teacherCode: '# Welcome to Python Lab!\n# Students will see your code live.\n\nprint("Hello, students!")\n',
-    locked: false,
-    createdAt: {'.sv':'timestamp'}
+async function loadProjectCode(pid) {
+  if (!S.studentUser) return;
+  db.ref('projects/' + S.studentUser.uid + '/' + pid).once('value').then(snap => {
+    const p = snap.val();
+    if (p) {
+      S.currentProjectId = pid;
+      S.currentProjectName = p.name || 'Untitled';
+      studentStartCoding();
+      if (S.studentCM) S.studentCM.setValue(p.code || '');
+    }
   });
-  document.getElementById('roomCodeDisplayT').textContent = S.roomCode;
-  document.getElementById('roomCreatedTeacher').style.display = 'block';
-  document.getElementById('roomCodeDisplayT').onclick = () => {
-    (navigator.clipboard ? navigator.clipboard.writeText(S.roomCode) : Promise.reject()).then(() => {
-      document.getElementById('roomCodeDisplayT').style.borderColor = 'var(--success)';
-      setTimeout(() => document.getElementById('roomCodeDisplayT').style.borderColor = '', 1500);
-    }).catch(() => { window.prompt('Copy room code:', S.roomCode); });
-  };
 }
 
-/* ══════ TEACHER: REJOIN ROOM ══════ */
-async function rejoinRoom() {
-  if (!S.lastTeacherRoom) return;
-  const room = await fbRest.get('rooms/' + S.lastTeacherRoom);
-  if (!room) { alert('Room no longer exists.'); S.lastTeacherRoom = null; document.getElementById('rejoinRoomTeacher').style.display = 'none'; return; }
-  S.roomCode = S.lastTeacherRoom;
-  S.ideMode = 'room';
-  enterIDE();
+async function deleteProject(pid, e) {
+  e.stopPropagation();
+  if (confirm('Delete this project?')) {
+    await db.ref('projects/' + S.studentUser.uid + '/' + pid).remove();
+    loadMyProjects();
+  }
 }
 
-/* ══════ STUDENT: JOIN ROOM ══════ */
-function showJoinRoom() { document.getElementById('joinRoomSection').style.display = 'block'; }
-
-async function studentJoinRoom() {
-  const code = document.getElementById('studentRoomCode').value.trim().toUpperCase();
-  if (!code || code.length < 4) { document.getElementById('studentRoomCode').focus(); return; }
-  const room = await fbRest.get('rooms/' + code);
-  if (!room) { alert('Room not found.'); return; }
-  S.roomCode = code;
-  S.ideMode = 'room';
-  enterIDE();
-}
-
-/* ══════ STUDENT: SOLO CODING ══════ */
+/* ══════ ROOM & IDE MANAGEMENT ══════ */
 function studentStartCoding() {
   S.ideMode = 'solo';
-  S.roomCode = null;
   enterIDE();
 }
+function showJoinRoom() {
+  document.getElementById('joinRoomSection').style.display = 'block';
+}
 
-/* ══════ ENTER IDE ══════ */
+function generateRoomCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+  return code;
+}
+
+async function teacherCreateRoom() {
+  const code = generateRoomCode();
+  S.roomCode = code;
+  S.lastTeacherRoom = code;
+  await fbRest.set('rooms/' + code, {
+    createdAt: {'.sv':'timestamp'},
+    teacher: S.teacherSession.name,
+    teacherUid: S.teacherSession.id,
+    teacherCode: '# Write demo code here\nprint("Welcome to live Python class!")\n',
+    locked: false
+  });
+  document.getElementById('roomCodeDisplayT').textContent = code;
+  document.getElementById('roomCreatedTeacher').style.display = 'block';
+}
+
+function rejoinRoom() {
+  if (S.lastTeacherRoom) {
+    S.roomCode = S.lastTeacherRoom;
+    enterIDE();
+  }
+}
+
+async function studentJoinRoom() {
+  const inp = document.getElementById('studentRoomCode');
+  const code = inp.value.trim().toUpperCase();
+  if (code.length !== 6) { alert('Enter a valid 6-digit room code.'); return; }
+  try {
+    const snap = await db.ref('rooms/' + code).once('value');
+    const room = snap.val();
+    if (!room) { alert('Room not found. Please verify the code with your instructor.'); return; }
+    S.roomCode = code;
+    S.ideMode = 'room';
+    const sUid = (S.studentUser && S.studentUser.uid) || (auth.currentUser && auth.currentUser.uid);
+    const sName = (S.studentUser && S.studentUser.displayName) || (auth.currentUser && auth.currentUser.displayName) || 'Student';
+    if (sUid) {
+      await db.ref('rooms/' + code + '/students/' + sUid).update({
+        name: sName,
+        status: 'idle',
+        joinedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+    }
+    enterIDE();
+  } catch(err) {
+    console.error('Room join error:', err);
+    alert('Failed to join room: ' + err.message);
+  }
+}
+
 function enterIDE() {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('ide').style.display = 'flex';
-
   initEditors();
+  initPyodide();
 
   const roleBadge = document.getElementById('roleBadge');
-  const outputToggle = document.getElementById('outputSourceToggle');
-  const studentSelector = document.getElementById('studentSelector');
+  const roomBadgeWrap = document.getElementById('roomBadgeWrap');
+  const usersBadgeWrap = document.getElementById('usersBadgeWrap');
   const btnSendAll = document.getElementById('btnSendAll');
   const btnLock = document.getElementById('btnLock');
-  const lockedOverlay = document.getElementById('lockedOverlay');
-
-  // Reset
-  outputToggle.style.display = 'none';
-  studentSelector.style.display = 'none';
-  btnSendAll.style.display = 'none';
-  btnLock.style.display = 'none';
-  lockedOverlay.style.display = 'none';
-  S.outputSource = 'own';
-  S.selectedStudentUid = null;
-  S.studentsInRoom = {};
-  S.editorLocked = false;
-
-  if (S.ideMode === 'solo') {
-    document.getElementById('teacherPanel').style.display = 'none';
-    document.getElementById('resizeHandle').style.display = 'none';
-    document.getElementById('roomBadgeWrap').style.display = 'none';
-    document.getElementById('usersBadgeWrap').style.display = 'none';
-    roleBadge.textContent = 'practice';
-    roleBadge.className = 'role-badge role-student';
-    document.getElementById('studentPanelTitle').innerHTML = '<span class="dot dot-student"></span> Your Code';
-    S.studentCM.setOption('readOnly', false);
-    setupAutoSave();
-  } else if (S.role === 'teacher') {
-    document.getElementById('teacherPanel').style.display = 'flex';
-    document.getElementById('resizeHandle').style.display = 'block';
-    document.getElementById('roomBadgeWrap').style.display = 'flex';
-    document.getElementById('usersBadgeWrap').style.display = 'flex';
-    document.getElementById('toolbarRoomCode').textContent = S.roomCode;
-    roleBadge.textContent = 'teacher';
-    roleBadge.className = 'role-badge role-teacher';
-    document.getElementById('teacherPanelTitle').innerHTML = '<span class="dot dot-teacher"></span> Your Code (Teacher)';
-    document.getElementById('studentPanelTitle').innerHTML = '<span class="dot dot-student"></span> Student View';
-    outputToggle.style.display = 'flex';
-    outputToggle.querySelector('[data-src="own"]').textContent = 'My code';
-    outputToggle.querySelector('[data-src="student"]').textContent = 'Student code';
-    studentSelector.style.display = 'flex';
-    btnSendAll.style.display = 'flex';
-    btnLock.style.display = 'flex';
-    S.teacherCM.setOption('readOnly', false);
-    S.studentCM.setOption('readOnly', false);
-    setupFirebaseSync();
-    setupPresence();
-  } else {
-    document.getElementById('teacherPanel').style.display = 'flex';
-    document.getElementById('resizeHandle').style.display = 'block';
-    document.getElementById('roomBadgeWrap').style.display = 'flex';
-    document.getElementById('usersBadgeWrap').style.display = 'flex';
-    document.getElementById('toolbarRoomCode').textContent = S.roomCode;
-    roleBadge.textContent = 'student';
-    roleBadge.className = 'role-badge role-student';
-    document.getElementById('teacherPanelTitle').innerHTML = '<span class="dot dot-teacher"></span> Teacher\'s Code';
-    document.getElementById('studentPanelTitle').innerHTML = '<span class="dot dot-student"></span> Your Code';
-    outputToggle.style.display = 'flex';
-    outputToggle.querySelector('[data-src="own"]').textContent = 'My code';
-    outputToggle.querySelector('[data-src="student"]').textContent = 'Teacher code';
-    S.teacherCM.setOption('readOnly', true);
-    S.studentCM.setOption('readOnly', false);
-    setupFirebaseSync();
-    setupPresence();
-    setupAutoSave();
-  }
-
-  setTimeout(() => {
-    if (S.teacherCM) S.teacherCM.refresh();
-    if (S.studentCM) S.studentCM.refresh();
-  }, 50);
-
-  initPyodide();
-}
-
-/* ══════ FIREBASE SSE (real-time streaming via REST) ══════ */
-async function fbListen(path, callback) {
-  const tok = await getAuthToken();
-  let url = DB_BASE + '/' + path + '.json';
-  if (tok) url += '?auth=' + tok;
-  const es = new EventSource(url);
-  const dot = document.getElementById('statusDot');
-  const txt = document.getElementById('statusText');
-  es.addEventListener('put', e => {
-    try { const d = JSON.parse(e.data); callback(d.data, d.path); } catch(err) {}
-  });
-  es.addEventListener('patch', e => {
-    try { const d = JSON.parse(e.data); callback(d.data, d.path); } catch(err) {}
-  });
-  es.onopen = () => { dot.className = 'status-dot status-connected'; txt.textContent = 'Connected'; };
-  es.onerror = () => { dot.className = 'status-dot status-disconnected'; txt.textContent = 'Reconnecting...'; };
-  return es;
-}
-
-function cleanupSync() {
-  if (S._syncES) { S._syncES.close(); S._syncES = null; }
-  if (S._studentsES) { S._studentsES.close(); S._studentsES = null; }
-  if (S._studentSyncES) { S._studentSyncES.close(); S._studentSyncES = null; }
-  if (S._lockES) { S._lockES.close(); S._lockES = null; }
-  if (S._teacherChangeHandler) { S.teacherCM.off('change', S._teacherChangeHandler); S._teacherChangeHandler = null; }
-  if (S._studentChangeHandler) { S.studentCM.off('change', S._studentChangeHandler); S._studentChangeHandler = null; }
-}
-
-function setupFirebaseSync() {
-  if (!S.roomCode) return;
-  cleanupSync();
+  const studentSelector = document.getElementById('studentSelector');
+  const outputSourceToggle = document.getElementById('outputSourceToggle');
 
   if (S.role === 'teacher') {
-    fbRest.get('rooms/' + S.roomCode + '/teacherCode').then(v => { if (v && S.teacherCM) S.teacherCM.setValue(v); });
-    let t;
-    S._teacherChangeHandler = () => {
-      clearTimeout(t);
-      t = setTimeout(() => fbRest.set('rooms/' + S.roomCode + '/teacherCode', S.teacherCM.getValue()), 500);
-    };
-    S.teacherCM.on('change', S._teacherChangeHandler);
-
-    // Listen for all students' code
-    fbListen('rooms/' + S.roomCode + '/students', (data, path) => {
-      if (!data) return;
-      if (path === '/') {
-        for (const [uid, val] of Object.entries(data)) {
-          S.studentsInRoom[uid] = S.studentsInRoom[uid] || {};
-          if (val.code !== undefined) S.studentsInRoom[uid].code = val.code;
-          if (val.status !== undefined) S.studentsInRoom[uid].status = val.status;
-          if (val.name !== undefined) S.studentsInRoom[uid].name = val.name;
-        }
-      } else {
-        const parts = path.split('/').filter(Boolean);
-        if (parts.length === 1) {
-          const uid = parts[0];
-          S.studentsInRoom[uid] = S.studentsInRoom[uid] || {};
-          if (typeof data === 'object') Object.assign(S.studentsInRoom[uid], data);
-        } else if (parts.length === 2) {
-          const uid = parts[0], key = parts[1];
-          S.studentsInRoom[uid] = S.studentsInRoom[uid] || {};
-          S.studentsInRoom[uid][key] = data;
-        }
-      }
-      updateStudentDropdown();
-      if (S.selectedStudentUid && S.studentsInRoom[S.selectedStudentUid]) {
-        const sv = S.studentsInRoom[S.selectedStudentUid].code;
-        if (sv != null && S.studentCM && sv !== S.studentCM.getValue()) {
-          S.studentCM.setValue(sv);
-        }
-      }
-    }).then(es => { S._studentsES = es; });
-
-    // Teacher writes to selected student's code
-    let st;
-    S._studentChangeHandler = () => {
-      if (!S.selectedStudentUid) return;
-      clearTimeout(st);
-      st = setTimeout(() => fbRest.set('rooms/' + S.roomCode + '/students/' + S.selectedStudentUid + '/code', S.studentCM.getValue()), 500);
-    };
-    S.studentCM.on('change', S._studentChangeHandler);
-
-    // Listen for lock state
-    fbListen('rooms/' + S.roomCode + '/locked', v => {
-      S.editorLocked = !!v;
-      updateLockUI();
-    }).then(es => { S._lockES = es; });
-
+    roleBadge.className = 'role-badge role-teacher';
+    roleBadge.textContent = 'INSTRUCTOR';
+    document.getElementById('studentPanelTitle').innerHTML = '<span class="dot dot-student"></span> Student\'s Code';
+    document.getElementById('teacherPanelTitle').innerHTML = '<span class="dot dot-teacher"></span> Instructor Code';
+    S.teacherCM.setOption('readOnly', false);
+    btnSendAll.style.display = 'flex';
+    btnLock.style.display = 'flex';
+    studentSelector.style.display = 'flex';
+    outputSourceToggle.style.display = 'flex';
   } else {
-    // Student
-    const uid = S.studentUser.uid;
-    const studentName = S.studentUser.displayName || 'Student';
+    roleBadge.className = 'role-badge role-student';
+    roleBadge.textContent = 'STUDENT';
+    S.teacherCM.setOption('readOnly', true);
+    S.studentCM.setOption('readOnly', false);
+    btnSendAll.style.display = 'none';
+    btnLock.style.display = 'none';
+    studentSelector.style.display = 'none';
+    outputSourceToggle.style.display = 'none';
+  }
 
-    // Save student name
-    fbRest.update('rooms/' + S.roomCode + '/students/' + uid, { name: studentName, status: 'idle' });
-
-    // Load teacher code
-    fbRest.get('rooms/' + S.roomCode + '/teacherName').then(v => {
-      if (v) document.getElementById('teacherPanelTitle').innerHTML = '<span class="dot dot-teacher"></span> Teacher\'s Code (' + esc(v) + ')';
-    });
-
-    // Load own saved code or set default
-    fbRest.get('rooms/' + S.roomCode + '/students/' + uid + '/code').then(v => {
-      if (v != null && S.studentCM) S.studentCM.setValue(v);
-    });
-
-    // Sync student code to Firebase
-    let t;
-    S._studentChangeHandler = () => {
-      clearTimeout(t);
-      t = setTimeout(() => {
-        fbRest.set('rooms/' + S.roomCode + '/students/' + uid + '/code', S.studentCM.getValue());
-        fbRest.update('rooms/' + S.roomCode + '/students/' + uid, { status: 'typing' });
-      }, 500);
-    };
-    S.studentCM.on('change', S._studentChangeHandler);
-
-    // Listen for teacher code
-    fbListen('rooms/' + S.roomCode + '/teacherCode', v => {
-      if (v != null && S.teacherCM && v !== S.teacherCM.getValue()) S.teacherCM.setValue(v);
-    }).then(es => { S._syncES = es; });
-
-    fbListen('rooms/' + S.roomCode + '/students/' + uid + '/code', v => {
-      if (v != null && S.studentCM && v !== S.studentCM.getValue()) S.studentCM.setValue(v);
-    }).then(es => { S._studentSyncES = es; });
-
-    fbListen('rooms/' + S.roomCode + '/locked', v => {
-      S.editorLocked = !!v;
-      const overlay = document.getElementById('lockedOverlay');
-      if (S.editorLocked) {
-        S.studentCM.setOption('readOnly', true);
-        overlay.style.display = 'flex';
-      } else {
-        S.studentCM.setOption('readOnly', false);
-        overlay.style.display = 'none';
-      }
-    }).then(es => { S._lockES = es; });
+  if (S.roomCode) {
+    roomBadgeWrap.style.display = 'flex';
+    document.getElementById('toolbarRoomCode').textContent = 'ROOM: ' + S.roomCode;
+    usersBadgeWrap.style.display = 'flex';
+    setupRoomSync();
+  } else {
+    roomBadgeWrap.style.display = 'none';
+    usersBadgeWrap.style.display = 'none';
+    document.getElementById('teacherPanel').style.display = 'none';
+    document.getElementById('resizeHandle').style.display = 'none';
   }
 }
 
-/* ══════ STUDENT DROPDOWN (teacher side) ══════ */
-function updateStudentDropdown() {
+function leaveIDE() {
+  if (S.autoSaveTimer) clearTimeout(S.autoSaveTimer);
+  if (S.role === 'teacher') {
+    showTeacherDashboard();
+  } else {
+    showStudentDashboard();
+  }
+}
+
+/* ══════ ROOM REALTIME SYNC ══════ */
+function setupRoomSync() {
+  if (!S.roomCode) return;
+
+  // Teacher broadcast sync
+  db.ref('rooms/' + S.roomCode + '/teacherCode').on('value', snap => {
+    const val = snap.val() || '';
+    if (S.role === 'student' && S.teacherCM && S.teacherCM.getValue() !== val) {
+      const cursor = S.teacherCM.getCursor();
+      S.teacherCM.setValue(val);
+      S.teacherCM.setCursor(cursor);
+    }
+  });
+
+  // Lock status sync
+  db.ref('rooms/' + S.roomCode + '/locked').on('value', snap => {
+    const locked = !!snap.val();
+    S.editorLocked = locked;
+    if (S.role === 'student') {
+      if (S.studentCM) S.studentCM.setOption('readOnly', locked);
+      document.getElementById('lockedOverlay').style.display = locked ? 'flex' : 'none';
+    }
+  });
+
+  // Teacher student changes
+  if (S.role === 'teacher') {
+    db.ref('rooms/' + S.roomCode + '/students').on('value', snap => {
+      const students = snap.val() || {};
+      S.studentsInRoom = students;
+      updateStudentDropdown(students);
+    });
+  }
+
+  // Student editor sync to DB on edit
+  if (S.studentCM) {
+    S.studentCM.on('change', () => {
+      if (S.role === 'student' && S.roomCode && S.studentUser) {
+        if (S.autoSaveTimer) clearTimeout(S.autoSaveTimer);
+        S.autoSaveTimer = setTimeout(() => {
+          db.ref('rooms/' + S.roomCode + '/students/' + S.studentUser.uid + '/code').set(S.studentCM.getValue());
+        }, 300);
+      }
+    });
+  }
+}
+
+function updateStudentDropdown(students) {
   const dd = document.getElementById('studentDropdown');
-  const uids = Object.keys(S.studentsInRoom);
-  if (!uids.length) {
-    dd.innerHTML = '<option value="">No students yet</option>';
+  const entries = Object.entries(students);
+  if (!entries.length) {
+    dd.innerHTML = '<option value="">No students in room</option>';
     return;
   }
-  const prev = dd.value;
-  dd.innerHTML = uids.map(uid => {
-    const s = S.studentsInRoom[uid];
-    const name = s.name || uid.substring(0,8);
-    const statusClass = 'st-' + (s.status || 'idle');
-    return `<option value="${uid}">${name}</option>`;
-  }).join('');
-  if (prev && S.studentsInRoom[prev]) {
-    dd.value = prev;
-  } else if (uids.length && !S.selectedStudentUid) {
-    dd.value = uids[0];
-    selectStudent(uids[0]);
-  }
-  updateStudentStatusDots();
-}
-
-function updateStudentStatusDots() {
-  // Update the panel title with status info
-  if (S.role !== 'teacher' || S.ideMode === 'solo') return;
-  const uids = Object.keys(S.studentsInRoom);
-  const counts = { typing: 0, running: 0, error: 0, done: 0, idle: 0 };
-  uids.forEach(uid => { const st = (S.studentsInRoom[uid].status || 'idle'); counts[st] = (counts[st] || 0) + 1; });
-  let statusHtml = '';
-  if (counts.typing) statusHtml += `<span class="student-status st-typing" title="${counts.typing} typing"></span>`;
-  if (counts.running) statusHtml += `<span class="student-status st-running" title="${counts.running} running"></span>`;
-  if (counts.error) statusHtml += `<span class="student-status st-error" title="${counts.error} error"></span>`;
-  if (counts.done) statusHtml += `<span class="student-status st-done" title="${counts.done} done"></span>`;
-  const titleEl = document.getElementById('studentPanelTitle');
-  const selName = S.selectedStudentUid && S.studentsInRoom[S.selectedStudentUid] ? S.studentsInRoom[S.selectedStudentUid].name : 'Student';
-  titleEl.innerHTML = '<span class="dot dot-student"></span> ' + esc(selName || 'Student View') + ' ' + statusHtml;
+  dd.innerHTML = '<option value="">Select student...</option>' + entries.map(([uid, st]) => `
+    <option value="${esc(uid)}">${esc(st.name || 'Student')} (${st.status || 'idle'})</option>
+  `).join('');
 }
 
 function selectStudent(uid) {
   S.selectedStudentUid = uid;
-  if (uid && S.studentsInRoom[uid] && S.studentsInRoom[uid].code != null) {
-    S.studentCM.setValue(S.studentsInRoom[uid].code);
-  } else if (uid) {
-    S.studentCM.setValue('');
-  }
-  updateStudentStatusDots();
-}
-
-/* ══════ SEND CODE TO ALL STUDENTS ══════ */
-function sendCodeToAll() {
-  if (S.role !== 'teacher' || !S.roomCode) return;
-  const code = S.teacherCM.getValue();
-  const uids = Object.keys(S.studentsInRoom);
-  if (!uids.length) { alert('No students in room yet.'); return; }
-  uids.forEach(uid => {
-    fbRest.set('rooms/' + S.roomCode + '/students/' + uid + '/code', code);
+  if (!uid || !S.roomCode) return;
+  db.ref('rooms/' + S.roomCode + '/students/' + uid + '/code').once('value').then(snap => {
+    const code = snap.val() || '';
+    if (S.studentCM) S.studentCM.setValue(code);
   });
-  const btn = document.getElementById('btnSendAll');
-  btn.textContent = 'Sent!';
-  setTimeout(() => { btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send to All'; }, 1500);
 }
 
-/* ══════ LOCK/UNLOCK STUDENT EDITORS ══════ */
+function sendCodeToAll() {
+  if (!S.roomCode || !S.teacherCM) return;
+  const code = S.teacherCM.getValue();
+  db.ref('rooms/' + S.roomCode + '/teacherCode').set(code).then(() => {
+    showSaveIndicator('Broadcasted to all students');
+  });
+}
+
 function toggleLock() {
-  if (S.role !== 'teacher' || !S.roomCode) return;
-  S.editorLocked = !S.editorLocked;
-  fbRest.set('rooms/' + S.roomCode + '/locked', S.editorLocked);
-  updateLockUI();
-}
-
-function updateLockUI() {
-  const btn = document.getElementById('btnLock');
-  if (S.editorLocked) {
-    btn.classList.add('locked');
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Locked';
-  } else {
-    btn.classList.remove('locked');
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Unlock';
-  }
-}
-
-/* ══════ DOWNLOAD CODE ══════ */
-function downloadCode() {
-  const code = S.studentCM ? S.studentCM.getValue() : '';
-  if (!code.trim()) return;
-  const blob = new Blob([code], { type: 'text/x-python' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = (S.currentProjectName || 'code') + '.py';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-/* ══════ PRESENCE ══════ */
-async function setupPresence() {
   if (!S.roomCode) return;
-  const uid = S.role === 'teacher' ? 'teacher_' + (S.teacherSession ? S.teacherSession.id : Date.now()) : S.studentUser.uid;
-  const name = S.role === 'teacher' ? S.teacherSession.name : (S.studentUser.displayName || 'Student');
-  const now = Date.now();
-  await fbRest.set('rooms/' + S.roomCode + '/presence/' + uid, { name, role: S.role, joinedAt: {'.sv':'timestamp'}, lastSeen: {'.sv':'timestamp'} });
-  S._presenceUid = uid;
-  S._presenceHeartbeat = setInterval(() => {
-    if (S.roomCode && S._presenceUid) fbRest.update('rooms/' + S.roomCode + '/presence/' + S._presenceUid, { lastSeen: {'.sv':'timestamp'} });
-  }, 30000);
-  const existing = await fbRest.get('rooms/' + S.roomCode + '/presence');
-  if (existing) {
-    for (const [k, v] of Object.entries(existing)) {
-      if (k !== uid && v.lastSeen && now - v.lastSeen > 120000) {
-        fbRest.set('rooms/' + S.roomCode + '/presence/' + k, null);
-      }
-    }
-  }
-  fbListen('rooms/' + S.roomCode + '/presence', p => {
-    if (p && typeof p === 'object') {
-      document.getElementById('userCount').textContent = Object.keys(p).length;
-    }
-  }).then(es => { S._presenceES = es; });
+  const nextLock = !S.editorLocked;
+  db.ref('rooms/' + S.roomCode + '/locked').set(nextLock).then(() => {
+    S.editorLocked = nextLock;
+    const btn = document.getElementById('btnLock');
+    btn.textContent = nextLock ? 'Unlock' : 'Lock';
+    btn.className = 'btn-lock ' + (nextLock ? 'locked' : '');
+  });
 }
 
-/* ══════ PYODIDE ══════ */
+async function saveProject() {
+  const activeCM = S.studentCM;
+  if (!activeCM) return;
+  const code = activeCM.getValue();
+  const name = prompt('Project Name:', S.currentProjectName || 'My Python Project');
+  if (!name) return;
+
+  const uid = (S.studentUser && S.studentUser.uid) || (S.teacherSession && S.teacherSession.id);
+  if (!uid) return;
+
+  const pid = S.currentProjectId || 'p_' + Date.now();
+  await db.ref('projects/' + uid + '/' + pid).set({
+    name: name,
+    code: code,
+    updatedAt: Date.now()
+  });
+  S.currentProjectId = pid;
+  S.currentProjectName = name;
+  showSaveIndicator('Saved');
+}
+
+function showSaveIndicator(msg) {
+  const el = document.getElementById('saveIndicator');
+  el.textContent = msg || 'Saved';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+function downloadCode() {
+  const activeEditor = (S.role === 'teacher' && S.teacherCM) ? S.teacherCM : S.studentCM;
+  const code = activeEditor ? activeEditor.getValue() : '';
+  const blob = new Blob([code], { type: 'text/x-python;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (S.currentProjectName || 'roboden_python') + '.py';
+  a.click();
+}
+
+/* ══════ PYODIDE RUNTIME ══════ */
 async function initPyodide() {
-  if (S.pyodideReady) { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('btnRun').disabled = false; return; }
+  if (S.pyodideReady) {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    document.getElementById('btnRun').disabled = false;
+    return;
+  }
   const overlay = document.getElementById('loadingOverlay');
   const lt = document.getElementById('loadingText');
   overlay.classList.remove('hidden');
   try {
-    lt.textContent = 'Downloading Python engine (~15MB)...';
+    lt.textContent = 'Loading Python engine (~15MB)...';
     S.pyodide = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/' });
-    lt.textContent = 'Setting up environment...';
-    S.pyodide.runPython('import sys\nfrom io import StringIO');
-    S.pyodideReady = true;
+    lt.textContent = 'Setting up runtime environment...';
     setupRuntime();
+    S.pyodideReady = true;
     document.getElementById('btnRun').disabled = false;
-    document.getElementById('pyodideVersion').textContent = 'Python ' + S.pyodide.runPython('import sys; sys.version.split()[0]');
+    document.getElementById('pyodideVersion').textContent = 'Python 3.11 (Pyodide)';
     overlay.classList.add('hidden');
-  } catch(e) { lt.textContent = 'Failed to load Python. Refresh page.'; console.error(e); }
+  } catch(e) {
+    lt.textContent = 'Failed to load Python. Please refresh.';
+    console.error(e);
+  }
 }
 
-/* ══════ RUNTIME: streaming terminal + inline input ══════ */
 function termWrite(text, isErr) {
   const out = document.getElementById('outputArea');
   if (!out) return;
@@ -1642,47 +1391,12 @@ function termWrite(text, isErr) {
   out.scrollTop = out.scrollHeight;
 }
 
-function termAsk() {
-  return new Promise(resolve => {
-    const out = document.getElementById('outputArea');
-    const inp = document.createElement('input');
-    inp.className = 'term-input';
-    inp.type = 'text';
-    inp.spellcheck = false;
-    inp.autocomplete = 'off';
-    inp.setAttribute('aria-label', 'Program input');
-    inp.size = 1;
-    out.appendChild(inp);
-    inp.focus();
-    out.scrollTop = out.scrollHeight;
-    S._activeInput = inp;
-    const grow = () => { inp.size = Math.max(1, inp.value.length + 1); };
-    const submit = () => {
-      const v = inp.value;
-      inp.removeEventListener('keydown', onKey);
-      inp.removeEventListener('input', grow);
-      const echo = document.createElement('span');
-      echo.className = 'term-echo';
-      echo.textContent = v + '\n';
-      inp.replaceWith(echo);
-      S._activeInput = null;
-      S._runWrote = true;
-      out.scrollTop = out.scrollHeight;
-      resolve(v);
-    };
-    const onKey = e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } };
-    inp.addEventListener('keydown', onKey);
-    inp.addEventListener('input', grow);
-  });
-}
-
 function setupRuntime() {
-  if (!S.pyodideReady) return;
+  if (!S.pyodide) return;
   window.__pyTermWrite = termWrite;
-  window.__pyAsk = termAsk;
   S.pyodide.runPython(`
-import sys, ast, time, builtins, traceback, linecache
-from js import __pyTermWrite as _js_write, __pyAsk as _js_ask
+import sys, time, builtins, ast, traceback, linecache
+from js import __pyTermWrite as _js_write
 
 class _TermOut:
     def __init__(self, is_err):
@@ -1696,16 +1410,11 @@ class _TermOut:
     def isatty(self):
         return False
 
-_guard_state = [0.0]
+_deadline = [0.0]
 
-async def __ainput(prompt=''):
-    if prompt:
-        sys.stdout.write(str(prompt))
-    res = await _js_ask()
-    _guard_state[0] = time.time()
-    if res is None:
-        raise EOFError('Input cancelled')
-    return str(res)
+def __tick():
+    if time.time() > _deadline[0]:
+        raise TimeoutError('Program took too long to execute (possible infinite loop). Check your while/for loop conditions.')
 
 def _sync_input(prompt=''):
     if prompt:
@@ -1715,20 +1424,25 @@ def _sync_input(prompt=''):
     if r is None:
         raise EOFError('Input cancelled')
     sys.stdout.write(str(r) + '\\n')
+    _deadline[0] = time.time() + 10
     return str(r)
+
 builtins.input = _sync_input
 
-class _InputT(ast.NodeTransformer):
-    def visit_Call(self, node):
+class _Transform(ast.NodeTransformer):
+    def _tick(self, ref):
+        call = ast.Expr(value=ast.Call(func=ast.Name(id='__tick', ctx=ast.Load()), args=[], keywords=[]))
+        return ast.copy_location(call, ref)
+    def visit_While(self, node):
         self.generic_visit(node)
-        if isinstance(node.func, ast.Name) and node.func.id == 'input':
-            new = ast.Await(value=ast.Call(
-                func=ast.Name(id='__ainput', ctx=ast.Load()),
-                args=node.args, keywords=node.keywords))
-            return ast.copy_location(new, node)
+        node.body.insert(0, self._tick(node))
+        return node
+    def visit_For(self, node):
+        self.generic_visit(node)
+        node.body.insert(0, self._tick(node))
         return node
 
-def _print_user_tb(exc):
+def _print_tb(exc):
     frames = [f for f in traceback.extract_tb(exc.__traceback__) if f.filename == '<program>']
     parts = []
     if frames:
@@ -1737,228 +1451,70 @@ def _print_user_tb(exc):
     parts.extend(traceback.format_exception_only(type(exc), exc))
     sys.stderr.write(''.join(parts))
 
-async def __run_user_code(src):
+def __run_code(src):
     old_out, old_err = sys.stdout, sys.stderr
     sys.stdout = _TermOut(False)
     sys.stderr = _TermOut(True)
     linecache.cache['<program>'] = (len(src), None, src.splitlines(keepends=True), '<program>')
-    _guard_state[0] = time.time()
-    def _guard(frame, event, arg):
-        if time.time() - _guard_state[0] > 10:
-            sys.settrace(None)
-            raise TimeoutError('Program took too long (possible infinite loop). Check your while/for loops.')
-        return _guard
+    _deadline[0] = time.time() + 10
     ok = True
     try:
-        tree = _InputT().visit(ast.parse(src))
+        tree = _Transform().visit(ast.parse(src, '<program>'))
         ast.fix_missing_locations(tree)
-        code_obj = compile(tree, '<program>', 'exec', flags=ast.PyCF_ALLOW_TOP_LEVEL_AWAIT)
-        ns = {'__name__': '__main__', '__ainput': __ainput}
-        sys.settrace(_guard)
-        result = eval(code_obj, ns)
-        if result is not None:
-            await result
+        code_obj = compile(tree, '<program>', 'exec')
+        ns = {'__name__': '__main__', '__tick': __tick}
+        exec(code_obj, ns)
     except BaseException as e:
         ok = False
-        sys.settrace(None)
-        _print_user_tb(e)
+        _print_tb(e)
     finally:
-        sys.settrace(None)
         sys.stdout = old_out
         sys.stderr = old_err
     return ok
 `);
 }
 
-/* ══════ RUN CODE ══════ */
 async function runCode() {
   if (!S.pyodideReady || S._running) return;
-  let code;
+  let code = '';
   if (S.ideMode === 'solo') {
     code = S.studentCM.getValue();
   } else if (S.role === 'teacher') {
     code = S.outputSource === 'student' ? S.studentCM.getValue() : S.teacherCM.getValue();
   } else {
-    code = S.outputSource === 'student' ? S.teacherCM.getValue() : S.studentCM.getValue();
+    code = S.studentCM.getValue();
   }
+
   const out = document.getElementById('outputArea');
   const btn = document.getElementById('btnRun');
   const et = document.getElementById('execTime');
   S._running = true;
   S._runWrote = false;
-  btn.disabled = true; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><circle cx="12" cy="12" r="3"/></svg> Running...'; out.innerHTML = '';
+  btn.disabled = true;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><circle cx="12" cy="12" r="3"/></svg> Running...';
+  out.innerHTML = '';
   const t0 = performance.now();
-
-  if (S.role === 'student' && S.roomCode) {
-    fbRest.update('rooms/' + S.roomCode + '/students/' + S.studentUser.uid, { status: 'running' });
-  }
 
   let ok = true;
   try {
     S.pyodide.globals.set('__user_src', code);
-    ok = await S.pyodide.runPythonAsync('await __run_user_code(__user_src)');
+    ok = S.pyodide.runPython('__run_code(__user_src)');
   } catch(e) {
     ok = false;
     termWrite(e.message, true);
   }
-  et.textContent = ((performance.now()-t0)/1000).toFixed(3)+'s';
-  if (ok && !S._runWrote) out.innerHTML = '<span class="system">Program finished with no output.</span>';
-  if (S.role === 'student' && S.roomCode) {
-    fbRest.update('rooms/' + S.roomCode + '/students/' + S.studentUser.uid, { status: ok ? 'done' : 'error' });
-  }
+
+  et.textContent = ((performance.now() - t0)/1000).toFixed(3) + 's';
+  if (ok && !S._runWrote) out.innerHTML = '<span class="system">Program executed successfully (no output).</span>';
   S._running = false;
-  btn.disabled = false; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run';
+  btn.disabled = false;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run';
 }
 
 function clearOutput() {
   document.getElementById('outputArea').innerHTML = '<span class="system">Output cleared.</span>';
   document.getElementById('execTime').textContent = '';
 }
-
-/* ══════ PROJECTS ══════ */
-async function saveProject() {
-  if (!S.studentUser) return;
-  const code = S.studentCM ? S.studentCM.getValue() : '';
-  if (!code.trim()) return;
-  const uid = S.studentUser.uid;
-  if (S.currentProjectId) {
-    await fbRest.update('projects/'+uid+'/'+S.currentProjectId, { code, updatedAt: {'.sv':'timestamp'} });
-  } else {
-    const name = prompt('Project name:', 'My Project');
-    if (!name) return;
-    const result = await fbRest.push('projects/'+uid, { name, code, createdAt: {'.sv':'timestamp'}, updatedAt: {'.sv':'timestamp'} });
-    S.currentProjectId = result.name;
-    S.currentProjectName = name;
-  }
-  showSaveIndicator();
-}
-
-function setupAutoSave() {
-  if (!S.studentCM) return;
-  if (S._autoSaveHandler) { S.studentCM.off('change', S._autoSaveHandler); }
-  S._autoSaveHandler = () => {
-    if (!S.currentProjectId || !S.studentUser) return;
-    clearTimeout(S.autoSaveTimer);
-    S.autoSaveTimer = setTimeout(() => {
-      const code = S.studentCM.getValue(); if (!code.trim()) return;
-      fbRest.update('projects/'+S.studentUser.uid+'/'+S.currentProjectId, { code, updatedAt: {'.sv':'timestamp'} });
-      showSaveIndicator();
-    }, 3000);
-  };
-  S.studentCM.on('change', S._autoSaveHandler);
-}
-
-function showSaveIndicator() {
-  const el = document.getElementById('saveIndicator');
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2000);
-}
-
-async function loadMyProjects() {
-  if (!S.studentUser) return;
-  const data = await fbRest.get('projects/'+S.studentUser.uid);
-  const list = document.getElementById('myProjectsList');
-  if (!data) { list.innerHTML = '<div class="no-items">No saved projects yet. Start coding!</div>'; document.getElementById('myProjectCount').textContent = ''; return; }
-  const projects = Object.entries(data).sort((a,b) => (b[1].updatedAt||0) - (a[1].updatedAt||0));
-  document.getElementById('myProjectCount').textContent = '('+projects.length+')';
-  list.innerHTML = projects.map(([id,p]) => `
-    <div class="project-item" onclick="openMyProject('${id}')">
-      <div class="project-info"><div class="project-name">${esc(p.name)}</div><div class="project-date">${formatDate(p.updatedAt)}</div></div>
-      <div class="project-actions">
-        <button class="project-btn" onclick="event.stopPropagation();renameProject('${id}','${esc(p.name)}')" title="Rename"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-        <button class="project-btn" onclick="event.stopPropagation();deleteProject('${id}','${esc(p.name)}')" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-      </div>
-    </div>
-  `).join('');
-}
-
-async function openMyProject(pid) {
-  const d = await fbRest.get('projects/'+S.studentUser.uid+'/'+pid);
-  if (!d) return;
-  S.currentProjectId = pid;
-  S.currentProjectName = d.name || 'project';
-  S.ideMode = 'solo';
-  enterIDE();
-  setTimeout(() => { if (S.studentCM) S.studentCM.setValue(d.code || ''); }, 100);
-}
-
-async function renameProject(id, oldName) {
-  const n = prompt('Rename project:', oldName);
-  if (!n || n === oldName) return;
-  await fbRest.update('projects/'+S.studentUser.uid+'/'+id, { name: n });
-  loadMyProjects();
-}
-
-async function deleteProject(id, name) {
-  if (!confirm('Delete "'+name+'"?')) return;
-  await fbRest.set('projects/'+S.studentUser.uid+'/'+id, null);
-  if (S.currentProjectId === id) S.currentProjectId = null;
-  loadMyProjects();
-}
-
-/* ══════ LEAVE IDE ══════ */
-function leaveIDE() {
-  if (S._presenceUid && S.roomCode) fbRest.set('rooms/'+S.roomCode+'/presence/'+S._presenceUid, null);
-  if (S.role === 'teacher' && S.roomCode) S.lastTeacherRoom = S.roomCode;
-  cleanupSync();
-  if (S._presenceES) S._presenceES.close();
-  if (S._presenceHeartbeat) clearInterval(S._presenceHeartbeat);
-  if (S._autoSaveHandler && S.studentCM) { S.studentCM.off('change', S._autoSaveHandler); S._autoSaveHandler = null; }
-  S._presenceES = null; S._presenceUid = null; S._presenceHeartbeat = null;
-  S.roomRef = null; S.presenceRef = null; S.roomCode = null;
-  S.currentProjectId = null; S.currentProjectName = null; S.ideMode = null;
-  S.selectedStudentUid = null; S.studentsInRoom = {}; S.editorLocked = false;
-  if (S.teacherCM) S.teacherCM.setValue('');
-  if (S.studentCM) S.studentCM.setValue('');
-  document.getElementById('ide').style.display = 'none';
-  if (S.role === 'teacher') showTeacherDashboard();
-  else showStudentDashboard();
-}
-
-/* ══════ HELPERS ══════ */
-function genCode() { const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let r=''; for(let i=0;i<6;i++) r+=c[Math.floor(Math.random()*c.length)]; return r; }
-function esc(t) { const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
-function safeImgSrc(url) { if (!url) return ''; try { const u = new URL(url); if (u.protocol === 'https:') return esc(url); } catch(e) {} return ''; }
-function formatDate(ts) { if(!ts) return ''; const d=new Date(ts),n=new Date(),df=n-d; if(df<60000) return 'just now'; if(df<3600000) return Math.floor(df/60000)+'m ago'; if(df<86400000) return Math.floor(df/3600000)+'h ago'; return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:d.getFullYear()!==n.getFullYear()?'numeric':undefined}); }
-
-/* ══════ CLEANUP ON PAGE CLOSE ══════ */
-window.addEventListener('beforeunload', () => {
-  if (S._presenceUid && S.roomCode) {
-    const url = DB_BASE + '/rooms/' + S.roomCode + '/presence/' + S._presenceUid + '.json';
-    navigator.sendBeacon(url.replace('.json', '.json?x-http-method-override=DELETE'), '');
-    fetch(url, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: 'null', keepalive: true });
-  }
-});
-
-/* ══════ KEYBOARD SHORTCUTS ══════ */
-document.addEventListener('keydown', e => {
-  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();runCode();}
-  if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();saveProject();}
-  if(e.key==='Escape')closeModal();
-});
-
-/* ══════ RESIZE ══════ */
-(function(){
-  const h=document.getElementById('resizeHandle'),c=document.getElementById('editorsContainer'),tp=document.getElementById('teacherPanel');let d=false;
-  h.addEventListener('mousedown',e=>{d=true;h.classList.add('active');document.body.style.cursor='col-resize';document.body.style.userSelect='none';e.preventDefault();});
-  document.addEventListener('mousemove',e=>{if(!d)return;const r=c.getBoundingClientRect(),p=((e.clientX-r.left)/r.width)*100;if(p>20&&p<80){tp.style.flex='none';tp.style.width=p+'%';if(S.teacherCM)S.teacherCM.refresh();if(S.studentCM)S.studentCM.refresh();}});
-  document.addEventListener('mouseup',()=>{if(d){d=false;h.classList.remove('active');document.body.style.cursor='';document.body.style.userSelect='';if(S.teacherCM)S.teacherCM.refresh();if(S.studentCM)S.studentCM.refresh();}});
-  const or=document.getElementById('outputResize'),oc=document.getElementById('outputContainer');let od=false;
-  or.addEventListener('mousedown',e=>{od=true;or.classList.add('active');document.body.style.cursor='row-resize';document.body.style.userSelect='none';e.preventDefault();});
-  document.addEventListener('mousemove',e=>{if(!od)return;const r=document.getElementById('ide').getBoundingClientRect(),nh=r.bottom-e.clientY;if(nh>80&&nh<500)oc.style.height=nh+'px';});
-  document.addEventListener('mouseup',()=>{if(od){od=false;or.classList.remove('active');document.body.style.cursor='';document.body.style.userSelect='';}});
-})();
-
-/* ══════ CONNECTION ══════ */
-(async () => {
-  const d=document.getElementById('statusDot'),t=document.getElementById('statusText');
-  try {
-    await fbRest.get('teachers');
-    d.className='status-dot status-connected'; t.textContent='Connected';
-  } catch(e) {
-    d.className='status-dot status-disconnected'; t.textContent='Disconnected';
-  }
-})();
 </script>
 </body>
 </html>
