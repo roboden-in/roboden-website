@@ -295,19 +295,23 @@ auth.onAuthStateChanged(user=>{
 });
 
 // ── LOAD USERS ──
-let rawUsers = {}, rawStudents = {}, rawTeachers = {};
+let rawUsers = {}, rawStudents = {}, rawTeachers = {}, rawProjects = {}, rawTyping = {};
 function loadAllUsers(){
   mergeAndRenderAdmin();
-  db.ref('users').on('value', snap => { rawUsers = snap.val() || {}; mergeAndRenderAdmin(); }, () => {});
-  db.ref('students').on('value', snap => { rawStudents = snap.val() || {}; mergeAndRenderAdmin(); }, () => {});
-  db.ref('teachers').on('value', snap => { rawTeachers = snap.val() || {}; mergeAndRenderAdmin(); }, () => {});
+  db.ref('users').on('value', snap => { rawUsers = snap.val() || {}; mergeAndRenderAdmin(); }, err => { console.warn('users read error:', err); mergeAndRenderAdmin(); });
+  db.ref('students').on('value', snap => { rawStudents = snap.val() || {}; mergeAndRenderAdmin(); }, err => { console.warn('students read error:', err); mergeAndRenderAdmin(); });
+  db.ref('teachers').on('value', snap => { rawTeachers = snap.val() || {}; mergeAndRenderAdmin(); }, err => { console.warn('teachers read error:', err); mergeAndRenderAdmin(); });
+  db.ref('projects').on('value', snap => { rawProjects = snap.val() || {}; mergeAndRenderAdmin(); }, err => { console.warn('projects read error:', err); mergeAndRenderAdmin(); });
+  db.ref('typingProgress').on('value', snap => { rawTyping = snap.val() || {}; mergeAndRenderAdmin(); }, err => { console.warn('typingProgress read error:', err); mergeAndRenderAdmin(); });
 }
 
 function mergeAndRenderAdmin() {
   allUsers = {};
-  if (rawTeachers) Object.entries(rawTeachers).forEach(([uid,t])=>{ if(t) allUsers[uid]={name:t.name||'Instructor',email:t.email||'',role:t.isAdmin||t.email===ADMIN_EMAIL?'admin':'teacher',status:'approved',courses:{python:true,typing:true}}; });
-  if (rawStudents) Object.entries(rawStudents).forEach(([uid,s])=>{ if(s) allUsers[uid]={name:s.name||'Student',email:s.email||'',role:'student',status:s.status||'approved',courses:s.courses||{python:true,typing:true}}; });
-  if (rawUsers) Object.entries(rawUsers).forEach(([uid,u])=>{ if(u) allUsers[uid]=Object.assign(allUsers[uid]||{},u); });
+  if (rawTeachers) Object.entries(rawTeachers).forEach(([uid,t])=>{ if(t && typeof t === 'object') allUsers[uid]={name:t.name||'Instructor',email:t.email||'',role:t.isAdmin||t.email===ADMIN_EMAIL?'admin':'teacher',status:'approved',courses:{python:true,typing:true}}; });
+  if (rawStudents) Object.entries(rawStudents).forEach(([uid,s])=>{ if(s && typeof s === 'object') allUsers[uid]={name:s.name||'Student',email:s.email||'',role:'student',status:s.status||'approved',courses:s.courses||{python:true,typing:true}}; });
+  if (rawUsers) Object.entries(rawUsers).forEach(([uid,u])=>{ if(u && typeof u === 'object') allUsers[uid]=Object.assign(allUsers[uid]||{},u); });
+  if (rawProjects) Object.keys(rawProjects).forEach(uid=>{ if(!allUsers[uid]) allUsers[uid]={name:'Student ('+uid.slice(0,6)+')',email:'Python Lab Student',role:'student',status:'approved',courses:{python:true,typing:true}}; });
+  if (rawTyping) Object.keys(rawTyping).forEach(uid=>{ if(!allUsers[uid]) allUsers[uid]={name:'Student ('+uid.slice(0,6)+')',email:'Typing Lab Student',role:'student',status:'approved',courses:{python:true,typing:true}}; });
   renderAll();
 }
 
@@ -333,12 +337,7 @@ function renderAll(){
     }
   });
 
-  // Load typing progress for active count
-  db.ref('typingProgress').once('value').then(snap=>{
-    const progress=snap.val()||{};
-    Object.values(progress).forEach(p=>{if(p.lastPractice===today)activeToday++;});
-    $('statActive').textContent=activeToday;
-  });
+  if (rawTyping) Object.values(rawTyping).forEach(p=>{if(p&&p.lastPractice===today)activeToday++;});
 
   $('statStudents').textContent=students.length;
   $('statPending').textContent=pending.length;
@@ -356,35 +355,19 @@ function renderStudents(students){
   if(!students.length){$('studentTable').innerHTML='<tr><td colspan="7" class="empty-state">No approved students yet</td></tr>';return;}
   $('studentTable').innerHTML=students.map(s=>{
     const courses=s.courses||{};
+    const tp=rawTyping[s._uid];
+    const typingDay=tp?(tp.currentDay?'Day '+tp.currentDay:'Day 1'):'—';
+    const lastActive=tp&&tp.lastPractice?tp.lastPractice:'—';
     return`<tr>
       <td><div class="user-cell"><span class="avatar">${(s.name||'?').charAt(0).toUpperCase()}</span><div><b>${esc(s.name||'Unknown')}</b><small>${esc(s.email||'')}</small></div></div></td>
       <td><span class="status-badge status-approved">Approved</span></td>
       <td><button class="toggle ${courses.python?'on':'off'}" onclick="toggleCourse('${esc(s._uid)}','python',${!courses.python})" title="Toggle Python access"></button></td>
       <td><button class="toggle ${courses.typing?'on':'off'}" onclick="toggleCourse('${esc(s._uid)}','typing',${!courses.typing})" title="Toggle Typing access"></button></td>
-      <td style="font:500 12px var(--mono);color:var(--muted)">${s._typingDay||'—'}</td>
-      <td style="font-size:11px;color:var(--muted);font-family:var(--mono)">${s.lastActive||'—'}</td>
+      <td style="font:500 12px var(--mono);color:var(--muted)">${typingDay}</td>
+      <td style="font-size:11px;color:var(--muted);font-family:var(--mono)">${lastActive}</td>
       <td><button class="action-btn remove-btn" onclick="removeUser('${esc(s._uid)}','${esc(s.name)}')">Revoke</button></td>
     </tr>`;
   }).join('');
-
-  // Load typing progress for each student
-  students.forEach(s=>{
-    db.ref('typingProgress/'+s._uid).once('value').then(snap=>{
-      const tp=snap.val();
-      if(tp){
-        s._typingDay=`Day ${tp.currentDay||1}`;
-        s.lastActive=tp.lastPractice||'—';
-        const row=document.querySelector(`[onclick*="${s._uid}"]`);
-        if(row){
-          const tr=row.closest('tr');
-          if(tr){
-            tr.children[4].textContent=s._typingDay;
-            tr.children[5].textContent=s.lastActive;
-          }
-        }
-      }
-    });
-  });
 }
 
 function renderPending(pending){
