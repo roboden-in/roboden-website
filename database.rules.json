@@ -2,37 +2,37 @@
   "rules": {
     "users": {
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')",
-        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || (auth.uid === $uid && (!data.exists() ? (newData.child('role').val() === 'student' && newData.child('status').val() === 'pending') : (newData.child('role').val() === data.child('role').val() && newData.child('status').val() === data.child('status').val()))))"
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')",
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin')"
       },
-      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')"
+      ".read": "auth != null && (auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')"
     },
     "students": {
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')",
-        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || auth.uid === $uid)"
+        ".read": "auth != null",
+        ".write": "auth != null"
       },
-      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')"
+      ".read": "auth != null"
     },
     "teachers": {
       ".read": "auth != null",
       "$uid": {
-        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
+        ".write": "auth != null && (auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin')"
       }
     },
     "projects": {
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')",
-        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')",
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin')"
       },
-      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')"
+      ".read": "auth != null && (auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')"
     },
     "typingProgress": {
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')",
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')",
         ".write": "auth != null && auth.uid === $uid"
       },
-      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')"
+      ".read": "auth != null && (auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')"
     },
     "rooms": {
       "$roomCode": {

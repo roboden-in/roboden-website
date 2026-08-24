@@ -538,79 +538,94 @@ auth.onAuthStateChanged(user => {
 });
 
 function showLoggedOut() {
+  $('loadingGate').classList.add('hidden');
   $('authGate').classList.remove('hidden');
   $('appShell').classList.add('hidden');
 }
 
 function resolveUser(user) {
   const email = user.email || '';
+  const isStaff = email === ADMIN_EMAIL || email.endsWith('@roboden.in');
+  const defaultRole = email === ADMIN_EMAIL ? 'admin' : (isStaff ? 'teacher' : 'student');
+
+  // Immediately route with optimistic data to avoid any perceived login delay
+  const initialData = {
+    name: user.displayName || (isStaff ? email.split('@')[0] : 'Student'),
+    email: email,
+    role: defaultRole,
+    status: isStaff ? 'approved' : 'pending',
+    courses: { python: isStaff, typing: isStaff }
+  };
+  routeUser(user, initialData);
+
+  // Sync / fetch fresh record from Firebase Realtime Database
   db.ref('users/' + user.uid).once('value').then(snap => {
     let data = snap.val();
-    if (data) { routeUser(user, data); return; }
-    // Legacy fallback check
+    if (data) {
+      if (isStaff && data.role !== 'admin' && data.role !== 'teacher') {
+        data.role = defaultRole;
+        data.status = 'approved';
+        data.courses = { python: true, typing: true };
+        db.ref('users/' + user.uid).update(data).catch(() => {});
+      }
+      routeUser(user, data);
+      return;
+    }
+
+    // Check legacy students table
     db.ref('students/' + user.uid).once('value').then(sSnap => {
       const old = sSnap.val();
-      const isStaff = email === ADMIN_EMAIL || email.endsWith('@roboden.in');
-      const role = email === ADMIN_EMAIL ? 'admin' : (email.endsWith('@roboden.in') ? 'teacher' : 'student');
-      data = {
+      const finalData = {
         name: (old && old.name) || user.displayName || (isStaff ? email.split('@')[0] : 'Student'),
         email: email,
-        role: role,
+        role: defaultRole,
         status: (old && old.status) || (isStaff ? 'approved' : 'pending'),
         courses: (old && old.courses) || { python: isStaff, typing: isStaff },
         createdAt: (old && old.createdAt) || Date.now()
       };
-      db.ref('users/' + user.uid).set(data).then(() => routeUser(user, data)).catch(() => routeUser(user, data));
+      db.ref('users/' + user.uid).set(finalData).catch(() => {});
+      routeUser(user, finalData);
     }).catch(() => {
-      const isStaff = email === ADMIN_EMAIL || email.endsWith('@roboden.in');
-      const fallbackData = {
-        name: user.displayName || email.split('@')[0] || 'User',
-        email: email,
-        role: email === ADMIN_EMAIL ? 'admin' : (isStaff ? 'teacher' : 'student'),
-        status: isStaff ? 'approved' : 'pending',
-        courses: { python: isStaff, typing: isStaff }
-      };
-      routeUser(user, fallbackData);
+      db.ref('users/' + user.uid).set(initialData).catch(() => {});
     });
-  }).catch(() => {
-    const isStaff = email === ADMIN_EMAIL || email.endsWith('@roboden.in');
-    const fallbackData = {
-      name: user.displayName || email.split('@')[0] || 'User',
-      email: email,
-      role: email === ADMIN_EMAIL ? 'admin' : (isStaff ? 'teacher' : 'student'),
-      status: isStaff ? 'approved' : 'pending',
-      courses: { python: isStaff, typing: isStaff }
-    };
-    routeUser(user, fallbackData);
+  }).catch(err => {
+    console.warn('Realtime database sync notice:', err);
   });
 }
 
 function routeUser(user, data) {
-  $('authGate').classList.add('hidden');
-  $('appShell').classList.remove('hidden');
+  try {
+    $('loadingGate').classList.add('hidden');
+    $('authGate').classList.add('hidden');
+    $('appShell').classList.remove('hidden');
 
-  const fullName = data.name || user.displayName || 'User';
-  const firstName = fullName.split(' ')[0];
-  const initial = firstName.charAt(0).toUpperCase();
+    const fullName = data.name || user.displayName || 'User';
+    const firstName = fullName.split(' ')[0] || 'User';
+    const initial = firstName.charAt(0).toUpperCase() || 'U';
 
-  $('userName').textContent = fullName;
-  $('userAvatar').textContent = initial;
-  $('mobUserName').textContent = fullName;
-  $('mobUserAvatar').textContent = initial;
+    $('userName').textContent = fullName;
+    $('userAvatar').textContent = initial;
+    $('mobUserName').textContent = fullName;
+    $('mobUserAvatar').textContent = initial;
 
-  const isFaculty = data.role === 'admin' || data.role === 'teacher';
-  currentRole = isFaculty ? 'faculty' : 'student';
+    const isFaculty = data.role === 'admin' || data.role === 'teacher';
+    currentRole = isFaculty ? 'faculty' : 'student';
 
-  if (isFaculty) {
-    $('userRole').textContent = data.role === 'admin' ? 'Admin' : 'Faculty';
-    buildFacultyNav();
-    switchView('classroomView', 'CLASSROOM', 'Management Console');
-    loadFacultyDashboard(user, data);
-  } else {
-    $('userRole').textContent = 'Student';
-    buildStudentNav();
-    switchView('coursesView', 'MY COURSES', 'Welcome, ' + firstName + '!');
-    loadStudentDashboard(user, data);
+    if (isFaculty) {
+      $('userRole').textContent = data.role === 'admin' ? 'Admin' : 'Faculty';
+      buildFacultyNav();
+      switchView('classroomView', 'CLASSROOM', 'Management Console');
+      loadFacultyDashboard(user, data);
+    } else {
+      $('userRole').textContent = 'Student';
+      buildStudentNav();
+      switchView('coursesView', 'MY COURSES', 'Welcome, ' + firstName + '!');
+      loadStudentDashboard(user, data);
+    }
+  } catch (err) {
+    console.error('Error rendering dashboard:', err);
+    $('authGate').classList.add('hidden');
+    $('appShell').classList.remove('hidden');
   }
 }
 
