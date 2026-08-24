@@ -539,8 +539,8 @@ function resolveUser(user) {
     // Legacy fallback check
     db.ref('students/' + user.uid).once('value').then(sSnap => {
       const old = sSnap.val();
+      const isStaff = email === ADMIN_EMAIL || email.endsWith('@roboden.in');
       const role = email === ADMIN_EMAIL ? 'admin' : (email.endsWith('@roboden.in') ? 'teacher' : 'student');
-      const isStaff = role === 'admin' || role === 'teacher';
       data = {
         name: (old && old.name) || user.displayName || (isStaff ? email.split('@')[0] : 'Student'),
         email: email,
@@ -549,8 +549,28 @@ function resolveUser(user) {
         courses: (old && old.courses) || { python: isStaff, typing: isStaff },
         createdAt: (old && old.createdAt) || Date.now()
       };
-      db.ref('users/' + user.uid).set(data).then(() => routeUser(user, data)).catch(e => showAuthError(e.message));
+      db.ref('users/' + user.uid).set(data).then(() => routeUser(user, data)).catch(() => routeUser(user, data));
+    }).catch(() => {
+      const isStaff = email === ADMIN_EMAIL || email.endsWith('@roboden.in');
+      const fallbackData = {
+        name: user.displayName || email.split('@')[0] || 'User',
+        email: email,
+        role: email === ADMIN_EMAIL ? 'admin' : (isStaff ? 'teacher' : 'student'),
+        status: isStaff ? 'approved' : 'pending',
+        courses: { python: isStaff, typing: isStaff }
+      };
+      routeUser(user, fallbackData);
     });
+  }).catch(() => {
+    const isStaff = email === ADMIN_EMAIL || email.endsWith('@roboden.in');
+    const fallbackData = {
+      name: user.displayName || email.split('@')[0] || 'User',
+      email: email,
+      role: email === ADMIN_EMAIL ? 'admin' : (isStaff ? 'teacher' : 'student'),
+      status: isStaff ? 'approved' : 'pending',
+      courses: { python: isStaff, typing: isStaff }
+    };
+    routeUser(user, fallbackData);
   });
 }
 
