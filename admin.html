@@ -297,6 +297,7 @@ auth.onAuthStateChanged(user=>{
 // ── LOAD USERS ──
 let rawUsers = {}, rawStudents = {};
 function loadAllUsers(){
+  mergeAndRenderAdmin();
   db.ref('users').on('value', snap => { rawUsers = snap.val() || {}; mergeAndRenderAdmin(); }, () => {});
   db.ref('students').on('value', snap => { rawStudents = snap.val() || {}; mergeAndRenderAdmin(); }, () => {});
 }
