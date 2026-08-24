@@ -743,6 +743,23 @@ function loadFacultyDashboard(user, data) {
   let rawUsers = {}, rawStudents = {};
   function mergeAndRender() {
     allUsersCache = Object.assign({}, rawStudents, rawUsers);
+
+    // Auto-discover any student accounts that have saved projects or typing progress
+    if (allProjectsCache && typeof allProjectsCache === 'object') {
+      Object.keys(allProjectsCache).forEach(uid => {
+        if (!allUsersCache[uid]) {
+          allUsersCache[uid] = { name: 'Student (' + uid.slice(0, 6) + ')', email: 'Python Lab Student', role: 'student', status: 'approved', courses: { python: true, typing: true } };
+        }
+      });
+    }
+    if (typingProgressCache && typeof typingProgressCache === 'object') {
+      Object.keys(typingProgressCache).forEach(uid => {
+        if (!allUsersCache[uid]) {
+          allUsersCache[uid] = { name: 'Student (' + uid.slice(0, 6) + ')', email: 'Typing Lab Student', role: 'student', status: 'approved', courses: { python: true, typing: true } };
+        }
+      });
+    }
+
     Object.entries(allUsersCache).forEach(([uid, u]) => {
       if (!u || typeof u !== 'object') return;
       u.uid = uid;
@@ -760,89 +777,100 @@ function loadFacultyDashboard(user, data) {
     renderFacultyPanels();
   }
 
-  // Realtime listeners on both users and legacy students
+  // Initial immediate render
+  mergeAndRender();
+
+  // Realtime listeners
   db.ref('users').on('value', snap => { rawUsers = snap.val() || {}; mergeAndRender(); }, () => {});
   db.ref('students').on('value', snap => { rawStudents = snap.val() || {}; mergeAndRender(); }, () => {});
-  db.ref('projects').on('value', snap => { allProjectsCache = snap.val() || {}; renderFacultyPanels(); }, () => {});
-  db.ref('typingProgress').on('value', snap => { typingProgressCache = snap.val() || {}; renderFacultyPanels(); }, () => {});
+  db.ref('projects').on('value', snap => { allProjectsCache = snap.val() || {}; mergeAndRender(); }, () => {});
+  db.ref('typingProgress').on('value', snap => { typingProgressCache = snap.val() || {}; mergeAndRender(); }, () => {});
 }
 
 function renderFacultyPanels() {
-  let pending = [], students = [], teachers = [];
-  let totalProjects = 0, activeToday = 0;
-  const today = new Date().toISOString().slice(0, 10);
+  try {
+    let pending = [], students = [], teachers = [];
+    let totalProjects = 0, activeToday = 0;
+    const today = new Date().toISOString().slice(0, 10);
 
-  Object.values(allProjectsCache).forEach(pMap => {
-    if (pMap && typeof pMap === 'object') totalProjects += Object.keys(pMap).length;
-  });
-  Object.values(typingProgressCache).forEach(tp => {
-    if (tp && tp.lastPractice === today) activeToday++;
-  });
-
-  Object.entries(allUsersCache).forEach(([uid, u]) => {
-    if (!u || typeof u !== 'object') return;
-    u.uid = uid;
-    const email = u.email || '';
-    const isFaculty = u.role === 'admin' || u.role === 'teacher' || email === ADMIN_EMAIL || email.endsWith('@roboden.in');
-
-    if (isFaculty) {
-      teachers.push(u);
-    } else if (u.status === 'pending') {
-      pending.push(u);
-    } else {
-      if (!u.courses) u.courses = { python: true, typing: true };
-      students.push(u);
+    if (allProjectsCache && typeof allProjectsCache === 'object') {
+      Object.values(allProjectsCache).forEach(pMap => {
+        if (pMap && typeof pMap === 'object') totalProjects += Object.keys(pMap).length;
+      });
     }
-  });
+    if (typingProgressCache && typeof typingProgressCache === 'object') {
+      Object.values(typingProgressCache).forEach(tp => {
+        if (tp && tp.lastPractice === today) activeToday++;
+      });
+    }
 
-  $('statStudents').textContent = students.length;
-  $('statPending').textContent = pending.length;
-  $('statProjects').textContent = totalProjects;
-  $('statActive').textContent = activeToday;
-  $('pendingChip').textContent = pending.length;
-  $('studentsChip').textContent = students.length;
-  $('teachersChip').textContent = teachers.length;
+    Object.entries(allUsersCache).forEach(([uid, u]) => {
+      if (!u || typeof u !== 'object') return;
+      u.uid = uid;
+      const email = u.email || '';
+      const isFaculty = u.role === 'admin' || u.role === 'teacher' || email === ADMIN_EMAIL || email.endsWith('@roboden.in');
 
-  // Pending Requests Table
-  $('pendingBody').innerHTML = pending.length ? pending.map(s => `
-    <tr>
-      <td><div class="cell-user"><div class="cell-avatar">${escapeHtml((s.name || 'S').charAt(0).toUpperCase())}</div><div class="cell-meta"><strong>${escapeHtml(s.name || 'Student')}</strong></div></div></td>
-      <td class="mono">${escapeHtml(s.email)}</td>
-      <td>${s.createdAt ? escapeHtml(new Date(s.createdAt).toLocaleDateString()) : 'Recent'}</td>
-      <td style="text-align:right">
-        <button class="btn-sm approve" onclick="approveStudent('${escapeHtml(s.uid)}')">Approve All Courses</button>
-        <button class="btn-sm reject" onclick="rejectStudent('${escapeHtml(s.uid)}')">Decline</button>
-      </td>
-    </tr>`).join('') : '<tr><td colspan="4" class="empty-row">No pending student requests.</td></tr>';
+      if (isFaculty) {
+        teachers.push(u);
+      } else if (u.status === 'pending') {
+        pending.push(u);
+      } else {
+        if (!u.courses) u.courses = { python: true, typing: true };
+        students.push(u);
+      }
+    });
 
-  // Approved Students Table (with individual Course Toggles)
-  $('studentsBody').innerHTML = students.length ? students.map(s => {
-    const pOn = s.courses && s.courses.python;
-    const tOn = s.courses && s.courses.typing;
-    const tp = typingProgressCache[s.uid] || {};
-    const dayVal = tp.currentDay || (tp.currentLesson ? tp.currentLesson + 1 : null);
-    const dayStr = dayVal ? 'Day ' + dayVal : 'Not started';
-    const prjs = allProjectsCache[s.uid] || {};
-    const pc = Object.keys(prjs).length;
-    return `
-    <tr>
-      <td><div class="cell-user"><div class="cell-avatar">${escapeHtml((s.name || 'S').charAt(0).toUpperCase())}</div><div class="cell-meta"><strong>${escapeHtml(s.name || 'Student')}</strong><small>${escapeHtml(s.email)}</small></div></div></td>
-      <td><button class="toggle ${pOn ? 'on' : ''}" onclick="toggleCourse('${escapeHtml(s.uid)}','python',${!pOn})" title="${pOn ? 'Enabled (click to revoke)' : 'Disabled (click to grant)'}"></button></td>
-      <td><button class="toggle ${tOn ? 'on' : ''}" onclick="toggleCourse('${escapeHtml(s.uid)}','typing',${!tOn})" title="${tOn ? 'Enabled (click to revoke)' : 'Disabled (click to grant)'}"></button></td>
-      <td class="mono">${escapeHtml(dayStr)}</td>
-      <td>${pc > 0 ? `<button class="btn-sm projects" onclick="inspectProjects('${escapeHtml(s.uid)}','${encodeURIComponent(s.name || 'Student')}','${escapeHtml(s.email)}')">&lt;/&gt; ${pc}</button>` : '<span style="color:var(--muted);font-size:12px">0</span>'}</td>
-      <td style="text-align:right"><button class="btn-sm revoke" onclick="rejectStudent('${escapeHtml(s.uid)}')">Revoke</button></td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="6" class="empty-row">No approved students yet. Approve pending students above.</td></tr>';
+    $('statStudents').textContent = students.length;
+    $('statPending').textContent = pending.length;
+    $('statProjects').textContent = totalProjects;
+    $('statActive').textContent = activeToday;
+    $('pendingChip').textContent = pending.length;
+    $('studentsChip').textContent = students.length;
+    $('teachersChip').textContent = teachers.length;
 
-  // Faculty Table
-  $('teachersBody').innerHTML = teachers.length ? teachers.map(t => `
-    <tr>
-      <td><div class="cell-user"><div class="cell-avatar">${escapeHtml((t.name || 'F').charAt(0).toUpperCase())}</div><div class="cell-meta"><strong>${escapeHtml(t.name || 'Faculty')}</strong></div></div></td>
-      <td class="mono">${escapeHtml(t.email)}</td>
-      <td><span class="role-chip ${escapeHtml(t.role)}">${escapeHtml(t.role)}</span></td>
-      <td style="text-align:right">${t.role !== 'admin' ? `<button class="btn-sm revoke" onclick="rejectStudent('${escapeHtml(t.uid)}')">Remove</button>` : '<span style="color:var(--muted);font-size:11px">Primary Admin</span>'}</td>
-    </tr>`).join('') : '<tr><td colspan="4" class="empty-row">No faculty found.</td></tr>';
+    // Pending Requests Table
+    $('pendingBody').innerHTML = pending.length ? pending.map(s => `
+      <tr>
+        <td><div class="cell-user"><div class="cell-avatar">${escapeHtml((s.name || 'S').charAt(0).toUpperCase())}</div><div class="cell-meta"><strong>${escapeHtml(s.name || 'Student')}</strong></div></div></td>
+        <td class="mono">${escapeHtml(s.email)}</td>
+        <td>${s.createdAt ? escapeHtml(new Date(s.createdAt).toLocaleDateString()) : 'Recent'}</td>
+        <td style="text-align:right">
+          <button class="btn-sm approve" onclick="approveStudent('${escapeHtml(s.uid)}')">Approve All Courses</button>
+          <button class="btn-sm reject" onclick="rejectStudent('${escapeHtml(s.uid)}')">Decline</button>
+        </td>
+      </tr>`).join('') : '<tr><td colspan="4" class="empty-row">No pending student requests.</td></tr>';
+
+    // Approved Students Table (with individual Course Toggles)
+    $('studentsBody').innerHTML = students.length ? students.map(s => {
+      const pOn = s.courses && s.courses.python;
+      const tOn = s.courses && s.courses.typing;
+      const tp = typingProgressCache[s.uid] || {};
+      const dayVal = tp.currentDay || (tp.currentLesson ? tp.currentLesson + 1 : null);
+      const dayStr = dayVal ? 'Day ' + dayVal : 'Not started';
+      const prjs = allProjectsCache[s.uid] || {};
+      const pc = Object.keys(prjs).length;
+      return `
+      <tr>
+        <td><div class="cell-user"><div class="cell-avatar">${escapeHtml((s.name || 'S').charAt(0).toUpperCase())}</div><div class="cell-meta"><strong>${escapeHtml(s.name || 'Student')}</strong><small>${escapeHtml(s.email)}</small></div></div></td>
+        <td><button class="toggle ${pOn ? 'on' : ''}" onclick="toggleCourse('${escapeHtml(s.uid)}','python',${!pOn})" title="${pOn ? 'Enabled (click to revoke)' : 'Disabled (click to grant)'}"></button></td>
+        <td><button class="toggle ${tOn ? 'on' : ''}" onclick="toggleCourse('${escapeHtml(s.uid)}','typing',${!tOn})" title="${tOn ? 'Enabled (click to revoke)' : 'Disabled (click to grant)'}"></button></td>
+        <td class="mono">${escapeHtml(dayStr)}</td>
+        <td>${pc > 0 ? `<button class="btn-sm projects" onclick="inspectProjects('${escapeHtml(s.uid)}','${encodeURIComponent(s.name || 'Student')}','${escapeHtml(s.email)}')">&lt;/&gt; ${pc}</button>` : '<span style="color:var(--muted);font-size:12px">0</span>'}</td>
+        <td style="text-align:right"><button class="btn-sm revoke" onclick="rejectStudent('${escapeHtml(s.uid)}')">Revoke</button></td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="6" class="empty-row">No approved students yet. Approve pending students above.</td></tr>';
+
+    // Faculty Table
+    $('teachersBody').innerHTML = teachers.length ? teachers.map(t => `
+      <tr>
+        <td><div class="cell-user"><div class="cell-avatar">${escapeHtml((t.name || 'F').charAt(0).toUpperCase())}</div><div class="cell-meta"><strong>${escapeHtml(t.name || 'Faculty')}</strong></div></div></td>
+        <td class="mono">${escapeHtml(t.email)}</td>
+        <td><span class="role-chip ${escapeHtml(t.role)}">${escapeHtml(t.role)}</span></td>
+        <td style="text-align:right">${t.role !== 'admin' ? `<button class="btn-sm revoke" onclick="rejectStudent('${escapeHtml(t.uid)}')">Remove</button>` : '<span style="color:var(--muted);font-size:11px">Primary Admin</span>'}</td>
+      </tr>`).join('') : '<tr><td colspan="4" class="empty-row">No faculty found.</td></tr>';
+  } catch(err) {
+    console.error('Error rendering faculty panels:', err);
+  }
 }
 
 /* ── ACTIONS (Optimistic + Realtime) ── */
