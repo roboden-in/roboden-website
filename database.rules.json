@@ -1,44 +1,38 @@
 {
   "rules": {
     "users": {
+      ".read": "auth != null",
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')",
-        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin')"
-      },
-      ".read": "auth != null && (auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')"
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in')"
+      }
     },
     "students": {
+      ".read": "auth != null",
       "$uid": {
-        ".read": "auth != null",
-        ".write": "auth != null"
-      },
-      ".read": "auth != null"
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in')"
+      }
     },
     "teachers": {
       ".read": "auth != null",
       "$uid": {
-        ".write": "auth != null && (auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in')"
       }
     },
     "projects": {
+      ".read": "auth != null",
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')",
-        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin')"
-      },
-      ".read": "auth != null && (auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')"
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in')"
+      }
     },
     "typingProgress": {
+      ".read": "auth != null",
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')",
-        ".write": "auth != null && auth.uid === $uid"
-      },
-      ".read": "auth != null && (auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'teacher')"
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in')"
+      }
     },
     "rooms": {
-      "$roomCode": {
-        ".read": "auth != null",
-        ".write": "auth != null"
-      }
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 }

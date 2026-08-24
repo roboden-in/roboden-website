@@ -295,15 +295,19 @@ auth.onAuthStateChanged(user=>{
 });
 
 // ── LOAD USERS ──
-let rawUsers = {}, rawStudents = {};
+let rawUsers = {}, rawStudents = {}, rawTeachers = {};
 function loadAllUsers(){
   mergeAndRenderAdmin();
   db.ref('users').on('value', snap => { rawUsers = snap.val() || {}; mergeAndRenderAdmin(); }, () => {});
   db.ref('students').on('value', snap => { rawStudents = snap.val() || {}; mergeAndRenderAdmin(); }, () => {});
+  db.ref('teachers').on('value', snap => { rawTeachers = snap.val() || {}; mergeAndRenderAdmin(); }, () => {});
 }
 
 function mergeAndRenderAdmin() {
-  allUsers = Object.assign({}, rawStudents, rawUsers);
+  allUsers = {};
+  if (rawTeachers) Object.entries(rawTeachers).forEach(([uid,t])=>{ if(t) allUsers[uid]={name:t.name||'Instructor',email:t.email||'',role:t.isAdmin||t.email===ADMIN_EMAIL?'admin':'teacher',status:'approved',courses:{python:true,typing:true}}; });
+  if (rawStudents) Object.entries(rawStudents).forEach(([uid,s])=>{ if(s) allUsers[uid]={name:s.name||'Student',email:s.email||'',role:'student',status:s.status||'approved',courses:s.courses||{python:true,typing:true}}; });
+  if (rawUsers) Object.entries(rawUsers).forEach(([uid,u])=>{ if(u) allUsers[uid]=Object.assign(allUsers[uid]||{},u); });
   renderAll();
 }
 

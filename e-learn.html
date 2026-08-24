@@ -740,11 +740,49 @@ function loadFacultyDashboard(user, data) {
   // Admin-only: show add teacher bar
   if (data.role !== 'admin') { $('addTeacherBar').style.display = 'none'; }
 
-  let rawUsers = {}, rawStudents = {};
+  let rawUsers = {}, rawStudents = {}, rawTeachers = {};
   function mergeAndRender() {
-    allUsersCache = Object.assign({}, rawStudents, rawUsers);
+    allUsersCache = {};
 
-    // Auto-discover any student accounts that have saved projects or typing progress
+    // 1. Teachers node
+    if (rawTeachers && typeof rawTeachers === 'object') {
+      Object.entries(rawTeachers).forEach(([uid, t]) => {
+        if (!t || typeof t !== 'object') return;
+        allUsersCache[uid] = {
+          name: t.name || 'Instructor',
+          email: t.email || '',
+          role: t.isAdmin || t.email === ADMIN_EMAIL ? 'admin' : 'teacher',
+          status: 'approved',
+          courses: { python: true, typing: true }
+        };
+      });
+    }
+
+    // 2. Legacy Students node
+    if (rawStudents && typeof rawStudents === 'object') {
+      Object.entries(rawStudents).forEach(([uid, s]) => {
+        if (!s || typeof s !== 'object') return;
+        const isApproved = s.status === 'approved' || !s.status;
+        allUsersCache[uid] = {
+          name: s.name || 'Student',
+          email: s.email || '',
+          role: 'student',
+          status: s.status || 'approved',
+          courses: s.courses || { python: isApproved, typing: isApproved },
+          createdAt: s.createdAt || Date.now()
+        };
+      });
+    }
+
+    // 3. Modern Users node (highest priority)
+    if (rawUsers && typeof rawUsers === 'object') {
+      Object.entries(rawUsers).forEach(([uid, u]) => {
+        if (!u || typeof u !== 'object') return;
+        allUsersCache[uid] = Object.assign(allUsersCache[uid] || {}, u);
+      });
+    }
+
+    // 4. Auto-discover from saved Projects
     if (allProjectsCache && typeof allProjectsCache === 'object') {
       Object.keys(allProjectsCache).forEach(uid => {
         if (!allUsersCache[uid]) {
@@ -752,6 +790,8 @@ function loadFacultyDashboard(user, data) {
         }
       });
     }
+
+    // 5. Auto-discover from Typing Progress
     if (typingProgressCache && typeof typingProgressCache === 'object') {
       Object.keys(typingProgressCache).forEach(uid => {
         if (!allUsersCache[uid]) {
@@ -760,6 +800,7 @@ function loadFacultyDashboard(user, data) {
       });
     }
 
+    // Standardize roles and active flags
     Object.entries(allUsersCache).forEach(([uid, u]) => {
       if (!u || typeof u !== 'object') return;
       u.uid = uid;
@@ -774,17 +815,19 @@ function loadFacultyDashboard(user, data) {
         if (!u.courses) u.courses = { python: true, typing: true };
       }
     });
+
     renderFacultyPanels();
   }
 
   // Initial immediate render
   mergeAndRender();
 
-  // Realtime listeners
-  db.ref('users').on('value', snap => { rawUsers = snap.val() || {}; mergeAndRender(); }, () => {});
-  db.ref('students').on('value', snap => { rawStudents = snap.val() || {}; mergeAndRender(); }, () => {});
-  db.ref('projects').on('value', snap => { allProjectsCache = snap.val() || {}; mergeAndRender(); }, () => {});
-  db.ref('typingProgress').on('value', snap => { typingProgressCache = snap.val() || {}; mergeAndRender(); }, () => {});
+  // Listeners on all collections with error fallbacks
+  db.ref('users').on('value', snap => { rawUsers = snap.val() || {}; mergeAndRender(); }, err => { console.warn('users notice:', err); mergeAndRender(); });
+  db.ref('students').on('value', snap => { rawStudents = snap.val() || {}; mergeAndRender(); }, err => { console.warn('students notice:', err); mergeAndRender(); });
+  db.ref('teachers').on('value', snap => { rawTeachers = snap.val() || {}; mergeAndRender(); }, err => { console.warn('teachers notice:', err); mergeAndRender(); });
+  db.ref('projects').on('value', snap => { allProjectsCache = snap.val() || {}; mergeAndRender(); }, err => { console.warn('projects notice:', err); mergeAndRender(); });
+  db.ref('typingProgress').on('value', snap => { typingProgressCache = snap.val() || {}; mergeAndRender(); }, err => { console.warn('typingProgress notice:', err); mergeAndRender(); });
 }
 
 function renderFacultyPanels() {
