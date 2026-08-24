@@ -295,11 +295,15 @@ auth.onAuthStateChanged(user=>{
 });
 
 // ── LOAD USERS ──
+let rawUsers = {}, rawStudents = {};
 function loadAllUsers(){
-  db.ref('users').on('value',snap=>{
-    allUsers=snap.val()||{};
-    renderAll();
-  });
+  db.ref('users').on('value', snap => { rawUsers = snap.val() || {}; mergeAndRenderAdmin(); }, () => {});
+  db.ref('students').on('value', snap => { rawStudents = snap.val() || {}; mergeAndRenderAdmin(); }, () => {});
+}
+
+function mergeAndRenderAdmin() {
+  allUsers = Object.assign({}, rawStudents, rawUsers);
+  renderAll();
 }
 
 function renderAll(){
@@ -310,10 +314,18 @@ function renderAll(){
   const today=new Date().toISOString().slice(0,10);
 
   Object.entries(allUsers).forEach(([uid,user])=>{
+    if(!user || typeof user !== 'object') return;
     user._uid=uid;
-    if(user.role==='teacher'||user.role==='admin'){teachers.push(user);}
-    if(user.role==='student'&&user.status==='approved'){students.push(user);}
-    if(user.role==='student'&&user.status==='pending'){pending.push(user);}
+    const email=user.email||'';
+    if(user.role==='teacher'||user.role==='admin'||email===ADMIN_EMAIL||email.endsWith('@roboden.in')){
+      teachers.push(user);
+    } else if(user.status==='pending'){
+      pending.push(user);
+    } else {
+      if(!user.status) user.status='approved';
+      if(!user.courses) user.courses={python:true,typing:true};
+      students.push(user);
+    }
   });
 
   // Load typing progress for active count

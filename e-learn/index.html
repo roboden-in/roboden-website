@@ -740,48 +740,29 @@ function loadFacultyDashboard(user, data) {
   // Admin-only: show add teacher bar
   if (data.role !== 'admin') { $('addTeacherBar').style.display = 'none'; }
 
-  // Clean previous listeners
-  db.ref('users').off();
-  db.ref('projects').off();
-  db.ref('typingProgress').off();
-
-  // Load all data with safe fallbacks
-  const safeOnce = path => db.ref(path).once('value').then(snap => snap.val() || {}).catch(() => ({}));
-  Promise.all([
-    safeOnce('users'),
-    safeOnce('students'),
-    safeOnce('projects'),
-    safeOnce('typingProgress')
-  ]).then(([usersData, studentsData, projData, tpData]) => {
-    allUsersCache = usersData;
-    const legacy = studentsData;
-    allProjectsCache = projData;
-    typingProgressCache = tpData;
-
-    // Merge legacy students
-    Object.entries(legacy).forEach(([uid, st]) => {
-      if (!allUsersCache[uid]) {
-        const email = st.email || '';
-        const role = email === ADMIN_EMAIL ? 'admin' : (email.endsWith('@roboden.in') ? 'teacher' : 'student');
-        allUsersCache[uid] = {
-          name: st.name || 'Student',
-          email: email,
-          role: role,
-          status: st.status || 'approved',
-          courses: { python: st.status === 'approved', typing: st.status === 'approved' },
-          createdAt: st.createdAt || Date.now()
-        };
-        db.ref('users/' + uid).set(allUsersCache[uid]).catch(() => {});
+  let rawUsers = {}, rawStudents = {};
+  function mergeAndRender() {
+    allUsersCache = Object.assign({}, rawStudents, rawUsers);
+    Object.entries(allUsersCache).forEach(([uid, u]) => {
+      if (!u || typeof u !== 'object') return;
+      u.uid = uid;
+      const email = u.email || '';
+      if (email === ADMIN_EMAIL || u.role === 'admin') {
+        u.role = 'admin'; u.status = 'approved'; u.courses = { python: true, typing: true };
+      } else if (email.endsWith('@roboden.in') || u.role === 'teacher') {
+        u.role = 'teacher'; u.status = 'approved'; u.courses = { python: true, typing: true };
+      } else {
+        if (!u.role) u.role = 'student';
+        if (!u.status) u.status = 'approved';
+        if (!u.courses) u.courses = { python: true, typing: true };
       }
     });
     renderFacultyPanels();
-  }).catch(err => {
-    console.error('Error loading faculty data:', err);
-    renderFacultyPanels();
-  });
+  }
 
-  // Realtime listeners
-  db.ref('users').on('value', snap => { allUsersCache = snap.val() || {}; renderFacultyPanels(); }, () => {});
+  // Realtime listeners on both users and legacy students
+  db.ref('users').on('value', snap => { rawUsers = snap.val() || {}; mergeAndRender(); }, () => {});
+  db.ref('students').on('value', snap => { rawStudents = snap.val() || {}; mergeAndRender(); }, () => {});
   db.ref('projects').on('value', snap => { allProjectsCache = snap.val() || {}; renderFacultyPanels(); }, () => {});
   db.ref('typingProgress').on('value', snap => { typingProgressCache = snap.val() || {}; renderFacultyPanels(); }, () => {});
 }
