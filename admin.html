@@ -139,7 +139,48 @@ tr:last-child td{border-bottom:0}
   table{font-size:12px}
   th,td{padding:10px 12px}
 }
-  </style>
+  
+/* Premium UI Patch */
+.modal-container, .gate-card, .profile-modal-content {
+  box-shadow: 0 24px 48px rgba(48,28,78,0.1), 0 8px 16px rgba(48,28,78,0.06) !important;
+  animation: modalEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalEnter {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.btn-variant:hover:not(.active) {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.gate-btn:hover, .auth-btn:hover, .btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(104,40,201,0.2);
+  filter: brightness(1.1);
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--purple);
+  outline-offset: 2px;
+}
+
+.btn-variant, .btn-doc-tool {
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -182,6 +223,8 @@ tr:last-child td{border-bottom:0}
       <button class="tab active" data-tab="students">Students <span class="tab-count" id="studentCount">0</span></button>
       <button class="tab" data-tab="pending">Pending <span class="tab-count pending-count" id="pendingCount">0</span></button>
       <button class="tab" data-tab="teachers">Teachers <span class="tab-count" id="teacherCount">0</span></button>
+      <button class="tab" data-tab="workshops">🎓 Workshop QR Passes <span class="tab-count" id="workshopCount">0</span></button>
+      <button class="tab" data-tab="pricing">💰 AI Teacher Pricing</button>
     </div>
 
     <!-- Students Tab -->
@@ -204,6 +247,64 @@ tr:last-child td{border-bottom:0}
             <thead><tr><th>STUDENT</th><th>EMAIL</th><th>REQUESTED</th><th>ACTIONS</th></tr></thead>
             <tbody id="pendingTable"><tr><td colspan="4" class="empty-state">No pending requests</td></tr></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    
+    <!-- Workshop Passes Tab -->
+    <div class="tab-content" id="tabWorkshops">
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>SCHOOL / EVENT</th><th>PASS CODE</th><th>CAPACITY</th><th>REDEEMED</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+            <tbody id="workshopTable"><tr><td colspan="6" class="empty-state">Loading workshop passes...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="add-teacher-form" style="background:#faf5ff; border-top:2px solid #e9d5ff;">
+          <div class="form-group"><label>School / Institution Name</label><input type="text" id="wsSchoolName" placeholder="e.g. Green Berg International School"></div>
+          <div class="form-group"><label>Custom Pass Code (or auto)</label><input type="text" id="wsPassCode" placeholder="e.g. GREENBERG_2026" style="text-transform:uppercase;"></div>
+          <div class="form-group"><label>Teacher Capacity</label>
+            <select id="wsCapacity" style="border:1px solid var(--line); border-radius:6px; padding:10px 12px; font:600 13px var(--sans); height:40px; background:#fff;">
+              <option value="20">20 Teachers</option>
+              <option value="30" selected>30 Teachers</option>
+              <option value="50">50 Teachers</option>
+              <option value="100">100 Teachers</option>
+              <option value="500">500 (Mega Workshop)</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Pro Validity</label>
+            <select id="wsDuration" style="border:1px solid var(--line); border-radius:6px; padding:10px 12px; font:600 13px var(--sans); height:40px; background:#fff;">
+              <option value="365" selected>1 Year Free Pro</option>
+              <option value="180">6 Months Pro</option>
+              <option value="30">30 Days Pass</option>
+            </select>
+          </div>
+          <button id="btnCreateWorkshop" style="background:#6d28d9;">⚡ Generate Live QR Pass</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Teacher Pricing Tab -->
+    <div class="tab-content" id="tabPricing">
+      <div class="panel">
+        <div class="add-teacher-form" style="background:#faf5ff; border-top:2px solid #e9d5ff; display:block;">
+          <p style="font:700 14px var(--sans); margin-bottom:4px;">AI Teacher Pro — Subscription Pricing</p>
+          <p style="font:500 12px var(--sans); color:#64748b; margin-bottom:14px;">Live control of what teachers see and pay on <b>roboden.in/teachers</b>. Changes apply instantly.</p>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px;">
+            <div class="form-group"><label>Regular Annual Price (₹)</label><input type="number" id="prAnnual" placeholder="990"></div>
+            <div class="form-group"><label>Launch Offer Price (₹)</label><input type="number" id="prLaunch" placeholder="300"></div>
+            <div class="form-group"><label>"Per month" display (₹)</label><input type="number" id="prMonthly" placeholder="25"></div>
+            <div class="form-group"><label>Free Trial (days)</label><input type="number" id="prTrial" placeholder="7"></div>
+            <div class="form-group"><label>Active Offer</label>
+              <select id="prOffer" style="border:1px solid var(--line); border-radius:6px; padding:10px 12px; font:600 13px var(--sans); height:40px; background:#fff;">
+                <option value="launch">Launch Offer (discounted)</option>
+                <option value="annual">Regular Annual</option>
+              </select>
+            </div>
+          </div>
+          <button id="btnSavePricing" style="background:#6d28d9; margin-top:6px;">💾 Save Pricing</button>
+          <p id="pricingMsg" style="font:600 12px var(--sans); margin-top:8px;"></p>
         </div>
       </div>
     </div>
@@ -265,11 +366,40 @@ document.querySelectorAll('.tab').forEach(tab=>{
     document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById('tab'+tab.dataset.tab.charAt(0).toUpperCase()+tab.dataset.tab.slice(1)).classList.add('active');
+    if(tab.dataset.tab === 'pricing') loadPricing();
   });
 });
 
 // ── AUTH ──
 $('signOut').addEventListener('click',()=>auth.signOut().then(()=>location.href='e-learn.html'));
+
+// ── AI TEACHER PRO PRICING ──
+function loadPricing(){
+  db.ref('config/pricing').once('value').then(s=>{
+    const p = s.val() || {};
+    if($('prAnnual')) $('prAnnual').value = p.annual != null ? p.annual : 990;
+    if($('prLaunch')) $('prLaunch').value = p.launch != null ? p.launch : 300;
+    if($('prMonthly')) $('prMonthly').value = p.monthlyDisplay != null ? p.monthlyDisplay : 25;
+    if($('prTrial')) $('prTrial').value = p.trialDays != null ? p.trialDays : 7;
+    if($('prOffer')) $('prOffer').value = p.activeOffer || 'launch';
+  });
+}
+document.addEventListener('click', (e)=>{
+  if(e.target && e.target.id === 'btnSavePricing'){
+    const pricing = {
+      annual: Number($('prAnnual').value) || 990,
+      launch: Number($('prLaunch').value) || 300,
+      monthlyDisplay: Number($('prMonthly').value) || 25,
+      trialDays: Number($('prTrial').value) || 7,
+      activeOffer: $('prOffer').value || 'launch',
+      currency: 'INR',
+      updatedAt: Date.now()
+    };
+    db.ref('config/pricing').set(pricing)
+      .then(()=>{ const m=$('pricingMsg'); if(m){ m.textContent='✓ Saved — live on the site now.'; m.style.color='#0f766e'; } showToast && showToast('Pricing updated.'); })
+      .catch(err=>{ const m=$('pricingMsg'); if(m){ m.textContent='Error: '+err.message; m.style.color='#dc2626'; } });
+  }
+});
 
 const ADMIN_EMAIL='surya@roboden.in';
 auth.onAuthStateChanged(user=>{
@@ -290,7 +420,117 @@ auth.onAuthStateChanged(user=>{
     $('adminName').textContent=userData.name||(isAdmin?'Admin':'Teacher');
     $('avatar').textContent=(userData.name||'A').charAt(0).toUpperCase();
     $('adminBadge').textContent=isAdmin?'ADMIN':'TEACHER';
-    loadAllUsers();
+    loadAllUsers(); loadWorkshopPasses(); loadPricing();
+
+// ── WORKSHOP PASSES MANAGEMENT ──
+let allWorkshopsCache = {};
+
+function loadWorkshopPasses(){
+  db.ref('workshop_passes').on('value', snap => {
+    allWorkshopsCache = snap.val() || {};
+    renderWorkshopTable();
+  });
+}
+
+function renderWorkshopTable(){
+  const tbody = $('workshopTable');
+  if(!tbody) return;
+  const entries = Object.entries(allWorkshopsCache);
+  $('workshopCount').textContent = entries.length;
+
+  if(!entries.length){
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No workshop passes created yet. Create one below!</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = entries.map(([code, ws]) => {
+    const redeemed = ws.redeemedCount || 0;
+    const max = ws.capacity || 30;
+    const isFull = redeemed >= max;
+    const isActive = ws.status !== 'disabled';
+
+    return `
+      <tr>
+        <td><strong>${esc(ws.schoolName)}</strong><br><small style="color:var(--muted);">${ws.createdAt ? new Date(ws.createdAt).toLocaleDateString() : ''}</small></td>
+        <td><code style="font-weight:800; color:var(--purple);">${esc(code)}</code></td>
+        <td>${max} Teachers</td>
+        <td><span class="role-badge ${isFull ? 'role-admin' : 'role-student'}">${redeemed} / ${max}</span></td>
+        <td><span class="status-badge ${isActive && !isFull ? 'status-approved' : 'status-rejected'}">${isActive ? (isFull ? 'FULL' : 'ACTIVE') : 'DISABLED'}</span></td>
+        <td>
+          <div class="action-group">
+            <button class="action-btn approve-btn" onclick="openQrModal('${esc(code)}')">📱 Show QR</button>
+            <button class="action-btn remove-btn" onclick="toggleWorkshopStatus('${esc(code)}', ${isActive})">${isActive ? 'Disable' : 'Enable'}</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openQrModal(code){
+  const ws = allWorkshopsCache[code];
+  if(!ws) return;
+  const link = `https://roboden.in/teachers.html?ws=${encodeURIComponent(code)}`;
+  
+  $('qrModalSchool').textContent = ws.schoolName;
+  $('qrModalLink').textContent = link;
+  $('qrModalCapacity').textContent = `${ws.redeemedCount || 0} / ${ws.capacity || 30} Teachers Activated`;
+
+  const box = $('qrcodeBox');
+  box.innerHTML = '';
+  if(typeof QRCode !== 'undefined'){
+    new QRCode(box, {
+      text: link,
+      width: 180,
+      height: 180,
+      colorDark: "#1e1035",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  } else {
+    box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(link)}" alt="QR Code">`;
+  }
+
+  $('qrModal').classList.remove('hidden');
+}
+
+function toggleWorkshopStatus(code, currentActive){
+  db.ref('workshop_passes/' + code).update({ status: currentActive ? 'disabled' : 'active' })
+    .then(() => showToast(`Workshop pass ${code} updated!`));
+}
+
+$('btnCreateWorkshop').addEventListener('click', () => {
+  const school = $('wsSchoolName').value.trim();
+  let code = $('wsPassCode').value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+  const capacity = parseInt($('wsCapacity').value) || 30;
+  const durationDays = parseInt($('wsDuration').value) || 365;
+
+  if(!school){
+    showToast('Please enter the school / institution name.');
+    return;
+  }
+  if(!code){
+    // Auto-generate code from school initials + year
+    const initials = school.split(' ').map(w => w.charAt(0)).join('').toUpperCase().substring(0, 5);
+    code = `${initials}_${new Date().getFullYear()}_${Math.floor(100 + Math.random()*900)}`;
+  }
+
+  db.ref('workshop_passes/' + code).set({
+    schoolName: school,
+    capacity: capacity,
+    durationDays: durationDays,
+    redeemedCount: 0,
+    status: 'active',
+    createdBy: 'surya@roboden.in',
+    createdAt: Date.now()
+  }).then(() => {
+    showToast(`✅ Workshop pass ${code} created for ${school}!`);
+    $('wsSchoolName').value = '';
+    $('wsPassCode').value = '';
+    openQrModal(code);
+  }).catch(err => showToast('Error: ' + err.message));
+});
+
   });
 });
 
@@ -443,5 +683,27 @@ $('addTeacher').addEventListener('click',async()=>{
 
 function showToast(msg){const t=$('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
 </script>
+
+<!-- Workshop QR Code Fullscreen Modal -->
+<div class="access-gate hidden" id="qrModal" style="background:rgba(7,7,12,0.92); z-index:9999;">
+  <div class="gate-card" style="max-width:540px; padding:36px 32px; background:#ffffff; border-radius:16px; box-shadow:0 25px 60px rgba(0,0,0,0.4);">
+    <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:#6d28d9; margin-bottom:4px;">Roboden Educator Workshop Pass</div>
+    <h2 id="qrModalSchool" style="font-size:1.4rem; font-weight:900; color:#0f172a; margin-bottom:6px;">School Name</h2>
+    <p style="font-size:13px; color:#64748b; margin-bottom:18px;">Teachers can scan this QR code or open the link to activate 1-Year Pro Access instantly.</p>
+    
+    <div id="qrcodeBox" style="display:flex; justify-content:center; padding:18px; background:#ffffff; border:2px solid #e2e8f0; border-radius:12px; margin-bottom:16px; min-height:220px; align-items:center;"></div>
+    
+    <div style="background:#f8fafc; border:1px dashed #cbd5e1; padding:10px; border-radius:8px; margin-bottom:18px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+      <code id="qrModalLink" style="font-family:var(--mono); font-size:12px; color:#6d28d9; font-weight:700; word-break:break-all;">https://roboden.in/teachers.html?ws=CODE</code>
+      <button class="action-btn approve-btn" onclick="navigator.clipboard.writeText($('qrModalLink').textContent); showToast('Link copied to clipboard!');">Copy</button>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span id="qrModalCapacity" style="font-size:12px; font-weight:800; color:#16a34a;">0 / 30 Redeemed</span>
+      <button class="gate-btn" onclick="$('qrModal').classList.add('hidden');" style="background:#0f172a;">Close Card</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

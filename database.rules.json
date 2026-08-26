@@ -33,6 +33,34 @@
     "rooms": {
       ".read": "auth != null",
       ".write": "auth != null"
+    },
+    "teacher_hub": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        "profile": {
+          ".write": "auth != null && auth.uid === $uid"
+        },
+        "trialStart": {
+          ".write": "auth != null && auth.uid === $uid && !data.exists() && newData.val() === now"
+        },
+        "entitlement": {
+          ".write": false
+        }
+      }
+    },
+    "workshop_passes": {
+      ".read": "auth != null && (auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+      ".write": "auth != null && (auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+    },
+    "config": {
+      ".read": true,
+      "pricing": {
+        ".write": "auth != null && (auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
+    },
+    "orders": {
+      ".read": "auth != null && (auth.token.email === 'surya@roboden.in' || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+      ".write": false
     }
   }
 }
