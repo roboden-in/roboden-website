@@ -277,7 +277,7 @@ body { background: var(--bg); color: var(--ink); font-family: Nunito, Arial, san
 
       <button class="email-toggle" id="emailToggle">Sign in with email instead</button>
 
-      <form class="email-form" id="emailForm" onsubmit="return false;">
+      <form class="email-form" id="emailForm" onsubmit="event.preventDefault();document.getElementById('emailSignInBtn').click();">
         <label>Email address</label>
         <input type="email" id="emailInput" placeholder="name@roboden.in" autocomplete="email">
         <label>Password</label>
@@ -315,7 +315,7 @@ body { background: var(--bg); color: var(--ink); font-family: Nunito, Arial, san
           <span class="avatar" id="mobUserAvatar" style="width:28px;height:28px;font-size:11px;">S</span>
           <span id="mobUserName">Student</span>
         </div>
-        <button class="btn-mob-signout" onclick="auth.signOut()">Sign out</button>
+        <button class="btn-mob-signout" onclick="localStorage.removeItem('teacherSession');auth.signOut();">Sign out</button>
       </div>
 
       <header class="topbar">
@@ -649,13 +649,16 @@ function buildFacultyNav() {
   bindNavClicks();
 }
 
+let _navBound = false;
 function bindNavClicks() {
-  document.querySelectorAll('.nav-item').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      switchView(btn.dataset.view, btn.dataset.eye, btn.dataset.title);
-    });
+  if (_navBound) return;
+  _navBound = true;
+  $('sideNav').addEventListener('click', e => {
+    const btn = e.target.closest('.nav-item');
+    if (!btn) return;
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    switchView(btn.dataset.view, btn.dataset.eye, btn.dataset.title);
   });
 }
 
@@ -725,17 +728,20 @@ function loadStudentDashboard(user, data) {
 }
 
 /* ── FACULTY DASHBOARD ── */
+let _panelTabsBound = false;
 function loadFacultyDashboard(user, data) {
-  // Panel tab switcher
-  document.querySelectorAll('.panel-tab').forEach(btn => {
-    btn.addEventListener('click', () => {
+  if (!_panelTabsBound) {
+    _panelTabsBound = true;
+    document.querySelector('.panel-tabs')?.addEventListener('click', e => {
+      const btn = e.target.closest('.panel-tab');
+      if (!btn) return;
       document.querySelectorAll('.panel-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const target = btn.dataset.panel;
       document.querySelectorAll('.panel-section').forEach(s => s.classList.remove('active'));
       $(target).classList.add('active');
     });
-  });
+  }
 
   // Admin-only: show add teacher bar
   if (data.role !== 'admin') { $('addTeacherBar').style.display = 'none'; }
@@ -912,7 +918,7 @@ function renderFacultyPanels() {
         <td><button class="toggle ${pOn ? 'on' : ''}" onclick="toggleCourse('${escapeHtml(s.uid)}','python',${!pOn})" title="${pOn ? 'Enabled (click to revoke)' : 'Disabled (click to grant)'}"></button></td>
         <td><button class="toggle ${tOn ? 'on' : ''}" onclick="toggleCourse('${escapeHtml(s.uid)}','typing',${!tOn})" title="${tOn ? 'Enabled (click to revoke)' : 'Disabled (click to grant)'}"></button></td>
         <td class="mono">${escapeHtml(dayStr)}</td>
-        <td>${pc > 0 ? `<button class="btn-sm projects" onclick="inspectProjects('${escapeHtml(s.uid)}','${encodeURIComponent(s.name || 'Student')}','${escapeHtml(s.email)}')">&lt;/&gt; ${pc}</button>` : '<span style="color:var(--muted);font-size:12px">0</span>'}</td>
+        <td>${pc > 0 ? `<button class="btn-sm projects" onclick="inspectProjects('${encodeURIComponent(s.uid)}','${encodeURIComponent(s.name || 'Student')}','${encodeURIComponent(s.email)}')">&lt;/&gt; ${pc}</button>` : '<span style="color:var(--muted);font-size:12px">0</span>'}</td>
         <td style="text-align:right"><button class="btn-sm revoke" onclick="rejectStudent('${escapeHtml(s.uid)}')">Revoke</button></td>
       </tr>`;
     }).join('') : '<tr><td colspan="6" class="empty-row">No approved students yet. Approve pending students above.</td></tr>';
@@ -953,7 +959,7 @@ window.rejectStudent = function(uid) {
     }
     db.ref('users/' + uid).update({ status: 'rejected', courses: { python: false, typing: false } }).then(() => {
       showToast('Access revoked.');
-    });
+    }).catch(err => { showToast('Error: ' + err.message); });
   }
 };
 
@@ -965,11 +971,13 @@ window.toggleCourse = function(uid, course, val) {
   }
   db.ref('users/' + uid + '/courses/' + course).set(val).then(() => {
     showToast(course.charAt(0).toUpperCase() + course.slice(1) + ' access ' + (val ? 'granted' : 'revoked') + '.');
-  });
+  }).catch(err => { showToast('Error: ' + err.message); });
 };
 
 /* ── CODE INSPECTOR ── */
-window.inspectProjects = function(uid, encodedName, email) {
+window.inspectProjects = function(uid, encodedName, encodedEmail) {
+  uid = decodeURIComponent(uid);
+  const email = decodeURIComponent(encodedEmail);
   $('modalTitle').textContent = decodeURIComponent(encodedName) + "'s Python Projects";
   $('modalEmail').textContent = email;
   const prjs = allProjectsCache[uid] || {};
