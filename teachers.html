@@ -1226,6 +1226,15 @@ footer{
 .ocr-add{ display:inline-flex; align-items:center; gap:7px; margin-top:10px; cursor:pointer; font-size:0.8rem; font-weight:700; color:var(--p); background:#f1ebff; border:1px solid #ddd0fb; padding:8px 14px; border-radius:9px; transition:.15s; }
 .ocr-add:hover{ background:#e9dfff; }
 
+/* Exam type info + Advanced settings */
+.exam-type-info{ font-size:0.82rem; margin-top:8px; color:var(--app-ink); }
+.adv-settings{ margin:6px 0 4px; border:1px solid var(--app-border); border-radius:10px; background:#fbfbfe; padding:0 14px; }
+.adv-settings[open]{ padding-bottom:12px; }
+.adv-settings > summary{ cursor:pointer; list-style:none; padding:11px 0; font-size:0.82rem; font-weight:700; color:var(--p); user-select:none; }
+.adv-settings > summary::-webkit-details-marker{ display:none; }
+.adv-settings > summary::before{ content:'▸ '; color:var(--app-ink-muted); }
+.adv-settings[open] > summary::before{ content:'▾ '; }
+
 /* ════════════════════════════════════════════════════════════════
    GAMMA-STYLE SLIDE DECK ENGINE  (.sl-*) — preview mirrors the .pptx
    ════════════════════════════════════════════════════════════════ */
@@ -2041,8 +2050,8 @@ function renderDynamicForm(tabKey){
         </select>
       </div>
       <div class="field-group">
-        <label class="field-label">Topic / Chapter Name</label>
-        <input type="text" class="field-input" id="inpTopicName" placeholder="e.g. Introduction to AI & Project Cycle" value="Introduction to AI & Project Cycle" required>
+        <label class="field-label">Chapter(s) / Topic(s) <span style="font-weight:400; color:var(--app-ink-muted);">— separate multiple with commas</span></label>
+        <input type="text" class="field-input" id="inpTopicName" placeholder="e.g. Linear Equations, Triangles, Statistics" value="Introduction to AI & Project Cycle" required>
       </div>
 
       <div class="ocr-drop" id="ocrBox">
@@ -2059,73 +2068,73 @@ function renderDynamicForm(tabKey){
         </label>
       </div>
 
-      <div class="form-section-title">3. Exam Structure & Settings</div>
+      <div class="form-section-title">3. Type of Exam</div>
       <div class="field-group">
-        <label class="field-label">Exam Format Blueprint</label>
-        <select class="field-select" id="selectBlueprint">
-          <option value="Template A: CBSE Periodic Test (MCQs with box, Fill blanks, Ruled Short Answer)" selected>
-            1. Periodic Test (MCQs with Box, Blanks, Ruled Lines)
-          </option>
-          <option value="Template B: Formal Pre-Board Exam (Double Rule Header, General Instructions 1-5)">
-            2. Formal Pre-Board / Annual Paper (CBSE/ICSE/IGCSE)
-          </option>
-          <option value="Template C: State Board Dual-Subject Blueprint (Q.No, Nature, Right Marks Table)">
-            3. Split Subject Blueprint (e.g. Geography & Economics / Bio & Chem)
-          </option>
-          <option value="Template D: Primary School Activity Paper (Match Columns, Circle Odd, Big Font)">
-            4. Primary School Activity Sheet (Class 1–5)
-          </option>
-          <option value="Template E: Mathematics & Science Numerical Step-Marking Sheet">
-            5. Mathematics & Science Step-Marking Sheet
-          </option>
-          <option value="Template F: Language & Literature (Comprehension Passage, Grammar, Lit)">
-            6. Language & Literature Assessment
-          </option>
+        <label class="field-label">Exam Type <span style="font-weight:400; color:var(--app-ink-muted);">— sets the marks, time &amp; official pattern automatically</span></label>
+        <select class="field-select" id="selectExamType" onchange="updateExamTypeInfo()">
+          <option value="slip">Slip Test / Quick Quiz</option>
+          <option value="unit" selected>Unit Test / Periodic</option>
+          <option value="fa">Formative Assessment (FA)</option>
+          <option value="midterm">Mid-Term Exam</option>
+          <option value="term">Term / Summative</option>
+          <option value="halfyearly">Half-Yearly Exam</option>
+          <option value="preboard">Pre-Board Exam</option>
+          <option value="annual">Annual / Board Exam</option>
         </select>
+        <p id="examTypeInfo" class="exam-type-info"></p>
       </div>
-      <div class="field-row">
-        <div class="field-group">
-          <label class="field-label">Total Marks</label>
-          <select class="field-select" id="selectMarks">
-            <option value="10 Marks (Quick Quiz)">10 Marks (Quick Quiz)</option>
-            <option value="20 Marks (Unit Test)" selected>20 Marks (Unit Test)</option>
-            <option value="25 Marks (Periodic Test)">25 Marks (Periodic Test)</option>
-            <option value="40 Marks (Mid-Term Exam)">40 Marks (Mid-Term Exam)</option>
-            <option value="50 Marks (Term Assessment)">50 Marks (Term Assessment)</option>
-            <option value="80 Marks (Annual Board Exam)">80 Marks (Annual Board Exam)</option>
-          </select>
+
+      <details class="adv-settings">
+        <summary>⚙ Advanced settings — override marks, time &amp; choice</summary>
+        <div class="field-row" style="margin-top:12px;">
+          <div class="field-group">
+            <label class="field-label">Total Marks</label>
+            <select class="field-select" id="selectMarks" onchange="updateExamTypeInfo()">
+              <option value="" selected>Auto (from Exam Type)</option>
+              <option value="10 Marks">10 Marks</option>
+              <option value="20 Marks">20 Marks</option>
+              <option value="25 Marks">25 Marks</option>
+              <option value="40 Marks">40 Marks</option>
+              <option value="50 Marks">50 Marks</option>
+              <option value="80 Marks">80 Marks</option>
+              <option value="100 Marks">100 Marks</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Time Duration</label>
+            <select class="field-select" id="selectDuration" onchange="updateExamTypeInfo()">
+              <option value="" selected>Auto (from Exam Type)</option>
+              <option value="20 Minutes">20 Minutes</option>
+              <option value="30 Minutes">30 Minutes</option>
+              <option value="45 Minutes">45 Minutes</option>
+              <option value="1 Hour">1 Hour</option>
+              <option value="1.5 Hours">1.5 Hours</option>
+              <option value="2 Hours">2 Hours</option>
+              <option value="3 Hours">3 Hours</option>
+            </select>
+          </div>
         </div>
-        <div class="field-group">
-          <label class="field-label">Time Duration</label>
-          <select class="field-select" id="selectDuration">
-            <option value="30 Minutes">30 Minutes</option>
-            <option value="45 Minutes" selected>45 Minutes</option>
-            <option value="1 Hour">1 Hour</option>
-            <option value="1.5 Hours">1.5 Hours</option>
-            <option value="2 Hours">2 Hours</option>
-            <option value="3 Hours">3 Hours</option>
-          </select>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Page Fitting Budget</label>
+            <select class="field-select" id="selectDensity" onchange="applyPageDensity(this.value)">
+              <option value="compact" selected>1 Page (Compact)</option>
+              <option value="standard">2 Pages (Front &amp; Back)</option>
+              <option value="booklet">Multi-Page Booklet</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Section Choice Policy</label>
+            <select class="field-select" id="selectChoicePolicy">
+              <option value="All Questions Compulsory" selected>All Compulsory</option>
+              <option value="Internal Choice in Long Answer (OR)">Internal Choice (OR)</option>
+              <option value="Section Choice (Any 3 out of 5)">Attempt Any 3 of 5</option>
+            </select>
+          </div>
         </div>
-      </div>
-      <div class="field-row">
-        <div class="field-group">
-          <label class="field-label">Page Fitting Budget</label>
-          <select class="field-select" id="selectDensity" onchange="applyPageDensity(this.value)">
-            <option value="compact" selected>1 Page (Compact Front-Only)</option>
-            <option value="standard">2 Pages (Front & Back)</option>
-            <option value="booklet">Multi-Page Exam Booklet</option>
-          </select>
-        </div>
-        <div class="field-group">
-          <label class="field-label">Section Choice Policy</label>
-          <select class="field-select" id="selectChoicePolicy">
-            <option value="All Questions Compulsory" selected>All Compulsory</option>
-            <option value="Internal Choice in Long Answer (OR)">Internal Choice (OR)</option>
-            <option value="Section Choice (Any 3 out of 5)">Attempt Any 3 of 5</option>
-          </select>
-        </div>
-      </div>
+      </details>
     `;
+    setTimeout(updateExamTypeInfo, 0);
   }
   else if(tabKey === 'worksheet'){
     pTitle.innerHTML = '<i data-lucide="file-text"></i><span>Differentiated Worksheet Maker</span>';
@@ -2537,8 +2546,12 @@ function applyLibPrompt(tab, grade, subject, topic){
 
 // ── MASTER EXECUTE GENERATION ──
 
+// Phase-5 toggle: flip to true once on Groq Dev tier to enable the AI answer-key verifier.
+const AI_VERIFY = false;
+
 async function executeGenerate(){
-  if(!requireAccess()) return;   // 7-day trial / Pro gate
+  if(!requireAccess()) return;      // 7-day trial / Pro gate
+  if(!checkDailyCap()) return;      // per-teacher daily generation cap (protects shared credits)
   const P = collectPaperParams();
 
   document.getElementById('emptyView').style.display = 'none';
@@ -2598,6 +2611,7 @@ async function executeGenerate(){
     document.getElementById('loadingView').style.display = 'none';
     document.getElementById('toolActionsBar').style.display = 'flex';
     if(window.lucide) lucide.createIcons();
+    bumpDailyUsage();   // count this generation against the teacher's daily cap
   } catch (err) {
     console.error(err);
     toast('Generation failed: ' + (err.message || 'check network / proxy config'), 'err');
@@ -2687,48 +2701,155 @@ function typesetMath(root){
 function collectPaperParams(){
   const g = id => document.getElementById(id);
   const grade = g('selectGrade')?.value || 'Class 9';
-  const marksRaw = g('selectMarks')?.value || '20 Marks';
+  const subject = g('selectSubject')?.value || 'General Science';
+  const board = g('selectBoard')?.value || 'CBSE';
+
+  // Exam Type drives marks + duration; Advanced settings (Auto = "") can override.
+  const examKey = g('selectExamType')?.value || 'unit';
+  const et = EXAM_TYPES[examKey] || EXAM_TYPES.unit;
+  const advMarksRaw = (g('selectMarks')?.value || '').trim();          // "" = Auto
+  const advDuration = (g('selectDuration')?.value || '').trim();       // "" = Auto
+  const marksNum = advMarksRaw ? (parseInt(advMarksRaw.replace(/[^0-9]/g,''),10) || et.marks) : et.marks;
+  const duration = advDuration || et.duration;
+  const examSize = marksNum >= 70 ? 'board' : marksNum >= 40 ? 'medium' : marksNum <= 10 ? 'quiz' : 'small';
+
   return {
     tab: currentTabKey,
     topic: (g('inpTopicName')?.value || '').trim() || 'Core Concepts',
-    grade,
-    classNum: grade.replace('Class ',''),
-    subject: g('selectSubject')?.value || 'General Science',
-    board: g('selectBoard')?.value || 'CBSE',
+    grade, classNum: grade.replace('Class ',''),
+    subject, subjectGroup: subjectGroup(subject),
+    board,
     school: (g('inpSchoolName')?.value || '').trim() || 'Green Berg International School',
     location: (g('inpSchoolLoc')?.value || '').trim() || '',
-    blueprint: g('selectBlueprint')?.value || '',
-    marksLabel: marksRaw,
-    marksNum: parseInt(marksRaw.replace(/[^0-9]/g,''),10) || 20,
-    duration: g('selectDuration')?.value || '45 Minutes',
+    examKey, examType: et, examTitle: et.title, examSize,
+    marksLabel: marksNum + ' Marks',
+    marksNum,
+    duration,
     density: g('selectDensity')?.value || 'compact',
     choicePolicy: g('selectChoicePolicy')?.value || 'All Questions Compulsory'
   };
 }
 
-/* ── Board-specific section blueprint guidance ── */
-function structureGuidance(P){
-  const m = P.marksNum, b = P.board;
-  if(b.startsWith('ICSE')){
-    return `ICSE/ISC pattern — TWO parts. "Section A" is COMPULSORY (~${Math.round(m*0.5)} marks): short/objective + short-answer questions. "Section B" (~${Math.round(m*0.5)} marks): longer questions where the student attempts a stated number out of more (e.g. "Attempt any 4 of 6"). Set the section note accordingly.`;
+/* ═══════════════ EXAM-PATTERN ENGINE ═══════════════
+   Board × ExamType × SubjectGroup → an exact section blueprint (counts + marks),
+   fed to gpt as a hard structure and enforced by validatePaper(). Built from the
+   official-board research (CBSE 5-section, ICSE 2-part, IGCSE structured, etc.). */
+
+// Show the auto-derived marks/time under the Exam Type picker.
+function updateExamTypeInfo(){
+  const el = document.getElementById('examTypeInfo');
+  const sel = document.getElementById('selectExamType');
+  if(!el || !sel) return;
+  const et = EXAM_TYPES[sel.value] || EXAM_TYPES.unit;
+  const advM = (document.getElementById('selectMarks')?.value || '').trim();
+  const advD = (document.getElementById('selectDuration')?.value || '').trim();
+  const marks = advM ? advM.replace(/[^0-9]/g,'') : et.marks;
+  const dur = advD || et.duration;
+  const overridden = advM || advD;
+  el.innerHTML = `→ <strong>${marks} marks</strong> · <strong>${dur}</strong> ` +
+    (overridden ? '<span style="color:#6d28d9; font-weight:600;">(overridden)</span>' : '<span style="color:#94a3b8;">(auto)</span>');
+}
+
+// Exam type → marks + duration + which blueprint "size" to use. Marks/time auto-filled.
+const EXAM_TYPES = {
+  slip:       { label:'Slip Test / Quick Quiz',  marks:10, duration:'20 Minutes', size:'quiz',   title:'Class Test' },
+  unit:       { label:'Unit Test / Periodic',    marks:20, duration:'45 Minutes', size:'small',  title:'Unit Test' },
+  fa:         { label:'Formative Assessment (FA)',marks:25, duration:'1 Hour',     size:'small',  title:'Formative Assessment' },
+  midterm:    { label:'Mid-Term Exam',           marks:40, duration:'1.5 Hours',  size:'medium', title:'Mid-Term Examination' },
+  term:       { label:'Term / Summative',        marks:50, duration:'2 Hours',    size:'medium', title:'Term Examination' },
+  halfyearly: { label:'Half-Yearly Exam',        marks:80, duration:'3 Hours',    size:'board',  title:'Half-Yearly Examination' },
+  preboard:   { label:'Pre-Board Exam',          marks:80, duration:'3 Hours',    size:'board',  title:'Pre-Board Examination' },
+  annual:     { label:'Annual / Board Exam',     marks:80, duration:'3 Hours',    size:'board',  title:'Annual Examination' }
+};
+
+function subjectGroup(subject){
+  const s = (subject || '').toLowerCase();
+  if(/\bmath|algebra|geometry|calculus/.test(s)) return 'math';
+  if(/science|physics|chem|bio|computer|python|\bai\b|robot/.test(s)) return 'science';
+  if(/english|hindi|language|kannada|telugu|tamil|sanskrit|literature/.test(s)) return 'language';
+  if(/social|geograph|econ|history|civics|political/.test(s)) return 'social';
+  return 'general';
+}
+
+// Board marking rules for the TEACHER answer key (from research).
+function boardMarkingRules(board){
+  if(board.startsWith('IGCSE'))
+    return 'Use Cambridge principles: positive marking (award marks for what is correct), Error-Carried-Forward (if an early value is wrong but used correctly later, award later marks), and Levels-of-Response for extended writing.';
+  if(board.startsWith('ICSE'))
+    return 'Expect detailed, paragraph-formatted point-wise answers; award marks per valid point.';
+  return 'Use CBSE step-wise positive marking: award marks for every correct step even if the final answer is wrong (e.g. 3-mark sum = formula 1 + substitution 1 + result 1); ignore minor spelling in non-language subjects; give full credit for any valid alternative method.';
+}
+
+/* Returns { total, sections:[{name,note,count,marksEach,types,choice,caseParts}], choiceNote } */
+function getBlueprint(P){
+  const board = P.board, grp = P.subjectGroup, size = P.examSize, total = P.marksNum;
+  const S = (name,note,count,marksEach,types,opts) => Object.assign({ name, note, count, marksEach, types, choice:'none' }, opts||{});
+
+  // ---- FULL BOARD PAPERS (80) ----
+  if(size === 'board'){
+    if(board.startsWith('CBSE') || board === 'State Board'){
+      if(grp === 'language'){
+        return { total, sections:[
+          S('Section A','Reading (Comprehension)',2,10,['case'],{caseParts:'sub-questions totalling 10 marks (mix of 1 & 2 mark parts)'}),
+          S('Section B','Writing & Grammar',8,null,['long','short'],{note2:'3 writing tasks (5 marks) + 5 grammar items (3 marks) = 30'}),
+          S('Section C','Literature (Prose, Poetry, Drama)',9,null,['short','long'],{note2:'short & long answers on prescribed texts = 30'})
+        ], choiceNote:'Internal choice in the long-answer/writing questions.' };
+      }
+      // science / math / social / general → CBSE competency 5-section
+      return { total, sections:[
+        S('Section A','Objective Type — MCQ & Assertion-Reason (1 mark each)',20,1,['mcq','assertion_reason'],{note2:'16 MCQ + last 4 as assertion_reason'}),
+        S('Section B','Very Short Answer (2 marks each)',6,2,['short']),
+        S('Section C','Short Answer (3 marks each)',7,3,['short']),
+        S('Section D','Long Answer (5 marks each)',3,5,['long'],{choice:'internal'}),
+        S('Section E', grp==='social' ? 'Source/Map-Based Questions (4 marks each)' : 'Case-Study Based Questions (4 marks each)',3,4,['case'],{caseParts:'three sub-parts of 1+1+2 marks'})
+      ], choiceNote:'Internal choice (OR) is provided within some Long-Answer and Case questions — no overall section choice.' };
+    }
+    if(board.startsWith('ICSE')){
+      return { total, sections:[
+        S('Section A','Compulsory — attempt ALL questions (40 marks)',10,4,['short','fill','mcq'],{note2:'short factual questions spanning the whole syllabus'}),
+        S('Section B','Attempt any FOUR questions (40 marks)',6,10,['long'],{choice:'section', attemptCount:4})
+      ], choiceNote:'Section A is fully compulsory; in Section B the student attempts any 4 of 6 long questions.' };
+    }
+    if(board.startsWith('IGCSE')){
+      return { total, sections:[
+        S('Section A','Multiple Choice','',1,['mcq'],{count:15}),
+        S('Section B','Structured & Extended Response',7,null,['long','short'],{note2:'questions of increasing marks (2–8) with (a)(b)(c) sub-parts and command words', choice:'internal'})
+      ], choiceNote:'Some extended questions offer a choice (e.g. answer 1 of 2 essays). Core vs Extended tier per class.' };
+    }
   }
-  if(b.startsWith('IGCSE')){
-    return `IGCSE/Cambridge pattern — a single structured sequence of questions of increasing marks (1–8 marks), many with (a)(b)(c) sub-parts and command words (State, Explain, Calculate, Describe). Provide answer space via answerSpaceLines.`;
+
+  // ---- SCALED SMALLER PAPERS (10–50): board-style, proportioned & mark-balanced ----
+  const secs = [];
+  let budget = total, caseSec = null;
+  if(total >= 40){ caseSec = S('Section D','Case-Study Based (4 marks)',1,4,['case'],{caseParts:'sub-parts 1+1+2'}); budget -= 4; }
+  let obj = Math.max(2, Math.round(budget * (size==='quiz'?0.5:0.3)));           // 1-mark objective
+  if(obj > budget) obj = budget;
+  secs.push(S('Section A','Objective Type (1 mark each)', obj, 1, ['mcq','fill','truefalse','assertion_reason']));
+  let rem = budget - obj;
+  let longCount = Math.max(size==='quiz'?0:1, Math.round((rem*0.45)/5));         // 5-mark long
+  let longMk = Math.min(longCount*5, rem); longCount = Math.floor(longMk/5); longMk = longCount*5;
+  let shortMk = rem - longMk;                                                     // rest → short
+  if(shortMk > 0){
+    const per = (shortMk % 3 === 0) ? 3 : 2;
+    secs.push(S('Section B', `Short Answer (${per} marks each)`, Math.max(1,Math.round(shortMk/per)), per, ['short']));
   }
-  // CBSE / State default (competency-based, 5 sections when full length)
-  if(m >= 70){
-    return `CBSE full-length ${m}-mark pattern (5 sections):
- • Section A — 20 questions × 1 mark = 20 (mostly MCQ; include 2 Assertion–Reason as type "assertion_reason").
- • Section B — 6 questions × 2 marks = 12 (Very Short Answer).
- • Section C — 7 questions × 3 marks = 21 (Short Answer).
- • Section D — 3 questions × 5 marks = 15 (Long Answer; give 1–2 internal "orChoice").
- • Section E — 3 case-study questions × 4 marks = 12 (type "case", each with 3 sub-parts of 1+1+2).
- Total must equal 80.`;
-  }
-  if(m >= 40){
-    return `${m}-mark mid/term pattern (4 sections): Section A objective (1-mark MCQ/fill/assertion), Section B very-short (2 marks), Section C short (3 marks), Section D long (5 marks, with one internal orChoice) and — if marks ≥ 40 — one case-study (type "case", 4 marks). Section marks must sum to exactly ${m}.`;
-  }
-  return `${m}-mark short test (2–3 sections): Section A objective 1-mark (MCQ/fill-in/true-false/assertion), Section B short-answer 2–3 marks, and if space a small long-answer. Keep it single-page friendly. Section marks must sum to exactly ${m}.`;
+  if(longCount > 0) secs.push(S('Section C','Long Answer (5 marks each)', longCount, 5, ['long'], { choice: P.choicePolicy && P.choicePolicy.includes('OR') ? 'internal':'none' }));
+  if(caseSec) secs.push(caseSec);
+  return { total, sections: secs, choiceNote: P.choicePolicy || 'All questions compulsory.', approx: true };
+}
+
+// Human-readable blueprint the prompt hands to gpt (the "hard structure").
+function blueprintToText(bp){
+  const lines = bp.sections.map(s => {
+    const cnt = s.count || '?';
+    const mk = s.marksEach ? ` × ${s.marksEach} mark${s.marksEach>1?'s':''}` : ' (mixed marks)';
+    const ch = s.choice==='section' ? ` — student attempts any ${s.attemptCount} of ${cnt}` : s.choice==='internal' ? ' — with internal OR choice' : '';
+    return ` • ${s.name}: ${cnt} question${cnt===1?'':'s'}${mk}${ch}. ${s.note}${s.note2 ? ' ('+s.note2+')' : ''}${s.caseParts ? ' Each has '+s.caseParts+'.' : ''}`;
+  });
+  const header = bp.approx
+    ? `Use approximately this structure (you may adjust question counts, but the marks MUST total exactly ${bp.total}):`
+    : `Follow this EXACT blueprint — do NOT add or drop sections; question counts and marks are fixed:`;
+  return `${header}\n${lines.join('\n')}\nThe section marks MUST sum to exactly ${bp.total}.\n${bp.choiceNote}`;
 }
 
 /* ── Build the chat messages for a QUESTION PAPER / WORKSHEET ── */
@@ -2744,7 +2865,7 @@ Do NOT use emojis. Write academically and age-appropriately for ${P.grade}.`;
 {
   "meta": {
     "board": "${P.board}", "className": "${P.grade}", "subject": "${P.subject}",
-    "examTitle": "<e.g. Unit Test / Half-Yearly Examination / Pre-Board>",
+    "examTitle": "${P.examTitle}",
     "session": "2025-26", "maxMarks": ${P.marksNum}, "durationLabel": "${P.duration}"
   },
   "generalInstructions": ["<5-7 concise, board-authentic instructions>"],
@@ -2773,15 +2894,14 @@ Do NOT use emojis. Write academically and age-appropriately for ${P.grade}.`;
   ]
 }`;
 
+  const bp = getBlueprint(P);
   const rules = `REQUIREMENTS:
-• Topic/chapter: "${P.topic}". Subject: ${P.subject}. Board: ${P.board}. Class: ${P.grade}.
-• ${structureGuidance(P)}
-• The SUM of all question marks (counting each OR-group once) MUST equal exactly ${P.marksNum}.
-• Choice policy: ${P.choicePolicy}. ${P.choicePolicy.includes('OR') ? 'Add "orChoice" to the long-answer questions.' : P.choicePolicy.includes('Any') ? 'State the "attempt any N of M" rule in the section note.' : 'All questions compulsory.'}
+• Chapter(s)/topic: "${P.topic}" — spread questions across ALL listed chapters. Subject: ${P.subject}. Board: ${P.board}. Class: ${P.grade}. Exam: ${P.examType.label}.
+• ${blueprintToText(bp)}
+• The SUM of all question marks (counting each internal OR-group or attempt-any group once) MUST equal exactly ${P.marksNum}.
 • For MCQ give exactly 4 options; put the correct option text/letter in "answer".
-• For short/long/numeric set "answerSpaceLines" to a sensible number of blank writing lines (short:2, long:4-6, objective:0). Keep it compact if page budget is "${P.density}".
-• Every question must include "answer", a brief "solution" (value points / steps), and a "bloom" level for the teacher key.
-• Blueprint requested by teacher: ${P.blueprint || 'standard'}.
+• For short/long/numeric set "answerSpaceLines" (objective:0, short:2, long:4-6). Keep compact if page budget is "${P.density}".
+• TEACHER ANSWER KEY: every question must include "answer", a brief "solution" (value points / steps), and a "bloom" level. ${boardMarkingRules(P.board)}
 Output ONLY the JSON object.`;
 
   return [
@@ -3821,6 +3941,27 @@ function requireAccess(){
 }
 
 function openProfileModal(){ document.getElementById('teacherProfileModal')?.classList.add('active'); }
+
+/* ── Per-teacher daily generation cap (protects shared Groq credits) ── */
+function dailyCap(){ return Number(PRICING.dailyCap) || 15; }
+function todayKey(){ return new Date().toISOString().slice(0,10); }
+function dailyCount(){
+  const u = currentTeacherProfile && currentTeacherProfile.usage;
+  return (u && u[todayKey()]) || 0;
+}
+function checkDailyCap(){
+  if(!auth.currentUser) return true;           // signed-out is handled by requireAccess
+  if(dailyCount() >= dailyCap()){
+    toast(`Daily limit reached (${dailyCap()} generations/day). Please continue tomorrow.`, 'err');
+    return false;
+  }
+  return true;
+}
+async function bumpDailyUsage(){
+  const user = auth.currentUser; if(!user) return;
+  try { await db.ref(`teacher_hub/${user.uid}/profile/usage/${todayKey()}`).transaction(v => (Number(v)||0) + 1); }
+  catch(e){ /* non-fatal */ }
+}
 
 async function signInWithGoogle(){
   try {
