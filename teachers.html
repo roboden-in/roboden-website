@@ -1709,6 +1709,10 @@ footer{
       <input type="password" class="field-input" id="userPass" placeholder="Password (min 6 characters)">
     </div>
 
+    <div style="text-align:right; margin:-4px 0 12px;">
+      <a href="#" onclick="resetPassword(); return false;" style="font-size:0.78rem; color:var(--p); font-weight:600; text-decoration:none;">Forgot password?</a>
+    </div>
+
     <div style="display:flex; gap:8px;">
       <button class="btn-generate" style="flex:1; margin:0;" onclick="signInWithEmail()">
         <i data-lucide="log-in" style="width:15px;height:15px;"></i> Sign in
@@ -2606,7 +2610,7 @@ async function executeGenerate(){
 
 // ── MISSING BUTTON HANDLERS ──
 function handleAuthBadgeClick() {
-  document.getElementById('profileModal').classList.add('active');
+  document.getElementById('teacherProfileModal').classList.add('active');
 }
 
 function openSubscriptionModal() {
@@ -3795,7 +3799,7 @@ function computeAccess(){
 
 function updateAccessUI(){
   currentAccess = computeAccess();
-  const badge = document.getElementById('profileBadge');
+  const badge = document.getElementById('btnNavAuth');
   if(badge){
     const map = {
       signedout: { t: 'LOG IN', b: 'var(--p)', c: '#fff' },
@@ -3816,37 +3820,64 @@ function requireAccess(){
   return true;
 }
 
-function openProfileModal(){ document.getElementById('profileModal')?.classList.add('active'); }
+function openProfileModal(){ document.getElementById('teacherProfileModal')?.classList.add('active'); }
 
 async function signInWithGoogle(){
   try {
     const res = await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-    document.getElementById('profileModal')?.classList.remove('active');
+    document.getElementById('teacherProfileModal')?.classList.remove('active');
     toast(`Welcome, ${res.user.displayName || 'teacher'}!`, 'ok');
-  } catch(e){ console.error(e); toast('Google login failed.', 'err'); }
+  } catch(e){
+    console.error(e);
+    // Same email already registered with a password → guide them to link (see Firebase
+    // console setting "Link accounts that use the same email" for automatic linking).
+    if(e.code === 'auth/account-exists-with-different-credential'){
+      const email = (e.customData && e.customData.email) || e.email || '';
+      toast('This email is already registered with a password. Sign in with your password below (same account).', 'err');
+      const f = document.getElementById('userEmail'); if(f && email) f.value = email;
+    } else if(e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user'){
+      toast('Google popup was blocked/closed. Allow popups and try again.', 'err');
+    } else if(e.code === 'auth/unauthorized-domain'){
+      toast('This domain is not authorised for Google sign-in yet (add it in Firebase Auth settings).', 'err');
+    } else {
+      toast('Google login failed: ' + (e.message || e.code), 'err');
+    }
+  }
+}
+
+// Forgot password → Firebase sends a secure reset link to the email.
+async function resetPassword(){
+  const em = (document.getElementById('userEmail')?.value || '').trim();
+  if(!em) return toast('Enter your email above first, then tap "Forgot password".', 'err');
+  try {
+    await auth.sendPasswordResetEmail(em);
+    toast('Password reset link sent to ' + em + '. Check your inbox (and spam).', 'ok');
+  } catch(e){
+    toast(e.code === 'auth/user-not-found' ? 'No account found for that email.' : ('Could not send reset email: ' + e.message), 'err');
+  }
 }
 
 async function signInWithEmail(){
-  const em = document.getElementById('authEmail')?.value, pw = document.getElementById('authPassword')?.value;
+  const em = document.getElementById('userEmail')?.value, pw = document.getElementById('userPass')?.value;
   if(!em || !pw) return toast('Enter email and password.', 'err');
-  try { await auth.signInWithEmailAndPassword(em, pw); document.getElementById('profileModal')?.classList.remove('active'); toast('Logged in.', 'ok'); }
+  try { await auth.signInWithEmailAndPassword(em, pw); document.getElementById('teacherProfileModal')?.classList.remove('active'); toast('Logged in.', 'ok'); }
   catch(e){ toast(e.message, 'err'); }
 }
 
 async function signUpWithEmail(){
-  const em = document.getElementById('authEmail')?.value, pw = document.getElementById('authPassword')?.value;
+  const em = document.getElementById('userEmail')?.value, pw = document.getElementById('userPass')?.value;
   if(!em || !pw) return toast('Enter email and password.', 'err');
   if(pw.length < 6) return toast('Password must be at least 6 characters.', 'err');
   try {
     const res = await auth.createUserWithEmailAndPassword(em, pw);
     await db.ref('teacher_hub/' + res.user.uid + '/profile').update({ email: em, createdAt: firebase.database.ServerValue.TIMESTAMP });
-    document.getElementById('profileModal')?.classList.remove('active');
+    document.getElementById('teacherProfileModal')?.classList.remove('active');
     toast(`Account created — your ${PRICING.trialDays || 7}-day free trial has started!`, 'ok');
   } catch(e){ toast(e.message, 'err'); }
 }
 
 function signOut(){
-  auth.signOut().then(() => { toast('Logged out.'); document.getElementById('profileModal')?.classList.remove('active'); });
+  auth.signOut().then(() => { toast('Logged out.'); document.getElementById('teacherProfileModal')?.classList.remove('active'); });
 }
 
 function saveCustomKey(){
