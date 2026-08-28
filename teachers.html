@@ -1869,11 +1869,189 @@ const GROQ_CONFIG = {
 
 // Unified Groq caller. Uses the teacher's own key (direct) when present, else the proxy.
 // Auto-falls back to the smaller model on a non-OK primary response.
+/* ═══════════════════════════════════════════════════════════════════════════
+   AI MAPPING LAYERS  —  L5 model choice · L6 provider choice
+   planRoute() is the SINGLE place routing is decided. It returns the intended
+   model plus a fallback ladder, and a human-readable reason that goes into the
+   trace, so "what should have been called" is auditable.
+   Models whose provider has no key configured are filtered out automatically,
+   so this table can describe the FUTURE while degrading to what works today.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+// L6 — which hosts can serve each model. First entry with a key wins.
+// (Only 'groq' is wired today; the rest activate when their key is added.)
+const PROVIDERS = {
+  groq:       { ready: true  },
+  cerebras:   { ready: false },
+  together:   { ready: false },
+  fireworks:  { ready: false },
+  openrouter: { ready: false },
+  google:     { ready: false },   // Gemini
+  sarvam:     { ready: false }
+};
+
+const MODELS = {
+  GPT_OSS_120B:  { id:'openai/gpt-oss-120b', providers:['groq','cerebras','together','fireworks','openrouter'] },
+  GPT_OSS_20B:   { id:'openai/gpt-oss-20b',  providers:['groq','cerebras','openrouter'] },
+  QWEN_38:       { id:'qwen/qwen3.8-27b',    providers:['groq','openrouter'] },
+  QWEN_36:       { id:'qwen/qwen3.6-27b',    providers:['groq','openrouter'] },
+  COMPOUND_MINI: { id:'groq/compound-mini',  providers:['groq'] },
+  COMPOUND:      { id:'groq/compound',       providers:['groq'] },
+  LLAMA4_SCOUT:  { id:'meta-llama/llama-4-scout-17b-16e-instruct', providers:['groq'] },
+  GEMINI_FLASH:  { id:'gemini-2.5-flash',    providers:['google','openrouter'] },
+  SARVAM_105B:   { id:'sarvam-105b',         providers:['sarvam'] },
+  SARVAM_OCR:    { id:'sarvam-ocr',          providers:['sarvam'] }
+};
+
+function providerFor(modelKey){
+  const m = MODELS[modelKey]; if(!m) return null;
+  return m.providers.find(p => PROVIDERS[p] && PROVIDERS[p].ready) || null;
+}
+
+/* L5 — the routing rules table. Read top-to-bottom, first match wins.
+   Edit THIS to change model preferences; nothing else needs to change. */
+const ROUTE_RULES = [
+  // ── Handwriting OCR (vision) ──
+  { when:{ tool:'ocr', indic:true },      chain:['SARVAM_OCR','GEMINI_FLASH','LLAMA4_SCOUT'], reason:'Indic handwriting → Sarvam OCR' },
+  { when:{ tool:'ocr' },                  chain:['LLAMA4_SCOUT','GEMINI_FLASH'],              reason:'English handwriting → Llama 4 Scout vision' },
+
+  // ── Cheap/simple jobs (formatting an existing transcription or pasted text) ──
+  { when:{ tier:'cheap' },                chain:['GPT_OSS_20B','QWEN_36','COMPOUND_MINI','GPT_OSS_120B'], reason:'Simple formatting job → cheap tier' },
+
+  // ── Slides (English only for now) ──
+  { when:{ tool:'ppt_slides' },           chain:['GPT_OSS_120B','GEMINI_FLASH','QWEN_38'],    reason:'Slides → best English reasoning model' },
+
+  // ── Indic papers ──
+  { when:{ indic:true, group:'math' },    chain:['GEMINI_FLASH','SARVAM_105B','QWEN_38'],     reason:'Indic + maths → Gemini (maths + Indic strength)' },
+  { when:{ indic:true, group:'science' }, chain:['GEMINI_FLASH','SARVAM_105B','QWEN_38'],     reason:'Indic + science → Gemini' },
+  { when:{ indic:true },                  chain:['SARVAM_105B','GEMINI_FLASH','QWEN_38'],     reason:'Indic language/social → Sarvam (native-script specialist)' },
+
+  // ── English papers ──
+  { when:{ group:'math', highReasoning:true },    chain:['GPT_OSS_120B','GEMINI_FLASH','QWEN_38'], reason:'English maths → gpt-oss-120b at HIGH reasoning' },
+  { when:{ group:'science', highReasoning:true }, chain:['GPT_OSS_120B','GEMINI_FLASH','QWEN_38'], reason:'English science → gpt-oss-120b at HIGH reasoning' },
+
+  // ── Default ──
+  { when:{},                              chain:['GPT_OSS_120B','GEMINI_FLASH','QWEN_38','GPT_OSS_20B'], reason:'Default → best English reasoning model' }
+];
+
+const INDIC_LANGS = ['te','kn','ta','ml','hi'];
+
+// Flip to true once on a paid Groq plan (higher tokens/minute). On the free tier the
+// 8K TPM ceiling means prompt + max_tokens must stay under ~8000, which does not leave
+// room for 'high' reasoning — gpt-oss then truncates and Groq rejects the JSON with
+// "Failed to validate JSON". 'medium' is the best accuracy that fits the free tier.
+const AI_PAID_TIER = false;
+
+/**
+ * The single routing decision point.
+ * ctx: { tool, language, subjectGroup, tier }
+ * → { intended, ladder, plannedChain, reason, tier, reasoningEffort, providers }
+ */
+function planRoute(ctx = {}){
+  const tool = ctx.tool || 'question_paper';
+  const language = (ctx.language || 'en').toLowerCase();
+  const group = ctx.subjectGroup || 'general';
+  const tier = ctx.tier || 'smart';
+  const indic = INDIC_LANGS.includes(language);
+  // Maths/science PAPERS get HIGH reasoning — that is what fixes wrong answer keys. Slides and
+  // formatting jobs don't need it (it would just burn tokens on hidden thinking).
+  const needsAccuracy = ['question_paper','worksheet'].includes(tool);
+  const highReasoning = needsAccuracy && (group === 'math' || group === 'science') && tier !== 'cheap';
+
+  const facts = { tool, indic, group, tier, highReasoning };
+  const rule = ROUTE_RULES.find(r =>
+    Object.entries(r.when).every(([k, v]) => facts[k] === v)
+  ) || ROUTE_RULES[ROUTE_RULES.length - 1];
+
+  // Resolve to concrete model ids, dropping any whose provider has no key yet.
+  const resolved = [];
+  rule.chain.forEach(key => {
+    const p = providerFor(key);
+    if(p) resolved.push({ key, model: MODELS[key].id, provider: p });
+  });
+  // Safety net: never return an empty ladder.
+  if(!resolved.length){
+    ['GPT_OSS_120B','GPT_OSS_20B','COMPOUND_MINI'].forEach(key => {
+      const p = providerFor(key);
+      if(p) resolved.push({ key, model: MODELS[key].id, provider: p });
+    });
+  }
+
+  // `ideal`   = the best model the rules ask for, even if we can't reach it yet (no key).
+  // `intended` = the best model we can ACTUALLY call with today's configuration.
+  // When they differ we are running degraded — a configuration gap, not a runtime failure,
+  // so it is reported separately from the green/amber/red verdict.
+  const idealKey = rule.chain[0];
+  const ideal = MODELS[idealKey] ? MODELS[idealKey].id : idealKey;
+  const intended = resolved.length ? resolved[0].model : null;
+
+  return {
+    ideal,
+    intended,
+    degraded: !!(intended && ideal !== intended),   // best model unreachable (missing key)
+    ladder: resolved.map(r => r.model),
+    providers: resolved.reduce((a,r) => (a[r.model] = r.provider, a), {}),
+    plannedChain: rule.chain.map(k => MODELS[k] ? MODELS[k].id : k),  // what we WANTED, incl. unavailable
+    skipped: rule.chain.filter(k => !providerFor(k)).map(k => MODELS[k] ? MODELS[k].id : k),
+    reason: rule.reason,
+    tier,
+    // Reasoning burns OUTPUT tokens, so effort and max_tokens must be chosen together and
+    // kept under the plan's tokens-per-minute ceiling (8K on the Groq free tier).
+    reasoningEffort: highReasoning ? (AI_PAID_TIER ? 'high' : 'medium') : 'low',
+    maxTokens: highReasoning ? (AI_PAID_TIER ? 8000 : 6000) : 5500,
+    facts
+  };
+}
+
+/* ═══════════ L8 — TRACE (what actually happened) ═══════════ */
+function newTrace(ctx, plan){
+  return {
+    id: 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    ts: Date.now(),
+    tool: ctx.tool, language: ctx.language || 'en',
+    subject: ctx.subject || '', subjectGroup: ctx.subjectGroup || '',
+    board: ctx.board || '', examType: ctx.examType || '', marks: ctx.marks || null,
+    ideal: plan ? plan.ideal : null,
+    intended: plan ? plan.intended : null,
+    degraded: plan ? !!plan.degraded : false,   // ideal model unreachable (missing provider key)
+    plannedChain: plan ? plan.plannedChain : [],
+    skipped: plan ? plan.skipped : [],
+    routeReason: plan ? plan.reason : '',
+    reasoningEffort: plan ? plan.reasoningEffort : 'low',
+    attempts: [],
+    served: null, servedProvider: null,
+    tokensIn: 0, tokensOut: 0, cached: 0,
+    ok: false, verdict: 'red', error: '', ms: 0
+  };
+}
+
+function finalizeTrace(trace, outcome = {}){
+  trace.ms = Date.now() - trace.ts;
+  trace.ok = !!outcome.ok;
+  Object.assign(trace, outcome.meta || {});
+  if(!trace.ok) trace.verdict = 'red';
+  else trace.verdict = (trace.served && trace.served === trace.intended) ? 'green' : 'amber';
+  return trace;
+}
+
+// Persist the trace (telemetry only — never any question content).
+async function logTrace(trace){
+  try {
+    if(!auth || !auth.currentUser) return;
+    const day = new Date(trace.ts).toISOString().slice(0,10);
+    await db.ref(`ai_logs/${day}/${trace.id}`).set(Object.assign({ uid: auth.currentUser.uid }, trace));
+  } catch(e){ console.warn('[trace] not logged:', e.message); }
+}
+
 async function groqChat(messages, opts = {}){
   // Groq free tier is limited to ~8000 tokens/minute (prompt + max_tokens together),
   // so we keep max_tokens modest and ask gpt-oss for "low" reasoning effort (it is a
   // reasoning model — high effort burns the token budget on hidden thinking).
-  const { temperature = 0.3, max_tokens = 5500, jsonMode = false, model, reasoningEffort = 'low', tier = 'smart' } = opts;
+  const { temperature = 0.3, jsonMode = false, model, tier = 'smart', plan = null, trace = null } = opts;
+  // A route plan (from planRoute) supplies the ladder, the reasoning effort AND the matching
+  // token budget — the two must be chosen together or the response truncates mid-JSON.
+  const reasoningEffort = opts.reasoningEffort || (plan && plan.reasoningEffort) || 'low';
+  const max_tokens = (plan && plan.maxTokens) || opts.max_tokens || 5500;
   const useDirect = !!GROQ_CONFIG.apiKey;
   const url = useDirect ? GROQ_CONFIG.directEndpoint : GROQ_CONFIG.proxyEndpoint;
   const headers = useDirect
@@ -1894,41 +2072,77 @@ async function groqChat(messages, opts = {}){
     // The proxy relays Groq's status+body, but a rate-limit/again error comes back as
     // HTTP 200 with an {error:{message}} body — so we must inspect the body, not just res.ok.
     const data = await res.json().catch(() => null);
-    if (data && data.error) return { err: data.error.message || JSON.stringify(data.error) };
+    // Capture usage for the trace (cached tokens prove prompt caching is actually working).
+    const u = (data && data.usage) || {};
+    const usage = {
+      tokensIn: u.prompt_tokens || 0,
+      tokensOut: u.completion_tokens || 0,
+      cached: (u.prompt_tokens_details && u.prompt_tokens_details.cached_tokens) || u.cached_tokens || 0
+    };
+    if (data && data.error) return { err: data.error.message || JSON.stringify(data.error), usage };
     const choice = data && data.choices && data.choices[0];
     const content = choice && choice.message && choice.message.content;
-    if (content && content.trim()) return { content };
+    if (content && content.trim()) return { content, usage };
     if (choice && choice.finish_reason === 'length')
-      return { err: 'The AI response hit the token limit. Try lower total marks, fewer slides, or upgrade the Groq plan.' };
-    return { err: 'The AI returned an empty response — please try again.' };
+      return { err: 'The AI response hit the token limit. Try lower total marks, fewer slides, or upgrade the Groq plan.', usage };
+    return { err: 'The AI returned an empty response — please try again.', usage };
   };
 
   // Walk the ladder: on a rate limit (or any failure) put that model on a short cooldown
   // and immediately try the next one, so teachers never see a rate-limit error until
   // every model is exhausted.
-  const ladder = model ? [model] : (tier === 'cheap' ? GROQ_CONFIG.cheapLadder : GROQ_CONFIG.ladder);
+  const ladder = model ? [model]
+    : (plan && plan.ladder && plan.ladder.length) ? plan.ladder
+    : (tier === 'cheap' ? GROQ_CONFIG.cheapLadder : GROQ_CONFIG.ladder);
+
+  const note = (m, o) => {
+    if(trace) trace.attempts.push(Object.assign({ model:m, provider:(plan && plan.providers && plan.providers[m]) || 'groq' }, o));
+  };
+
   let lastErr = '';
   for (const m of ladder) {
-    if (!modelAvailable(m)) { lastErr = lastErr || (m + ' cooling down'); continue; }
+    if (!modelAvailable(m)) {
+      lastErr = lastErr || (m + ' cooling down');
+      note(m, { ok:false, skipped:true, error:'cooling down', ms:0 });
+      continue;
+    }
+    const t0 = Date.now();
     let res;
     try { res = await fetch(url, { method:'POST', headers, body: build(m) }); }
-    catch(netErr){ lastErr = netErr.message; coolDownModel(m, 20); continue; }
+    catch(netErr){
+      lastErr = netErr.message; coolDownModel(m, 20);
+      note(m, { ok:false, error:'network: '+netErr.message, ms:Date.now()-t0 });
+      continue;
+    }
 
     if (!res.ok) {
       lastErr = 'HTTP ' + res.status;
       coolDownModel(m, res.status === 429 ? 60 : 20);
+      note(m, { ok:false, status:res.status, error:lastErr, ms:Date.now()-t0 });
       console.warn(`[AI] ${m} → ${lastErr}; rotating`);
       continue;
     }
     const r = await parse(res);
-    if (r.content) { if(m !== ladder[0]) console.info(`[AI] served by ${m}`); return r.content; }
+    const ms = Date.now() - t0;
+    if (r.content) {
+      note(m, Object.assign({ ok:true, ms }, r.usage));
+      if(trace){
+        trace.served = m;
+        trace.servedProvider = (plan && plan.providers && plan.providers[m]) || 'groq';
+        trace.tokensIn += r.usage.tokensIn; trace.tokensOut += r.usage.tokensOut; trace.cached += r.usage.cached;
+      }
+      if(m !== ladder[0]) console.info(`[AI] served by ${m} (intended ${ladder[0]})`);
+      return r.content;
+    }
 
     lastErr = r.err || 'empty response';
+    note(m, Object.assign({ ok:false, error:lastErr.slice(0,140), ms }, r.usage));
     const wait = retryAfterSeconds(lastErr);
     const isLimit = /rate limit|tokens per minute|TPM|TPD|requests per|Request too large/i.test(lastErr);
     coolDownModel(m, isLimit ? (wait || 60) : 15);
     console.warn(`[AI] ${m} → ${lastErr.slice(0,80)}; rotating`);
   }
+  if(trace) trace.error = lastErr;
   throw new Error(
     /rate limit|tokens per minute|TPM|Request too large/i.test(lastErr)
       ? 'All AI models are busy right now. Please try again in a minute.'
@@ -2706,6 +2920,19 @@ async function executeGenerate(){
   if(!checkDailyCap()) return;      // per-teacher daily generation cap (protects shared credits)
   const P = collectPaperParams();
 
+  // ── AI MAPPING LAYERS ──
+  // L1 tool · L2 language · L3 subject group → L5/L6 model+provider plan → L8 trace.
+  // (Language selector isn't built yet, so this defaults to 'en' and degrades safely.)
+  const routeCtx = {
+    tool: currentTabKey,
+    language: (document.getElementById('selectLanguage')?.value || 'en').toLowerCase(),
+    subjectGroup: P.subjectGroup,
+    subject: P.subject, board: P.board, examType: P.examKey, marks: P.marksNum
+  };
+  const plan = planRoute(routeCtx);
+  const trace = newTrace(routeCtx, plan);
+  console.info(`[route] ${plan.reason} → intended ${plan.intended} (${plan.reasoningEffort} reasoning)`);
+
   document.getElementById('emptyView').style.display = 'none';
   document.getElementById('renderedPaperSheet').style.display = 'none';
   document.getElementById('renderedSlideDeck').style.display = 'none';
@@ -2716,7 +2943,7 @@ async function executeGenerate(){
   try {
     if(currentTabKey === 'ppt_slides'){
       const { messages, theme } = buildDeckPrompt(P);
-      const raw = await groqChat(messages, { temperature:0.35, max_tokens:5500, jsonMode:true });
+      const raw = await groqChat(messages, { temperature:0.35, max_tokens:5500, jsonMode:true, plan, trace });
       const data = normalizeDeck(extractJson(raw), theme);
       window.lastDeckData = data;
       const deck = document.getElementById('renderedSlideDeck');
@@ -2728,7 +2955,7 @@ async function executeGenerate(){
       document.getElementById('btnPptAction').style.display = 'inline-flex';
     }
     else if(currentTabKey === 'lesson_plan' || currentTabKey === 'teaching_aid'){
-      const raw = await groqChat(buildBlocksPrompt(P), { temperature:0.3, max_tokens:6000, jsonMode:true });
+      const raw = await groqChat(buildBlocksPrompt(P), { temperature:0.3, max_tokens:6000, jsonMode:true, plan, trace });
       const data = extractJson(raw); data.kind = 'blocks';
       window.lastPaperData = data;
       renderPaperInto('studentDocContent', renderBlocks(data));
@@ -2743,9 +2970,9 @@ async function executeGenerate(){
       // question_paper / worksheet → structured schema
       let data;
       if(currentTabKey === 'question_paper' && window.uploadedQPImages && window.uploadedQPImages.length){
-        data = await generatePaperFromPhotos(P);   // handwritten photo → clean paper
+        data = await generatePaperFromPhotos(P, trace);   // handwritten photo → clean paper
       } else {
-        const raw = await groqChat(buildPaperPrompt(P), { temperature:0.22, max_tokens:5500, jsonMode:true });
+        const raw = await groqChat(buildPaperPrompt(P), { temperature:0.22, max_tokens:5500, jsonMode:true, plan, trace });
         data = normalizePaperData(extractJson(raw), P);
       }
       window.lastPaperData = data;
@@ -2765,14 +2992,46 @@ async function executeGenerate(){
     document.getElementById('toolActionsBar').style.display = 'flex';
     if(window.lucide) lucide.createIcons();
     bumpDailyUsage();   // count this generation against the teacher's daily cap
+
+    finalizeTrace(trace, { ok:true, meta: traceOutputMeta() });
+    reportTrace(trace);
   } catch (err) {
     console.error(err);
     toast('Generation failed: ' + (err.message || 'check network / proxy config'), 'err');
     document.getElementById('loadingView').style.display = 'none';
     document.getElementById('emptyView').style.display = 'flex';
+    finalizeTrace(trace, { ok:false });
+    trace.error = trace.error || String(err.message || err).slice(0,200);
+    reportTrace(trace);
   } finally {
     document.getElementById('btnSubmitGen').disabled = false;
   }
+}
+
+// Summarise what the teacher actually received (no question content is ever logged).
+function traceOutputMeta(){
+  const d = window.lastPaperData, k = window.lastDeckData;
+  if(currentTabKey === 'ppt_slides' && k) return { outSlides: (k.slides||[]).length };
+  if(d && d.kind === 'blocks')          return { outBlocks: (d.blocks||[]).length };
+  if(d && d.sections)                   return { outQuestions: d.sections.reduce((a,s)=>a+s.questions.length,0),
+                                                 outMarks: d.computedTotal, targetMarks: (d.meta&&d.meta.maxMarks)||null };
+  return {};
+}
+
+// Console summary + persist. Amber means the teacher got output from a FALLBACK model.
+function reportTrace(trace){
+  const icon = trace.verdict === 'green' ? '✅' : trace.verdict === 'amber' ? '⚠️' : '❌';
+  console.info(
+    `${icon} [trace] ${trace.tool}/${trace.language} · intended=${trace.intended} · served=${trace.served || '—'}` +
+    ` · ${trace.tokensIn}in/${trace.tokensOut}out (cached ${trace.cached}) · ${trace.ms}ms`,
+    trace.attempts
+  );
+  if(trace.verdict === 'amber')
+    console.warn(`[trace] served by FALLBACK ${trace.served} instead of ${trace.intended} — quality may differ`);
+  if(trace.degraded)
+    console.warn(`[trace] DEGRADED: ideal model ${trace.ideal} unavailable (no provider key) — using ${trace.intended}`);
+  window.lastTrace = trace;
+  logTrace(trace);
 }
 
 // ── MISSING BUTTON HANDLERS ──
@@ -3999,17 +4258,17 @@ Output ONLY the JSON object.`;
   return [ { role:'system', content:system }, { role:'user', content: schema + '\n\n' + rules } ];
 }
 
-async function generatePaperFromPhotos(P){
+async function generatePaperFromPhotos(P, trace){
   const imgs = window.uploadedQPImages.slice();
   const loadMsg = document.getElementById('loadingSub');
   if(loadMsg) loadMsg.textContent = 'Reading your handwriting…';
   const transcription = await groqChat(buildOcrMessages(imgs), {
-    model: GROQ_CONFIG.visionModel, temperature:0.1, max_tokens:4000, jsonMode:false
+    model: GROQ_CONFIG.visionModel, temperature:0.1, max_tokens:4000, jsonMode:false, trace
   });
   if(!transcription || transcription.trim().length < 5) throw new Error('Could not read the handwriting clearly. Try a sharper, well-lit photo.');
   if(loadMsg) loadMsg.textContent = 'Rebuilding a clean, print-ready paper…';
   // Reformatting an existing transcription is a simple job → cheap model tier.
-  const raw = await groqChat(buildFormatFromOcrPrompt(P, transcription), { temperature:0.2, max_tokens:5500, jsonMode:true, tier:'cheap' });
+  const raw = await groqChat(buildFormatFromOcrPrompt(P, transcription), { temperature:0.2, max_tokens:5500, jsonMode:true, tier:'cheap', trace });
   const data = normalizePaperData(extractJson(raw), P);
   data.meta.examTitle = data.meta.examTitle || 'Question Paper';
   data._fromPhotos = true;
