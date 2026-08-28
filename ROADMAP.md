@@ -5,6 +5,22 @@
 >
 > Last updated: 2026-08-29
 
+## ▶ CURRENT SPRINT — Observability layer (in progress)
+
+Building now, in this order. No new API keys required.
+
+- [ ] **O1** `planRoute()` — split the routing *decision* from execution; one readable rules
+      table returning `{intended, ladder, reason, tier}`
+- [ ] **O2** Trace capture → Firebase `ai_logs/` (tool · language · intended vs served · every
+      attempt · tokens · cached · verdict), auto-pruned after 60 days
+- [ ] **O3** Admin map view — one row per generation, ✅ green / ⚠️ amber (fallback) / ❌ red,
+      plus today's usage by model, cache-hit rate and estimated ₹ spend
+- [ ] **O4** Health-check button (ping every model, green/red + latency) + live routing trace
+      shown during generation for admins
+
+**Blocked, waiting on Surya:** subjects list · Gemini's wizard output · free API keys
+(Cerebras / Google AI Studio / Sarvam) · lawyer view on the textbook digest library.
+
 ---
 
 ## 0. What the product is
@@ -185,10 +201,73 @@ lower default slide counts, and testing **Sarvam-30B** (much cheaper than 105B) 
 
 ---
 
+## 4A. 📚 CHAPTER GROUNDING — the hallucination problem
+
+### 4A.1 The problem
+Chapters fall into two very different classes:
+
+| Type | Example | Does the AI know it? |
+|---|---|---|
+| **Conceptual** | Linear Equations, Photosynthesis, Light–Reflection | ✅ Yes — universal knowledge |
+| **Text-specific** | "Surya's Journey", a Telugu poem, a state-board prose piece | ❌ No — it has never read that text |
+
+For text-specific chapters the AI **hallucinates**: it invents characters and plot and produces a
+confident, perfectly-formatted paper **about a story that does not exist**. It fails *silently* —
+the paper looks flawless; only the teacher discovers the content is wrong.
+
+**Decision: textbook grounding is needed for LANGUAGE subjects only.** Maths/Science/Social
+chapters are conceptual and generate reliably from the chapter name alone.
+
+### 4A.2 Required flow — never generate blindly
+```
+Teacher types chapter name  (language subject)
+      │
+      ├─ Fuzzy-match against the known chapter list for board/class/subject
+      │     ├─ close match  → "Did you mean 'Surya's Journey'?"  → confirm
+      │     └─ several near matches → offer the list to pick from
+      │
+      ├─ Not in library → AI grounding check:
+      │     "Do you know chapter X of <board> class <n> <subject>?" → {known, confidence, summary}
+      │     └─ known → show the summary → "Is this the right chapter?" → confirm → generate
+      │
+      └─ Still unknown → DO NOT GUESS. Give the teacher two explicit choices:
+            ① 📷 Upload textbook pages (photo → OCR → generate from the real text)
+            ② ✨ Generate anyway from the title  (clearly labelled as AI's best guess)
+```
+- [ ] Fuzzy match + "did you mean?" confirmation
+- [ ] AI grounding check (cheap pre-call) with summary confirmation
+- [ ] Two-choice fallback (upload pages / generate anyway) — **teacher's call, never automatic**
+- [ ] Skip the whole flow for maths/science/social (no friction where it isn't needed)
+
+### 4A.3 Textbook digest library (languages only)
+**Do NOT store whole textbooks.** Process each chapter **once, offline**, into a digest:
+```json
+{ "chapter":"...", "summary":"...", "characters":[...], "keyEvents":[...],
+  "themes":[...], "importantPassages":[...], "vocabulary":[...] }
+```
+- Retrieval is a **direct key lookup** (`board/class/subject/chapter`) — the teacher already tells
+  us exactly which chapter, so **no vector DB / embeddings / RAG needed**.
+- ~5 KB per chapter · ~25 MB for 300 books · can live as static JSON on the web host.
+- One-time digest generation ≈ **₹900 for ~4,500 chapters**; **₹0** per query afterwards.
+- Adds only ~₹0.05 per paper (digest ≈ 1,200 tokens vs ~6,000 for raw chapter text).
+
+⚠️ **Copyright:** storing *digests* (our own structured summaries) is far more defensible than
+hosting verbatim textbook text. Government/NCERT and state-board free PDFs are the low-risk lane;
+**never** ingest private publishers (Oswaal, S.Chand…). Teacher-uploaded pages remain the
+universally safe path — that is the teacher's own fair use, not our redistribution.
+**Get a lawyer's opinion before publishing a large stored library commercially.**
+
+**Scope decided (2026-08-29):** languages = **English, Telugu, Kannada, Tamil, Malayalam, Hindi**.
+Boards = **CBSE/NCERT first, then State (Telangana/AP)** — state boards matter most because the
+AI genuinely does not know those texts.
+
+---
+
 ## 5. 🧩 Feature backlog
 
 ### 5.1 Missing features
 - [ ] **Language selector** in the form — *prerequisite for ALL Indic routing.*
+      Options: English, Telugu, Kannada, Tamil, Malayalam, Hindi.
       Right now a teacher literally cannot request a Telugu paper.
 - [ ] **Subjects list rework** (Surya to provide the list)
 - [ ] Phase-by-phase **wizard** for question paper (spec handed to Gemini; I integrate + wire
