@@ -1269,6 +1269,45 @@ footer{
 .ocr-add{ display:inline-flex; align-items:center; gap:7px; margin-top:10px; cursor:pointer; font-size:0.8rem; font-weight:700; color:var(--p); background:#f1ebff; border:1px solid #ddd0fb; padding:8px 14px; border-radius:9px; transition:.15s; }
 .ocr-add:hover{ background:#e9dfff; }
 
+/* ── ADMIN: AI MONITOR ── */
+.aim-modal{ max-width:1000px; width:96vw; text-align:left; max-height:88vh; overflow-y:auto; }
+.aim-title{ font-size:1.25rem; font-weight:900; color:var(--app-ink); margin-bottom:2px; }
+.aim-sub{ font-size:0.82rem; color:var(--app-ink-muted); margin-bottom:14px; }
+.aim-actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+.aim-range{ width:auto; height:36px; padding:0 10px; font-size:0.8rem; }
+.aim-prune{ margin-left:auto; color:#b91c1c; border-color:#fca5a5; }
+
+.aim-health{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:8px; margin-bottom:14px; }
+.aim-health:empty{ display:none; }
+.aim-hrow{ display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:8px; font-size:0.8rem;
+  border:1px solid var(--app-border); background:#fff; }
+.aim-hrow.ok{ border-color:#a7f3d0; background:#f0fdf4; }
+.aim-hrow.warn{ border-color:#fde68a; background:#fffbeb; }
+.aim-hrow.bad{ border-color:#fecaca; background:#fef2f2; }
+.aim-hrow .m{ font-family:var(--mono); font-size:0.74rem; flex:1; word-break:break-all; }
+.aim-hrow .t{ color:var(--app-ink-muted); font-size:0.72rem; }
+
+.aim-stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:14px; }
+.aim-card{ border:1px solid var(--app-border); border-radius:10px; padding:11px 13px; background:#fff; }
+.aim-card .k{ font-size:0.68rem; text-transform:uppercase; letter-spacing:.06em; color:var(--app-ink-muted); font-weight:700; }
+.aim-card .v{ font-size:1.28rem; font-weight:900; color:var(--app-ink); line-height:1.2; margin-top:2px; }
+.aim-card .s{ font-size:0.7rem; color:var(--app-ink-muted); }
+
+.aim-table-wrap{ overflow-x:auto; border:1px solid var(--app-border); border-radius:10px; }
+.aim-table{ width:100%; border-collapse:collapse; font-size:0.78rem; min-width:820px; }
+.aim-table th{ background:#f8fafc; text-align:left; padding:8px 10px; font-weight:800; color:var(--app-ink-muted);
+  font-size:0.7rem; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--app-border); position:sticky; top:0; }
+.aim-table td{ padding:8px 10px; border-bottom:1px solid #f1f5f9; vertical-align:top; }
+.aim-table tr:last-child td{ border-bottom:none; }
+.aim-table .mono{ font-family:var(--mono); font-size:0.72rem; }
+.aim-v{ display:inline-block; padding:2px 8px; border-radius:999px; font-size:0.68rem; font-weight:800; white-space:nowrap; }
+.aim-v.green{ background:#dcfce7; color:#166534; }
+.aim-v.amber{ background:#fef3c7; color:#92400e; }
+.aim-v.red{ background:#fee2e2; color:#991b1b; }
+.aim-deg{ display:inline-block; margin-left:5px; padding:1px 6px; border-radius:4px; background:#ede9fe; color:#6d28d9;
+  font-size:0.63rem; font-weight:800; }
+.aim-empty{ padding:26px; text-align:center; color:var(--app-ink-muted); font-size:0.85rem; }
+
 /* Pro / subscription card — clean and minimal */
 .pricing-card-banner{ text-align:center; padding:26px 20px 22px; }
 .pro-eyebrow{ font-size:0.7rem; text-transform:uppercase; letter-spacing:0.14em; font-weight:800; color:#c7d2fe; }
@@ -1429,6 +1468,11 @@ footer{
   </ul>
   <div class="nav-right">
     <!-- Admin Workshop Button (Visible only to Surya / Admin) -->
+    <button class="user-auth-badge" id="btnAiMonitorNav" onclick="openAiMonitor()" style="display:none; background:rgba(13,148,136,0.18); border-color:rgba(13,148,136,0.5); color:#5eead4;">
+      <i data-lucide="activity" style="width:14px;height:14px; color:#2dd4bf;"></i>
+      <span>AI Monitor</span>
+    </button>
+
     <button class="user-auth-badge" id="btnAdminWorkshopNav" onclick="openAdminWorkshopModal()" style="display:none; background:rgba(234,88,12,0.18); border-color:rgba(234,88,12,0.5); color:#fdba74;">
       <i data-lucide="qr-code" style="width:14px;height:14px; color:#fb923c;"></i>
       <span>Create Workshop QR</span>
@@ -1701,6 +1745,30 @@ footer{
 </div>
 
 <!-- ── MODAL: ADMIN LIVE WORKSHOP QR GENERATOR (FOR SURYA) ── -->
+<!-- ── ADMIN: AI MONITOR (observability) ── -->
+<div class="modal-overlay" id="aiMonitorModal">
+  <div class="modal-container aim-modal">
+    <button class="modal-close-btn" onclick="closeModals()">✕</button>
+    <h3 class="aim-title">AI Monitor</h3>
+    <p class="aim-sub">Every generation: what model <em>should</em> have run, what actually ran, and whether the teacher got output.</p>
+
+    <div class="aim-actions">
+      <button class="btn-doc-tool" onclick="runHealthCheck()"><i data-lucide="stethoscope"></i> Test all models</button>
+      <button class="btn-doc-tool" onclick="loadAiLogs()"><i data-lucide="refresh-cw"></i> Refresh</button>
+      <select class="field-select aim-range" id="aimRange" onchange="loadAiLogs()">
+        <option value="1">Today</option>
+        <option value="7" selected>Last 7 days</option>
+        <option value="30">Last 30 days</option>
+      </select>
+      <button class="btn-doc-tool aim-prune" onclick="pruneAiLogs()" title="Delete logs older than 60 days"><i data-lucide="trash-2"></i> Prune</button>
+    </div>
+
+    <div id="aimHealth" class="aim-health"></div>
+    <div id="aimStats" class="aim-stats"></div>
+    <div id="aimTable" class="aim-table-wrap"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="adminWorkshopModal">
   <div class="modal-container" style="max-width:540px; text-align:center;">
     <button class="modal-close-btn" onclick="closeModals()">✕</button>
@@ -2932,6 +3000,15 @@ async function executeGenerate(){
   const plan = planRoute(routeCtx);
   const trace = newTrace(routeCtx, plan);
   console.info(`[route] ${plan.reason} → intended ${plan.intended} (${plan.reasoningEffort} reasoning)`);
+  // O4 — live routing trace, visible to admins while the paper generates.
+  if(isAdminUser()){
+    const sub = document.getElementById('loadingSub');
+    if(sub) sub.innerHTML =
+      `<span style="font-family:var(--mono);font-size:0.74rem;">` +
+      `route: ${esc(plan.reason)}<br>→ ${esc(plan.intended || 'none')} · ${plan.reasoningEffort} reasoning` +
+      (plan.degraded ? `<br><span style="color:#b45309;">degraded — ideal ${esc(plan.ideal)} unavailable</span>` : '') +
+      `</span>`;
+  }
 
   document.getElementById('emptyView').style.display = 'none';
   document.getElementById('renderedPaperSheet').style.display = 'none';
@@ -4380,6 +4457,142 @@ function isAdminUser(){
   return !!(currentTeacherProfile && currentTeacherProfile.role === 'admin');
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   O3/O4 — AI MONITOR (admin only)
+   Answers three questions at a glance:
+     1. Did the model we intended actually run?      (green vs amber)
+     2. Did the teacher get output?                  (red)
+     3. Is a better model unreachable for want of a key?  (DEGRADED)
+   ═══════════════════════════════════════════════════════════════════════════ */
+function openAiMonitor(){
+  if(!isAdminUser()){ toast('Admin access only.', 'err'); return; }
+  document.getElementById('aiMonitorModal').classList.add('active');
+  if(window.lucide) lucide.createIcons();
+  loadAiLogs();
+}
+
+function aimDayKeys(days){
+  const out = [];
+  for(let i=0;i<days;i++){
+    const d = new Date(Date.now() - i*86400000);
+    out.push(d.toISOString().slice(0,10));
+  }
+  return out;
+}
+
+async function loadAiLogs(){
+  const days = Number(document.getElementById('aimRange')?.value || 7);
+  const table = document.getElementById('aimTable');
+  const stats = document.getElementById('aimStats');
+  table.innerHTML = '<div class="aim-empty">Loading…</div>';
+  let rows = [];
+  try {
+    const snaps = await Promise.all(aimDayKeys(days).map(d => db.ref('ai_logs/' + d).once('value')));
+    snaps.forEach(s => { const v = s.val() || {}; Object.values(v).forEach(r => rows.push(r)); });
+  } catch(e){
+    table.innerHTML = `<div class="aim-empty">Could not read logs: ${esc(e.message)}<br><small>Publish the updated Firebase rules (ai_logs node) to enable this.</small></div>`;
+    stats.innerHTML = ''; return;
+  }
+  rows.sort((a,b) => (b.ts||0) - (a.ts||0));
+  renderAimStats(rows, stats);
+  renderAimTable(rows, table);
+}
+
+function renderAimStats(rows, el){
+  const n = rows.length;
+  const green = rows.filter(r => r.verdict==='green').length;
+  const amber = rows.filter(r => r.verdict==='amber').length;
+  const red   = rows.filter(r => r.verdict==='red').length;
+  const degraded = rows.filter(r => r.degraded).length;
+  const tIn  = rows.reduce((a,r)=>a+(r.tokensIn||0),0);
+  const tOut = rows.reduce((a,r)=>a+(r.tokensOut||0),0);
+  const cached = rows.reduce((a,r)=>a+(r.cached||0),0);
+  const cacheRate = tIn ? Math.round(cached/tIn*100) : 0;
+  // Rough ₹ estimate at Groq-paid-style rates; indicative only.
+  const est = (tIn/1e6)*12.6 + (tOut/1e6)*50;
+
+  const byModel = {};
+  rows.forEach(r => { if(r.served) byModel[r.served] = (byModel[r.served]||0)+1; });
+  const topModels = Object.entries(byModel).sort((a,b)=>b[1]-a[1])
+    .map(([m,c]) => `${m.split('/').pop()} ${Math.round(c/n*100)}%`).join(' · ') || '—';
+
+  el.innerHTML = `
+    <div class="aim-card"><div class="k">Generations</div><div class="v">${n}</div><div class="s">${topModels}</div></div>
+    <div class="aim-card"><div class="k">Succeeded</div><div class="v" style="color:#166534;">${green}</div><div class="s">intended model ran</div></div>
+    <div class="aim-card"><div class="k">On fallback</div><div class="v" style="color:#92400e;">${amber}</div><div class="s">${amber?'investigate primary':'healthy'}</div></div>
+    <div class="aim-card"><div class="k">Failed</div><div class="v" style="color:#991b1b;">${red}</div><div class="s">no output</div></div>
+    <div class="aim-card"><div class="k">Degraded</div><div class="v" style="color:#6d28d9;">${degraded}</div><div class="s">best model has no key</div></div>
+    <div class="aim-card"><div class="k">Tokens</div><div class="v">${(tIn+tOut).toLocaleString()}</div><div class="s">cache ${cacheRate}%</div></div>
+    <div class="aim-card"><div class="k">Est. spend</div><div class="v">₹${est.toFixed(2)}</div><div class="s">indicative</div></div>`;
+}
+
+function renderAimTable(rows, el){
+  if(!rows.length){ el.innerHTML = '<div class="aim-empty">No generations logged in this period.</div>'; return; }
+  const t = ts => new Date(ts).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+  const short = m => m ? String(m).split('/').pop() : '—';
+  el.innerHTML = `<table class="aim-table"><thead><tr>
+      <th>When</th><th>Tool</th><th>Lang</th><th>Intended</th><th>Served</th>
+      <th>Tokens</th><th>Time</th><th>Result</th><th>Output</th>
+    </tr></thead><tbody>` +
+    rows.slice(0,200).map(r => {
+      const out = r.outQuestions ? `${r.outQuestions}q · ${r.outMarks}/${r.targetMarks||'?'}`
+                : r.outSlides ? `${r.outSlides} slides`
+                : r.outBlocks ? `${r.outBlocks} blocks` : '—';
+      const err = r.verdict==='red' ? `<div class="s" style="color:#991b1b; font-size:0.7rem;">${esc((r.error||'').slice(0,70))}</div>` : '';
+      return `<tr>
+        <td class="mono">${t(r.ts)}</td>
+        <td>${esc(r.tool||'')}</td>
+        <td>${esc((r.language||'en').toUpperCase())}</td>
+        <td class="mono">${esc(short(r.intended))}${r.degraded?`<span class="aim-deg" title="ideal was ${esc(r.ideal||'')}">DEGRADED</span>`:''}</td>
+        <td class="mono">${esc(short(r.served))}</td>
+        <td class="mono">${(r.tokensIn||0)}/${(r.tokensOut||0)}</td>
+        <td class="mono">${Math.round((r.ms||0)/100)/10}s</td>
+        <td><span class="aim-v ${r.verdict||'red'}">${(r.verdict||'red').toUpperCase()}</span>${err}</td>
+        <td>${esc(out)}</td>
+      </tr>`;
+    }).join('') + '</tbody></table>';
+}
+
+// O4 — ping every model so config problems surface in seconds, not silently.
+async function runHealthCheck(){
+  const box = document.getElementById('aimHealth');
+  const all = [...new Set([].concat(GROQ_CONFIG.ladder, GROQ_CONFIG.cheapLadder, [GROQ_CONFIG.visionModel]))];
+  box.innerHTML = all.map(m => `<div class="aim-hrow" id="hc-${btoa(m).replace(/=/g,'')}"><span>⏳</span><span class="m">${esc(m)}</span><span class="t">testing…</span></div>`).join('');
+  for(const m of all){
+    const cell = document.getElementById('hc-' + btoa(m).replace(/=/g,''));
+    const t0 = Date.now();
+    let cls='bad', icon='❌', note='failed';
+    try {
+      // Vision models need an image; just verify the proxy accepts the model id.
+      const msgs = [{ role:'user', content:'ping' }];
+      await groqChat(msgs, { model:m, max_tokens:300, temperature:0, jsonMode:false });
+      cls='ok'; icon='✅'; note = (Date.now()-t0) + 'ms';
+    } catch(e){
+      const msg = String(e.message||'');
+      if(/not allowed/i.test(msg)){ cls='bad'; icon='⛔'; note='NOT IN PROXY ALLOWLIST — redeploy proxy'; }
+      else if(/rate limit|tokens per minute|TPM|busy/i.test(msg)){ cls='warn'; icon='⚠️'; note='rate limited (model IS reachable)'; }
+      else if(/empty response|token limit/i.test(msg)){ cls='ok'; icon='✅'; note='reachable (' + (Date.now()-t0) + 'ms)'; }
+      else { note = msg.slice(0,60); }
+    }
+    if(cell){ cell.className = 'aim-hrow ' + cls; cell.innerHTML = `<span>${icon}</span><span class="m">${esc(m)}</span><span class="t">${esc(note)}</span>`; }
+  }
+}
+
+// Keep storage small — drop anything older than 60 days.
+async function pruneAiLogs(){
+  if(!isAdminUser()) return;
+  if(!confirm('Delete AI logs older than 60 days?')) return;
+  const cutoff = new Date(Date.now() - 60*86400000).toISOString().slice(0,10);
+  try {
+    const snap = await db.ref('ai_logs').once('value');
+    const days = Object.keys(snap.val() || {});
+    const old = days.filter(d => d < cutoff);
+    await Promise.all(old.map(d => db.ref('ai_logs/'+d).remove()));
+    toast(old.length ? `Pruned ${old.length} day(s) of logs.` : 'Nothing to prune.', 'ok');
+    loadAiLogs();
+  } catch(e){ toast('Prune failed: ' + e.message, 'err'); }
+}
+
 function openAdminWorkshopModal(){
   if(!isAdminUser()){ toast('Admin access only.', 'err'); return; }
   document.getElementById('adminQrDisplay').style.display = 'none';
@@ -4458,9 +4671,12 @@ function updateAccessUI(){
     const m = map[currentAccess.state] || map.signedout;
     badge.innerText = m.t; badge.style.background = m.b; badge.style.color = m.c;
   }
-  // Admin-only nav button (Create Workshop QR)
+  // Admin-only nav buttons (AI Monitor + Create Workshop QR)
+  const admin = isAdminUser();
   const adminBtn = document.getElementById('btnAdminWorkshopNav');
-  if(adminBtn) adminBtn.style.display = isAdminUser() ? 'inline-flex' : 'none';
+  if(adminBtn) adminBtn.style.display = admin ? 'inline-flex' : 'none';
+  const aimBtn = document.getElementById('btnAiMonitorNav');
+  if(aimBtn) aimBtn.style.display = admin ? 'inline-flex' : 'none';
 
   if(auth.currentUser){ try { updateProfileModal(); applySavedSchoolToForm(); } catch(e){} }
 }

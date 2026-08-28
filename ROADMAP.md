@@ -21,6 +21,17 @@ Building now, in this order. No new API keys required.
 **Blocked, waiting on Surya:** subjects list · Gemini's wizard output · free API keys
 (Cerebras / Google AI Studio / Sarvam) · lawyer view on the textbook digest library.
 
+### 🔴 Found by the health check (2026-08-29)
+1. **The deployed Groq proxy rejects every rotation model** — `qwen3.8-27b`, `qwen3.6-27b`,
+   `compound`, `compound-mini` all return *"Model not allowed"*. Rotation is therefore
+   completely inactive: one rate limit = total failure. **Redeploy the proxy with the updated
+   `ALLOWED_MODELS`.**
+2. **⚠️ There is NO vision model on the Groq account.** `meta-llama/llama-4-scout-…` returns
+   *"model does not exist"*, and the account's limits page lists no vision-capable chat model.
+   **The handwriting-photo → question-paper feature cannot work today.** It needs either
+   Gemini vision (Google AI Studio key) or Sarvam's OCR/Document API. Until then the OCR
+   path should be hidden or clearly marked unavailable.
+
 ---
 
 ## 0. What the product is
