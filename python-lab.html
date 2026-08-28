@@ -282,6 +282,17 @@ nav .nav-right{display:flex;align-items:center;gap:10px;}
   .dash-grid{grid-template-columns:1fr;}
   .user-chip-name{display:none;}
 }
+
+/* AI Teacher nav accent */
+.nav-links a.nav-ai{color:#c4b5fd;font-weight:700;}
+.nav-links a.nav-ai:hover{color:#fff;background:rgba(124,58,237,0.20);}
+
+/* Nav collapses to hamburger on tablets too (7 items don't fit under ~1024px) */
+@media(max-width:1024px){
+  .nav-links{display:none !important;}
+  .hamburger{display:flex !important;}
+}
+
 </style>
 </head>
 <body>
@@ -295,7 +306,21 @@ nav .nav-right{display:flex;align-items:center;gap:10px;}
     </div>
   </a>
   <ul class="nav-links">
-    <li><a href="e-learn.html" class="back-dash-link">&larr; Back to Dashboard</a></li>
+    <li><a href="index.html">Home</a></li>
+    <li>
+      <a href="schools.html">Our Services <svg class="drop-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
+      <div class="dropdown">
+        <a href="schools.html"><strong>For Schools</strong><span>Robotics labs &amp; STEAM programs</span></a>
+        <a href="colleges.html"><strong>For Colleges</strong><span>Workshops &amp; skill programs</span></a>
+        <a href="online-training.html"><strong>Online — School Students</strong><span>Robotics &amp; Python courses</span></a>
+        <a href="online-training.html#college"><strong>Online — College Students</strong><span>Bare metal &amp; C programming</span></a>
+      </div>
+    </li>
+    <li><a href="teachers.html" class="nav-ai">AI Teacher</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li><a href="verify.html">Verify Certificate</a></li>
+    <li><a href="e-learn.html">E-Learn</a></li>
   </ul>
   <div class="nav-right">
     <div class="user-chip" id="userChip" style="display:none;">
@@ -307,7 +332,16 @@ nav .nav-right{display:flex;align-items:center;gap:10px;}
   </div>
 </nav>
 <div class="mobile-menu" id="mobileMenu">
-  <a href="e-learn.html">&larr; Back to Dashboard</a>
+  <a href="index.html">Home</a>
+  <a href="teachers.html">AI Teacher</a>
+  <a href="schools.html">For Schools</a>
+  <a href="colleges.html">For Colleges</a>
+  <a href="online-training.html">Online – School Students</a>
+  <a href="online-training.html#college">Online – College Students</a>
+  <a href="about.html">About</a>
+  <a href="contact.html">Contact</a>
+  <a href="verify.html">Verify Certificate</a>
+  <a href="e-learn.html">E-Learn</a>
 </div>
 
 <!-- SCREEN: LOADING (shown while Firebase auth resolves) -->

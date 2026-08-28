@@ -1385,6 +1385,17 @@ footer{
 .sl-quote .sl-qmark{ font-size:12cqw; line-height:.6; color:var(--sl-accent); font-weight:900; font-family:Georgia,serif; }
 .sl-quote blockquote{ font-size:4.4cqw; font-weight:700; color:var(--sl-ink); line-height:1.3; margin:1cqw 0 2.4cqw; }
 .sl-quote cite{ font-size:2.9cqw; color:var(--sl-sub); font-style:normal; font-weight:600; }
+
+/* AI Teacher nav accent */
+.nav-links a.nav-ai{color:#c4b5fd;font-weight:700;}
+.nav-links a.nav-ai:hover{color:#fff;background:rgba(124,58,237,0.20);}
+
+/* Nav collapses to hamburger on tablets too (7 items don't fit under ~1024px) */
+@media(max-width:1024px){
+  .nav-links{display:none !important;}
+  .hamburger{display:flex !important;}
+}
+
 </style>
 <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
 </head>
@@ -1401,16 +1412,16 @@ footer{
   </a>
   <ul class="nav-links">
     <li><a href="index.html">Home</a></li>
-    <li><a href="schools.html">For Schools</a></li>
-    <li><a href="teachers.html" class="active">For Teachers</a></li>
-    <li><a href="colleges.html">For Colleges</a></li>
     <li>
-      <a href="online-training.html">Online Training <svg class="drop-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
+      <a href="schools.html">Our Services <svg class="drop-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
       <div class="dropdown">
-        <a href="online-training.html"><strong>For School Students</strong><span>Robotics &amp; Python courses</span></a>
-        <a href="online-training.html#college"><strong>For College Students</strong><span>Bare metal &amp; C programming</span></a>
+        <a href="schools.html"><strong>For Schools</strong><span>Robotics labs &amp; STEAM programs</span></a>
+        <a href="colleges.html"><strong>For Colleges</strong><span>Workshops &amp; skill programs</span></a>
+        <a href="online-training.html"><strong>Online — School Students</strong><span>Robotics &amp; Python courses</span></a>
+        <a href="online-training.html#college"><strong>Online — College Students</strong><span>Bare metal &amp; C programming</span></a>
       </div>
     </li>
+    <li><a href="teachers.html" class="nav-ai active">AI Teacher</a></li>
     <li><a href="about.html">About</a></li>
     <li><a href="contact.html">Contact</a></li>
     <li><a href="verify.html">Verify Certificate</a></li>
@@ -1435,10 +1446,11 @@ footer{
 
 <div class="mobile-menu" id="mobileMenu">
   <a href="index.html">Home</a>
+  <a href="teachers.html">AI Teacher</a>
   <a href="schools.html">For Schools</a>
-  <a href="teachers.html">For Teachers</a>
   <a href="colleges.html">For Colleges</a>
-  <a href="online-training.html">Online Training</a>
+  <a href="online-training.html">Online – School Students</a>
+  <a href="online-training.html#college">Online – College Students</a>
   <a href="about.html">About</a>
   <a href="contact.html">Contact</a>
   <a href="verify.html">Verify Certificate</a>
