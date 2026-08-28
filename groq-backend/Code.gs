@@ -23,6 +23,7 @@ var ALLOWED_MODELS = [
   // them multiplies daily capacity. Keep in sync with GROQ_CONFIG.ladder in teachers.html.
   'qwen/qwen3.8-27b',
   'qwen/qwen3.6-27b',
+  'groq/compound',
   'groq/compound-mini',
   // Vision (handwriting OCR)
   'meta-llama/llama-4-scout-17b-16e-instruct',

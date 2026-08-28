@@ -1838,19 +1838,31 @@ const GROQ_CONFIG = {
   // models therefore multiplies real capacity instead of sharing one quota:
   //   gpt-oss-120b 200K/day + qwen3.8-27b 2M/day + gpt-oss-20b 200K/day + qwen3.6-27b 200K/day
   // ≈ 2.6M tokens/day instead of 200K — and it keeps working through the evening rush.
+  // Verified against console.groq.com → Settings → Limits:
+  //   gpt-oss-120b / 20b / qwen3.6-27b : 1K req/day,  8K tok/min,   200K tok/day
+  //   qwen3.8-27b                      : 1K req/day,  8K tok/min,   2M   tok/day
+  //   groq/compound(-mini)             : 250 req/day, 70K tok/min,  NO daily token cap
+  // The compound models are the reserve tank: no token ceiling and ~9x the per-minute
+  // throughput, so they keep the service alive during the evening rush and once the
+  // token-capped models are spent.
   ladder: [
     "openai/gpt-oss-120b",   // best quality — try first
-    "qwen/qwen3.8-27b",      // huge 2M/day budget
+    "qwen/qwen3.8-27b",      // workhorse: 2M tokens/day
     "openai/gpt-oss-20b",
-    "qwen/qwen3.6-27b"
+    "qwen/qwen3.6-27b",
+    "groq/compound-mini",    // reserve — no daily token limit
+    "groq/compound"          // final reserve — no daily token limit
   ],
   // Simple jobs (OCR clean-up, formatting pasted questions) don't need the big model.
   cheapLadder: [
     "openai/gpt-oss-20b",
     "qwen/qwen3.6-27b",
     "qwen/qwen3.8-27b",
+    "groq/compound-mini",
     "openai/gpt-oss-120b"
   ],
+  // Groq's compound systems are agentic and don't accept response_format/reasoning_effort.
+  noJsonModeModels: ["groq/compound", "groq/compound-mini"],
   proxyEndpoint: "https://script.google.com/macros/s/AKfycbwiUQ3OH_bp3k-wJgALCKotmHwRavza6qEAlB66ZSKCPTLcIWFSsPUHbuROGfwBXV_AlA/exec",
   directEndpoint: "https://api.groq.com/openai/v1/chat/completions"
 };
@@ -1870,7 +1882,10 @@ async function groqChat(messages, opts = {}){
 
   const build = (m) => {
     const body = { model: m, messages, temperature, max_tokens };
-    if (jsonMode) body.response_format = { type: 'json_object' };
+    // Compound (agentic) systems reject response_format/reasoning_effort — omit them there.
+    // extractJson() is tolerant of prose-wrapped JSON, so output still parses.
+    const plain = GROQ_CONFIG.noJsonModeModels.includes(m);
+    if (jsonMode && !plain) body.response_format = { type: 'json_object' };
     if (/gpt-oss/.test(m) && reasoningEffort) body.reasoning_effort = reasoningEffort; // gpt-oss only
     return JSON.stringify(body);
   };
