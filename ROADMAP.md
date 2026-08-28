@@ -26,11 +26,20 @@ Building now, in this order. No new API keys required.
    `compound`, `compound-mini` all return *"Model not allowed"*. Rotation is therefore
    completely inactive: one rate limit = total failure. **Redeploy the proxy with the updated
    `ALLOWED_MODELS`.**
-2. **⚠️ There is NO vision model on the Groq account.** `meta-llama/llama-4-scout-…` returns
-   *"model does not exist"*, and the account's limits page lists no vision-capable chat model.
-   **The handwriting-photo → question-paper feature cannot work today.** It needs either
-   Gemini vision (Google AI Studio key) or Sarvam's OCR/Document API. Until then the OCR
-   path should be hidden or clearly marked unavailable.
+2. **Vision model was wrong — now fixed.** `meta-llama/llama-4-scout-…` does not exist on this
+   account. Groq's multimodal models are the **qwen** ones (`qwen/qwen3.6-27b` = 5 images per
+   request, `qwen/qwen3.8-27b` = 3), both with JSON mode. Vision now routes to qwen3.6-27b, so
+   handwriting OCR works once the proxy allowlist is redeployed.
+   - ⚠️ Each image costs **2048 input tokens** — multi-page uploads need the paid tier's higher
+     tokens-per-minute ceiling (free tier is 8K/min; Developer plan is 250K/min).
+   - ⚠️ **The qwen models are Groq "Preview"** — *"may be discontinued at short notice"*, so they
+     should not be a commercial product's only path. Text generation degrades safely (rotation
+     falls back to gpt-oss/compound), but **vision has no other Groq option** — get Gemini vision
+     or Sarvam OCR as the stable path before selling the handwriting feature.
+
+3. **Production vs Preview matters for the ladder.** Production: `gpt-oss-120b`, `gpt-oss-20b`,
+   `compound`, `compound-mini`. Preview (discontinuable): `qwen3.6-27b`, `qwen3.8-27b`.
+   Rotation makes this survivable for text; do not let preview models be a single point of failure.
 
 ---
 

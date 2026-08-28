@@ -1899,7 +1899,12 @@ const GROQ_CONFIG = {
   apiKey: window.ROBODEN_GROQ_KEY || "",  // empty by default — filled only by a teacher's own saved key
   model: "openai/gpt-oss-120b",           // primary deep-reasoning model
   fallbackModel: "openai/gpt-oss-20b",    // used automatically if primary is rate-limited
-  visionModel: "meta-llama/llama-4-scout-17b-16e-instruct", // for handwriting OCR (image input)
+  // Vision (handwriting OCR). Groq's multimodal models are the qwen ones — llama-4-scout is
+  // NOT available on this account (the health check caught it returning "model does not exist").
+  // qwen3.6-27b accepts 5 images/request (vs 3 for 3.8) and supports JSON mode.
+  // NOTE: each image costs 2048 input tokens, so multi-page uploads need the paid tier's
+  // higher tokens-per-minute ceiling.
+  visionModel: "qwen/qwen3.6-27b",
 
   // ── MODEL ROTATION ──────────────────────────────────────────────────────────
   // Every model on Groq has its OWN rate-limit bucket (RPD/TPM/TPD). Rotating across
@@ -1965,8 +1970,10 @@ const MODELS = {
   QWEN_36:       { id:'qwen/qwen3.6-27b',    providers:['groq','openrouter'] },
   COMPOUND_MINI: { id:'groq/compound-mini',  providers:['groq'] },
   COMPOUND:      { id:'groq/compound',       providers:['groq'] },
-  LLAMA4_SCOUT:  { id:'meta-llama/llama-4-scout-17b-16e-instruct', providers:['groq'] },
-  GEMINI_FLASH:  { id:'gemini-2.5-flash',    providers:['google','openrouter'] },
+  // Vision — on Groq the multimodal models are the qwen ones (5 and 3 images per request).
+  QWEN_VISION:   { id:'qwen/qwen3.6-27b',    providers:['groq'], vision:true },
+  QWEN_VISION_2: { id:'qwen/qwen3.8-27b',    providers:['groq'], vision:true },
+  GEMINI_FLASH:  { id:'gemini-2.5-flash',    providers:['google','openrouter'], vision:true },
   SARVAM_105B:   { id:'sarvam-105b',         providers:['sarvam'] },
   SARVAM_OCR:    { id:'sarvam-ocr',          providers:['sarvam'] }
 };
@@ -1980,8 +1987,8 @@ function providerFor(modelKey){
    Edit THIS to change model preferences; nothing else needs to change. */
 const ROUTE_RULES = [
   // ── Handwriting OCR (vision) ──
-  { when:{ tool:'ocr', indic:true },      chain:['SARVAM_OCR','GEMINI_FLASH','LLAMA4_SCOUT'], reason:'Indic handwriting → Sarvam OCR' },
-  { when:{ tool:'ocr' },                  chain:['LLAMA4_SCOUT','GEMINI_FLASH'],              reason:'English handwriting → Llama 4 Scout vision' },
+  { when:{ tool:'ocr', indic:true },      chain:['SARVAM_OCR','GEMINI_FLASH','QWEN_VISION','QWEN_VISION_2'], reason:'Indic handwriting → Sarvam OCR (Indic script specialist)' },
+  { when:{ tool:'ocr' },                  chain:['QWEN_VISION','QWEN_VISION_2','GEMINI_FLASH'],              reason:'English handwriting → Qwen multimodal vision' },
 
   // ── Cheap/simple jobs (formatting an existing transcription or pasted text) ──
   { when:{ tier:'cheap' },                chain:['GPT_OSS_20B','QWEN_36','COMPOUND_MINI','GPT_OSS_120B'], reason:'Simple formatting job → cheap tier' },

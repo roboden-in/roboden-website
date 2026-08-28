@@ -16,18 +16,19 @@ var GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 
 // Allowed models — a safety allowlist so a stolen proxy URL can't run arbitrary
 // (expensive) models on your key. Keep in sync with GROQ_CONFIG in teachers.html.
+// Keep in sync with GROQ_CONFIG.ladder in teachers.html.
+// Verified against console.groq.com/docs/models for this account.
 var ALLOWED_MODELS = [
+  // Production models
   'openai/gpt-oss-120b',
   'openai/gpt-oss-20b',
-  // Rotation ladder — each model has its own rate-limit bucket, so rotating across
-  // them multiplies daily capacity. Keep in sync with GROQ_CONFIG.ladder in teachers.html.
-  'qwen/qwen3.8-27b',
-  'qwen/qwen3.6-27b',
+  // Production systems — no daily token cap, high tokens/minute (the reserve tank)
   'groq/compound',
   'groq/compound-mini',
-  // Vision (handwriting OCR)
-  'meta-llama/llama-4-scout-17b-16e-instruct',
-  'meta-llama/llama-4-maverick-17b-128e-instruct'
+  // Preview models — ALSO the only multimodal/vision models on Groq (handwriting OCR).
+  // ⚠️ Groq marks these "preview: may be discontinued at short notice".
+  'qwen/qwen3.8-27b',
+  'qwen/qwen3.6-27b'
 ];
 
 // Optional: cap max_tokens so a single request can't be abused to burn credits.
