@@ -1658,7 +1658,8 @@ footer{
         <span style="font-size:0.75rem; font-weight:800; text-transform:uppercase; color:#6d28d9;">Subscription Plan</span>
         <span class="pro-status-chip" id="profilePlanChip" style="padding:4px 10px; font-size:0.75rem;">Pro Active</span>
       </div>
-      <p id="profileExpiryText" style="font-size:0.82rem; color:var(--app-ink);">Valid until: Dec 31, 2026</p>
+      <p id="profileExpiryText" style="font-size:0.82rem; color:var(--app-ink);">—</p>
+      <p id="profileUsageText" style="font-size:0.76rem; color:var(--app-ink-muted); margin-top:4px;"></p>
     </div>
 
     <div class="form-section-title">Saved School Profile</div>
@@ -2750,8 +2751,12 @@ async function executeGenerate(){
 // ── MISSING BUTTON HANDLERS ──
 function handleAuthBadgeClick() {
   // Signed in → profile/settings modal; signed out → login modal.
-  const id = (auth && auth.currentUser) ? 'teacherProfileModal' : 'authModal';
-  document.getElementById(id)?.classList.add('active');
+  if(auth && auth.currentUser){
+    try { updateProfileModal(); } catch(e){ console.warn(e); }
+    document.getElementById('teacherProfileModal')?.classList.add('active');
+  } else {
+    document.getElementById('authModal')?.classList.add('active');
+  }
 }
 
 function openSubscriptionModal() {
@@ -4065,7 +4070,7 @@ auth.onAuthStateChanged(async (user) => {
       currentTrialStart = v.trialStart || null;
       if(currentTeacherProfile.customGroqKey){
         GROQ_CONFIG.apiKey = currentTeacherProfile.customGroqKey;
-        const el = document.getElementById('inpCustomKey'); if(el) el.value = currentTeacherProfile.customGroqKey;
+        const el = document.getElementById('customGroqKey'); if(el) el.value = currentTeacherProfile.customGroqKey;
       }
       updateAccessUI();
     }, () => {});
@@ -4170,6 +4175,8 @@ function updateAccessUI(){
   // Admin-only nav button (Create Workshop QR)
   const adminBtn = document.getElementById('btnAdminWorkshopNav');
   if(adminBtn) adminBtn.style.display = isAdminUser() ? 'inline-flex' : 'none';
+
+  if(auth.currentUser){ try { updateProfileModal(); applySavedSchoolToForm(); } catch(e){} }
 }
 
 // Gate: returns true if the user may generate; otherwise nudges to log in / upgrade.
@@ -4278,12 +4285,84 @@ function signOut(){
 }
 
 function saveCustomKey(){
-  const k = document.getElementById('inpCustomKey')?.value.trim();
+  const k = document.getElementById('customGroqKey')?.value.trim();
   const user = auth.currentUser;
   if(!user) return toast('Log in first to save your key.', 'err');
   db.ref('teacher_hub/' + user.uid + '/profile').update({ customGroqKey: k })
     .then(() => { GROQ_CONFIG.apiKey = k; toast('Your AI key was saved.', 'ok'); })
     .catch(() => toast('Could not save key.', 'err'));
+}
+
+/* ── Teacher profile modal ──────────────────────────────────────────────
+   These two were called by the modal's buttons but never existed, so
+   "Save School Profile" and "Sign out" did nothing. */
+async function saveTeacherSchoolProfile(){
+  const user = auth.currentUser;
+  if(!user){ toast('Log in first.', 'err'); return; }
+  const school = (document.getElementById('savedSchoolName')?.value || '').trim();
+  const location = (document.getElementById('savedSchoolLocation')?.value || '').trim();
+  const key = (document.getElementById('customGroqKey')?.value || '').trim();
+  try {
+    await db.ref('teacher_hub/' + user.uid + '/profile').update({
+      savedSchoolName: school, savedSchoolLocation: location, customGroqKey: key
+    });
+    if(key) GROQ_CONFIG.apiKey = key;
+    applySavedSchoolToForm();
+    closeModals();
+    toast('School profile saved.', 'ok');
+  } catch(e){ toast('Could not save: ' + e.message, 'err'); }
+}
+
+function firebaseSignOut(){ signOut(); }
+
+// Populate the profile modal with the REAL signed-in user (it previously showed
+// hardcoded demo text: "Teacher Name / Pro Active / Valid until Dec 31, 2026").
+function updateProfileModal(){
+  const user = auth.currentUser; if(!user) return;
+  const set = (id, txt) => { const el = document.getElementById(id); if(el) el.textContent = txt; };
+  const name = (currentTeacherProfile && currentTeacherProfile.name) || user.displayName || (user.email || '').split('@')[0] || 'Teacher';
+  set('profileUserName', name);
+  set('profileUserEmail', user.email || '');
+  const av = document.getElementById('userAvatarBadge');
+  if(av) av.textContent = (name[0] || 'T').toUpperCase();
+
+  const a = computeAccess();
+  const chip = document.getElementById('profilePlanChip');
+  const labels = { admin:'Admin', pro:'Pro Active', trial:`Trial · ${a.daysLeft}d left`, expired:'Expired', signedout:'—' };
+  if(chip){
+    chip.textContent = labels[a.state] || '—';
+    chip.style.background = a.state==='pro' ? '#fef3c7' : a.state==='admin' ? '#ffedd5' : a.state==='trial' ? '#ccfbf1' : '#fee2e2';
+    chip.style.color = a.state==='pro' ? '#92400e' : a.state==='admin' ? '#9a3412' : a.state==='trial' ? '#115e59' : '#991b1b';
+  }
+  let expiry = '—';
+  if(a.state === 'admin') expiry = 'Full access (admin account)';
+  else if(a.state === 'pro' && currentEntitlement && currentEntitlement.proExpiry)
+    expiry = 'Valid until: ' + new Date(currentEntitlement.proExpiry).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+  else if(a.state === 'trial') expiry = `Free trial — ${a.daysLeft} day(s) remaining`;
+  else if(a.state === 'expired') expiry = 'Trial ended — upgrade to continue';
+  set('profileExpiryText', expiry);
+
+  const p = currentTeacherProfile || {};
+  const sn = document.getElementById('savedSchoolName');
+  const sl = document.getElementById('savedSchoolLocation');
+  const ck = document.getElementById('customGroqKey');
+  if(sn && !sn.value) sn.value = p.savedSchoolName || '';
+  if(sl && !sl.value) sl.value = p.savedSchoolLocation || '';
+  if(ck && !ck.value) ck.value = p.customGroqKey || '';
+
+  // Usage line (helps teachers see their daily allowance)
+  const used = dailyCount(), cap = dailyCap();
+  const usageEl = document.getElementById('profileUsageText');
+  if(usageEl) usageEl.textContent = isAdminUser() ? 'Unlimited generations' : `${used} of ${cap} generations used today`;
+}
+
+// If the teacher saved a default school, prefill the generator form with it.
+function applySavedSchoolToForm(){
+  const p = currentTeacherProfile || {};
+  const n = document.getElementById('inpSchoolName');
+  const l = document.getElementById('inpSchoolLoc');
+  if(n && !n.value && p.savedSchoolName) n.value = p.savedSchoolName;
+  if(l && !l.value && p.savedSchoolLocation) l.value = p.savedSchoolLocation;
 }
 
 // Promo / workshop code — redeemed & verified SERVER-SIDE (single use per teacher).
