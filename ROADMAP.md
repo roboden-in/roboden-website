@@ -5,17 +5,17 @@
 >
 > Last updated: 2026-08-29
 
-## ▶ CURRENT SPRINT — Observability layer (in progress)
+## ▶ CURRENT SPRINT — Observability layer ✅ DONE (commits 9761e3e, f4a6c8f, db2480e)
 
 Building now, in this order. No new API keys required.
 
-- [ ] **O1** `planRoute()` — split the routing *decision* from execution; one readable rules
+- [x] **O1** `planRoute()` — split the routing *decision* from execution; one readable rules
       table returning `{intended, ladder, reason, tier}`
-- [ ] **O2** Trace capture → Firebase `ai_logs/` (tool · language · intended vs served · every
+- [x] **O2** Trace capture → Firebase `ai_logs/` (tool · language · intended vs served · every
       attempt · tokens · cached · verdict), auto-pruned after 60 days
-- [ ] **O3** Admin map view — one row per generation, ✅ green / ⚠️ amber (fallback) / ❌ red,
+- [x] **O3** Admin map view — one row per generation, ✅ green / ⚠️ amber (fallback) / ❌ red,
       plus today's usage by model, cache-hit rate and estimated ₹ spend
-- [ ] **O4** Health-check button (ping every model, green/red + latency) + live routing trace
+- [x] **O4** Health-check button (ping every model, green/red + latency) + live routing trace
       shown during generation for admins
 
 **Blocked, waiting on Surya:** subjects list · Gemini's wizard output · free API keys
@@ -153,8 +153,8 @@ GENERATION REQUEST
 │    └─ gpt-oss-120b ▸ Gemini 2.5 Flash ▸ Qwen3
 │
 ├─ HANDWRITING OCR (image)
-│    ├─ English script → Llama 4 Scout ▸ Gemini 2.5 Flash
-│    └─ Indic script   → Sarvam OCR/Doc API ▸ Gemini 2.5 Flash ▸ Llama 4 Scout
+│    ├─ English script → qwen/qwen3.6-27b ▸ qwen/qwen3.8-27b ▸ Gemini 2.5 Flash
+│    └─ Indic script   → Sarvam OCR/Doc API ▸ Gemini 2.5 Flash ▸ qwen vision
 │
 └─ PAPER / WORKSHEET / LESSON PLAN
      ├─ ENGLISH
