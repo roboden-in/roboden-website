@@ -1320,6 +1320,53 @@ footer{
 .pro-promo > summary{ cursor:pointer; list-style:none; font-size:0.8rem; font-weight:600; color:var(--p); text-align:center; }
 .pro-promo > summary::-webkit-details-marker{ display:none; }
 
+/* ── QUESTION PAPER WIZARD ── */
+.fl-hint{ font-weight:400; color:var(--app-ink-muted); font-size:0.76rem; }
+
+.wiz-steps{ display:flex; gap:4px; margin:0 0 18px; }
+.wiz-pip{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none;
+  cursor:pointer; padding:6px 2px 8px; font:600 0.68rem var(--sans); color:var(--app-ink-muted);
+  border-bottom:2px solid var(--app-border); transition:.18s; }
+.wiz-pip span{ width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:var(--app-border); color:var(--app-ink-muted); font-weight:800; font-size:0.72rem; transition:.18s; }
+.wiz-pip.active{ color:var(--p); border-bottom-color:var(--p); }
+.wiz-pip.active span{ background:var(--p); color:#fff; }
+.wiz-pip.done span{ background:#0f766e; color:#fff; }
+.wiz-pip.done{ color:#0f766e; border-bottom-color:#99f6e4; }
+
+.wiz-step{ display:none; animation:wizIn .22s ease; }
+.wiz-step.active{ display:block; }
+@keyframes wizIn{ from{ opacity:0; transform:translateY(4px);} to{ opacity:1; transform:none; } }
+
+.wiz-nav{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:18px;
+  padding-top:14px; border-top:1px solid var(--app-border); }
+.wiz-btn{ border-radius:9px; padding:9px 18px; font:700 0.84rem var(--sans); cursor:pointer; border:1px solid transparent; transition:.15s; }
+.wiz-btn.next{ background:var(--p); color:#fff; }
+.wiz-btn.next:hover{ filter:brightness(1.08); }
+.wiz-btn.back{ background:#fff; color:var(--app-ink-muted); border-color:var(--app-border); }
+.wiz-btn.back:hover{ background:#f8fafc; color:var(--app-ink); }
+
+/* Source cards (AI vs own questions) */
+.src-cards{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+@media(max-width:420px){ .src-cards{ grid-template-columns:1fr; } }
+.src-card{ text-align:left; background:#fff; border:1.5px solid var(--app-border); border-radius:12px;
+  padding:14px; cursor:pointer; display:flex; flex-direction:column; gap:3px; transition:.16s; font-family:var(--sans); }
+.src-card i, .src-card svg{ width:19px; height:19px; color:var(--app-ink-muted); margin-bottom:3px; }
+.src-card strong{ font-size:0.88rem; font-weight:800; color:var(--app-ink); }
+.src-card span{ font-size:0.74rem; color:var(--app-ink-muted); line-height:1.35; }
+.src-card:hover{ border-color:#c4b5fd; }
+.src-card.selected{ border-color:var(--p); background:#faf7ff; box-shadow:0 0 0 3px rgba(109,40,217,.09); }
+.src-card.selected i, .src-card.selected svg{ color:var(--p); }
+
+.src-panel{ display:none; border:1px solid var(--app-border); border-radius:12px; padding:14px; background:#fbfbfe; }
+.src-panel.open{ display:block; }
+.src-tabs{ display:flex; gap:6px; margin-bottom:12px; }
+.src-tab{ flex:1; background:#fff; border:1px solid var(--app-border); border-radius:8px; padding:8px;
+  font:700 0.78rem var(--sans); color:var(--app-ink-muted); cursor:pointer; transition:.15s; }
+.src-tab.active{ background:var(--p); color:#fff; border-color:var(--p); }
+.src-mode{ display:none; } .src-mode.active{ display:block; }
+.src-textarea{ min-height:150px; resize:vertical; font-family:var(--mono); font-size:0.78rem; line-height:1.55; }
+
 /* Exam type info + Advanced settings */
 .exam-type-info{ font-size:0.82rem; margin-top:8px; color:var(--app-ink); }
 .adv-settings{ margin:6px 0 4px; border:1px solid var(--app-border); border-radius:10px; background:#fbfbfe; padding:0 14px; }
@@ -2396,171 +2443,237 @@ function renderDynamicForm(tabKey){
     btnWordAction.style.display = 'inline-flex';
     btnPrintAction.style.display = 'inline-flex';
 
+    // NOTE: all four steps are rendered at once and hidden with CSS. They must never be
+    // unmounted — collectPaperParams() reads every field by id at generate time, and a
+    // missing field would silently fall back to a default and produce the wrong paper.
     container.innerHTML = `
-      <div class="form-section-title">1. School & Header Details</div>
-      <div class="field-group">
-        <label class="field-label">School / Institution Name</label>
-        <input type="text" class="field-input" id="inpSchoolName" placeholder="e.g. Green Berg International School">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Location / Sub-header</label>
-        <input type="text" class="field-input" id="inpSchoolLoc" placeholder="e.g. Affiliated to CBSE, New Delhi">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Header Logo Configuration</label>
-        <select class="field-select" id="selectLogoStyle" onchange="toggleLogoSlots(this.value)">
-          <option value="dual">Dual Logo (Left: School Crest + Right: Partner/Board)</option>
-          <option value="single">Single Logo (School Crest Only)</option>
-          <option value="none" selected>No Logo (Text Only Header)</option>
-        </select>
-      </div>
-      <div class="field-group" id="logoUploadSection" style="display:none;">
-        <div class="dual-logo-wrap two-slots" id="dualLogoWrap">
-          <div class="logo-box" id="logoSlot1">
-            <label>
-              <img id="logo1Thumb" class="thumb-prev" alt="Logo 1">
-              <span id="logo1Text"><i data-lucide="upload" style="width:12px;height:12px;"></i> Left Logo (School)</span>
-              <input type="file" id="logoFile1" accept="image/*" onchange="previewLogo(this, 1)">
-            </label>
-          </div>
-          <div class="logo-box" id="logoSlot2">
-            <label>
-              <img id="logo2Thumb" class="thumb-prev" alt="Logo 2">
-              <span id="logo2Text"><i data-lucide="upload" style="width:12px;height:12px;"></i> Right Logo (Board/Roboden)</span>
-              <input type="file" id="logoFile2" accept="image/*" onchange="previewLogo(this, 2)">
-            </label>
-          </div>
-        </div>
+      <div class="wiz-steps" id="wizSteps">
+        <button type="button" class="wiz-pip active" data-step="1" onclick="gotoWizStep(1)"><span>1</span>Topic</button>
+        <button type="button" class="wiz-pip" data-step="2" onclick="gotoWizStep(2)"><span>2</span>Questions</button>
+        <button type="button" class="wiz-pip" data-step="3" onclick="gotoWizStep(3)"><span>3</span>Structure</button>
+        <button type="button" class="wiz-pip" data-step="4" onclick="gotoWizStep(4)"><span>4</span>Header</button>
       </div>
 
-      <div class="form-section-title">2. Curriculum & Topic</div>
-      <div class="field-row">
-        <div class="field-group">
-          <label class="field-label">Grade / Class</label>
-          <select class="field-select" id="selectGrade">
-            <option value="Class 1">Class 1</option>
-            <option value="Class 2">Class 2</option>
-            <option value="Class 3">Class 3</option>
-            <option value="Class 4">Class 4</option>
-            <option value="Class 5">Class 5</option>
-            <option value="Class 6">Class 6</option>
-            <option value="Class 7">Class 7</option>
-            <option value="Class 8">Class 8</option>
-            <option value="Class 9" selected>Class 9</option>
-            <option value="Class 10">Class 10</option>
-            <option value="Class 11">Class 11</option>
-            <option value="Class 12">Class 12</option>
-          </select>
-        </div>
-        <div class="field-group">
-          <label class="field-label">Curriculum Board</label>
-          <select class="field-select" id="selectBoard">
-            <option value="CBSE" selected>CBSE</option>
-            <option value="ICSE / ISC">ICSE</option>
-            <option value="State Board">State Board</option>
-            <option value="IGCSE / Cambridge">IGCSE / Cambridge</option>
-          </select>
-        </div>
-      </div>
-      <div class="field-group">
-        <label class="field-label">Subject</label>
-        <select class="field-select" id="selectSubject">
-          <option value="Artificial Intelligence / Robotics" selected>Artificial Intelligence & Robotics</option>
-          <option value="Science (Physics/Chemistry/Biology)">Science (Physics / Chem / Bio)</option>
-          <option value="Mathematics">Mathematics</option>
-          <option value="Social Science (Geography & Economics)">Social Science (Geography & Economics)</option>
-          <option value="English Language & Literature">English</option>
-          <option value="Hindi">Hindi</option>
-          <option value="Computer Science / Python">Computer Science / Python</option>
-          <option value="Regional Language (Kannada/Telugu/Tamil)">Regional Language</option>
-        </select>
-      </div>
-      <div class="field-group">
-        <label class="field-label">Chapter(s) / Topic(s) <span style="font-weight:400; color:var(--app-ink-muted);">— separate multiple with commas</span></label>
-        <input type="text" class="field-input" id="inpTopicName" placeholder="e.g. Linear Equations, Triangles, Statistics" required>
-      </div>
-
-      <div class="ocr-drop" id="ocrBox">
-        <label class="field-label" style="display:flex;align-items:center;gap:6px;">
-          <i data-lucide="scan-line" style="width:15px;height:15px;color:var(--p);"></i>
-          Handwritten Paper → Printable (Optional)
-        </label>
-        <p class="ocr-hint">Snap or upload a photo of your handwritten questions. AI reads them and rebuilds a clean, print-ready paper. When photos are attached, they are used <strong>instead of</strong> auto-generating from the topic.</p>
-        <div class="ocr-thumbs" id="ocrThumbs"></div>
-        <label class="ocr-add">
-          <i data-lucide="camera" style="width:14px;height:14px;"></i>
-          <span id="ocrAddLabel">Add photo(s)</span>
-          <input type="file" id="qpPhotoInput" accept="image/*" multiple capture="environment" onchange="handleQPPhotos(this)" hidden>
-        </label>
-      </div>
-
-      <div class="form-section-title">3. Type of Exam</div>
-      <div class="field-group">
-        <label class="field-label">Exam Type <span style="font-weight:400; color:var(--app-ink-muted);">— sets the marks, time &amp; official pattern automatically</span></label>
-        <select class="field-select" id="selectExamType" onchange="updateExamTypeInfo()">
-          <option value="slip">Slip Test / Quick Quiz</option>
-          <option value="unit" selected>Unit Test / Periodic</option>
-          <option value="fa">Formative Assessment (FA)</option>
-          <option value="midterm">Mid-Term Exam</option>
-          <option value="term">Term / Summative</option>
-          <option value="halfyearly">Half-Yearly Exam</option>
-          <option value="preboard">Pre-Board Exam</option>
-          <option value="annual">Annual / Board Exam</option>
-        </select>
-        <p id="examTypeInfo" class="exam-type-info"></p>
-      </div>
-
-      <details class="adv-settings">
-        <summary>⚙ Advanced settings — override marks, time &amp; choice</summary>
-        <div class="field-row" style="margin-top:12px;">
+      <!-- ── STEP 1 — Curriculum & Topic ── -->
+      <div class="wiz-step active" data-step="1">
+        <div class="form-section-title">Curriculum &amp; Topic</div>
+        <div class="field-row">
           <div class="field-group">
-            <label class="field-label">Total Marks</label>
-            <select class="field-select" id="selectMarks" onchange="updateExamTypeInfo()">
-              <option value="" selected>Auto (from Exam Type)</option>
-              <option value="10 Marks">10 Marks</option>
-              <option value="20 Marks">20 Marks</option>
-              <option value="25 Marks">25 Marks</option>
-              <option value="40 Marks">40 Marks</option>
-              <option value="50 Marks">50 Marks</option>
-              <option value="80 Marks">80 Marks</option>
-              <option value="100 Marks">100 Marks</option>
+            <label class="field-label">Curriculum Board</label>
+            <select class="field-select" id="selectBoard">
+              <option value="CBSE" selected>CBSE</option>
+              <option value="ICSE / ISC">ICSE</option>
+              <option value="State Board">State Board</option>
+              <option value="IGCSE / Cambridge">IGCSE / Cambridge</option>
             </select>
           </div>
           <div class="field-group">
-            <label class="field-label">Time Duration</label>
-            <select class="field-select" id="selectDuration" onchange="updateExamTypeInfo()">
-              <option value="" selected>Auto (from Exam Type)</option>
-              <option value="20 Minutes">20 Minutes</option>
-              <option value="30 Minutes">30 Minutes</option>
-              <option value="45 Minutes">45 Minutes</option>
-              <option value="1 Hour">1 Hour</option>
-              <option value="1.5 Hours">1.5 Hours</option>
-              <option value="2 Hours">2 Hours</option>
-              <option value="3 Hours">3 Hours</option>
+            <label class="field-label">Grade / Class</label>
+            <select class="field-select" id="selectGrade">
+              <option value="Class 1">Class 1</option>
+              <option value="Class 2">Class 2</option>
+              <option value="Class 3">Class 3</option>
+              <option value="Class 4">Class 4</option>
+              <option value="Class 5">Class 5</option>
+              <option value="Class 6">Class 6</option>
+              <option value="Class 7">Class 7</option>
+              <option value="Class 8">Class 8</option>
+              <option value="Class 9" selected>Class 9</option>
+              <option value="Class 10">Class 10</option>
+              <option value="Class 11">Class 11</option>
+              <option value="Class 12">Class 12</option>
             </select>
           </div>
         </div>
         <div class="field-row">
           <div class="field-group">
-            <label class="field-label">Page Fitting Budget</label>
-            <select class="field-select" id="selectDensity" onchange="applyPageDensity(this.value)">
-              <option value="compact" selected>1 Page (Compact)</option>
-              <option value="standard">2 Pages (Front &amp; Back)</option>
-              <option value="booklet">Multi-Page Booklet</option>
+            <label class="field-label">Subject</label>
+            <select class="field-select" id="selectSubject">
+              <option value="Artificial Intelligence / Robotics" selected>Artificial Intelligence &amp; Robotics</option>
+              <option value="Science (Physics/Chemistry/Biology)">Science (Physics / Chem / Bio)</option>
+              <option value="Mathematics">Mathematics</option>
+              <option value="Social Science (Geography &amp; Economics)">Social Science (Geography &amp; Economics)</option>
+              <option value="English Language &amp; Literature">English</option>
+              <option value="Hindi">Hindi</option>
+              <option value="Computer Science / Python">Computer Science / Python</option>
+              <option value="Regional Language (Kannada/Telugu/Tamil)">Regional Language</option>
             </select>
           </div>
           <div class="field-group">
-            <label class="field-label">Section Choice Policy</label>
-            <select class="field-select" id="selectChoicePolicy">
-              <option value="All Questions Compulsory" selected>All Compulsory</option>
-              <option value="Internal Choice in Long Answer (OR)">Internal Choice (OR)</option>
-              <option value="Section Choice (Any 3 out of 5)">Attempt Any 3 of 5</option>
+            <label class="field-label">Paper Language</label>
+            <select class="field-select" id="selectLanguage">
+              <option value="en" selected>English</option>
+              <option value="te">Telugu</option>
+              <option value="kn">Kannada</option>
+              <option value="ta">Tamil</option>
+              <option value="ml">Malayalam</option>
+              <option value="hi">Hindi</option>
             </select>
           </div>
         </div>
-      </details>
+        <div class="field-group">
+          <label class="field-label">Chapter(s) / Topic(s) <span class="fl-hint">separate multiple with commas</span></label>
+          <input type="text" class="field-input" id="inpTopicName" placeholder="e.g. Linear Equations, Triangles, Statistics" required>
+        </div>
+        <div class="wiz-nav"><span></span><button type="button" class="wiz-btn next" onclick="gotoWizStep(2)">Next</button></div>
+      </div>
+
+      <!-- ── STEP 2 — Where do the questions come from? ── -->
+      <div class="wiz-step" data-step="2">
+        <div class="form-section-title">How should the questions be created?</div>
+        <input type="hidden" id="paperSource" value="ai">
+        <div class="src-cards">
+          <button type="button" class="src-card selected" id="srcCardAi" onclick="selectPaperSource('ai')">
+            <i data-lucide="sparkles"></i>
+            <strong>AI Generated</strong>
+            <span>AI writes questions from your chapters</span>
+          </button>
+          <button type="button" class="src-card" id="srcCardCustom" onclick="selectPaperSource('custom')">
+            <i data-lucide="pencil-line"></i>
+            <strong>My Own Questions</strong>
+            <span>Paste your questions or upload a photo</span>
+          </button>
+        </div>
+
+        <div class="src-panel" id="srcCustomPanel">
+          <div class="src-tabs">
+            <button type="button" class="src-tab active" id="srcTabPaste" onclick="selectCustomMode('paste')">Paste questions</button>
+            <button type="button" class="src-tab" id="srcTabPhoto" onclick="selectCustomMode('photo')">Upload photos</button>
+          </div>
+
+          <div class="src-mode active" id="srcModePaste">
+            <textarea class="field-input src-textarea" id="inpPastedQuestions" rows="8"
+              placeholder="Paste your questions here — one per line.&#10;&#10;1. Solve 2x + 5 = 15   [2]&#10;2. Define photosynthesis.   [3]&#10;&#10;Marks in brackets are optional; AI will format and build the answer key."></textarea>
+            <p class="fl-hint">Your questions are kept exactly as written — AI only formats them and prepares the answer key.</p>
+          </div>
+
+          <div class="src-mode" id="srcModePhoto">
+            <div class="ocr-drop" id="ocrBox">
+              <p class="ocr-hint">Photograph your handwritten questions (or a textbook page). AI reads them and rebuilds a clean, print-ready paper.</p>
+              <div class="ocr-thumbs" id="ocrThumbs"></div>
+              <label class="ocr-add">
+                <i data-lucide="camera" style="width:14px;height:14px;"></i>
+                <span id="ocrAddLabel">Add photo(s)</span>
+                <input type="file" id="qpPhotoInput" accept="image/*" multiple capture="environment" onchange="handleQPPhotos(this)" hidden>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="wiz-nav"><button type="button" class="wiz-btn back" onclick="gotoWizStep(1)">Back</button><button type="button" class="wiz-btn next" onclick="gotoWizStep(3)">Next</button></div>
+      </div>
+
+      <!-- ── STEP 3 — Exam structure ── -->
+      <div class="wiz-step" data-step="3">
+        <div class="form-section-title">Type of Exam</div>
+        <div class="field-group">
+          <label class="field-label">Exam Type <span class="fl-hint">sets marks, time &amp; the official pattern</span></label>
+          <select class="field-select" id="selectExamType" onchange="updateExamTypeInfo()">
+            <option value="slip">Slip Test / Quick Quiz</option>
+            <option value="unit" selected>Unit Test / Periodic</option>
+            <option value="fa">Formative Assessment (FA)</option>
+            <option value="midterm">Mid-Term Exam</option>
+            <option value="term">Term / Summative</option>
+            <option value="halfyearly">Half-Yearly Exam</option>
+            <option value="preboard">Pre-Board Exam</option>
+            <option value="annual">Annual / Board Exam</option>
+          </select>
+          <p id="examTypeInfo" class="exam-type-info"></p>
+        </div>
+
+        <details class="adv-settings">
+          <summary>Advanced settings — override marks, time &amp; choice</summary>
+          <div class="field-row" style="margin-top:12px;">
+            <div class="field-group">
+              <label class="field-label">Total Marks</label>
+              <select class="field-select" id="selectMarks" onchange="updateExamTypeInfo()">
+                <option value="" selected>Auto (from Exam Type)</option>
+                <option value="10 Marks">10 Marks</option>
+                <option value="20 Marks">20 Marks</option>
+                <option value="25 Marks">25 Marks</option>
+                <option value="40 Marks">40 Marks</option>
+                <option value="50 Marks">50 Marks</option>
+                <option value="80 Marks">80 Marks</option>
+                <option value="100 Marks">100 Marks</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Time Duration</label>
+              <select class="field-select" id="selectDuration" onchange="updateExamTypeInfo()">
+                <option value="" selected>Auto (from Exam Type)</option>
+                <option value="20 Minutes">20 Minutes</option>
+                <option value="30 Minutes">30 Minutes</option>
+                <option value="45 Minutes">45 Minutes</option>
+                <option value="1 Hour">1 Hour</option>
+                <option value="1.5 Hours">1.5 Hours</option>
+                <option value="2 Hours">2 Hours</option>
+                <option value="3 Hours">3 Hours</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Page Fitting Budget</label>
+              <select class="field-select" id="selectDensity" onchange="applyPageDensity(this.value)">
+                <option value="compact">1 Page (Compact)</option>
+                <option value="standard" selected>2 Pages (Front &amp; Back)</option>
+                <option value="booklet">Multi-Page Booklet</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Section Choice Policy</label>
+              <select class="field-select" id="selectChoicePolicy">
+                <option value="All Questions Compulsory" selected>All Compulsory</option>
+                <option value="Internal Choice in Long Answer (OR)">Internal Choice (OR)</option>
+                <option value="Section Choice (Any 3 out of 5)">Attempt Any 3 of 5</option>
+              </select>
+            </div>
+          </div>
+        </details>
+        <div class="wiz-nav"><button type="button" class="wiz-btn back" onclick="gotoWizStep(2)">Back</button><button type="button" class="wiz-btn next" onclick="gotoWizStep(4)">Next</button></div>
+      </div>
+
+      <!-- ── STEP 4 — Header & branding ── -->
+      <div class="wiz-step" data-step="4">
+        <div class="form-section-title">School Header</div>
+        <div class="field-group">
+          <label class="field-label">School / Institution Name</label>
+          <input type="text" class="field-input" id="inpSchoolName" placeholder="e.g. Green Berg International School">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Location / Sub-header</label>
+          <input type="text" class="field-input" id="inpSchoolLoc" placeholder="e.g. Affiliated to CBSE, New Delhi">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Header Logo</label>
+          <select class="field-select" id="selectLogoStyle" onchange="toggleLogoSlots(this.value)">
+            <option value="none" selected>No Logo (Text Only Header)</option>
+            <option value="single">Single Logo (School Crest Only)</option>
+            <option value="dual">Dual Logo (Left: School Crest + Right: Partner/Board)</option>
+          </select>
+        </div>
+        <div class="field-group" id="logoUploadSection" style="display:none;">
+          <div class="dual-logo-wrap two-slots" id="dualLogoWrap">
+            <div class="logo-box" id="logoSlot1">
+              <label>
+                <img id="logo1Thumb" class="thumb-prev" alt="Logo 1">
+                <span id="logo1Text"><i data-lucide="upload" style="width:12px;height:12px;"></i> Left Logo (School)</span>
+                <input type="file" id="logoFile1" accept="image/*" onchange="previewLogo(this, 1)">
+              </label>
+            </div>
+            <div class="logo-box" id="logoSlot2">
+              <label>
+                <img id="logo2Thumb" class="thumb-prev" alt="Logo 2">
+                <span id="logo2Text"><i data-lucide="upload" style="width:12px;height:12px;"></i> Right Logo (Board/Roboden)</span>
+                <input type="file" id="logoFile2" accept="image/*" onchange="previewLogo(this, 2)">
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="wiz-nav"><button type="button" class="wiz-btn back" onclick="gotoWizStep(3)">Back</button><span class="fl-hint">Ready — tap Generate below</span></div>
+      </div>
     `;
-    setTimeout(updateExamTypeInfo, 0);
+    currentWizStep = 1;
+    setTimeout(() => { updateExamTypeInfo(); applySavedSchoolToForm(); }, 0);
   }
   else if(tabKey === 'worksheet'){
     pTitle.innerHTML = '<i data-lucide="file-text"></i><span>Differentiated Worksheet Maker</span>';
@@ -2998,10 +3111,19 @@ async function executeGenerate(){
   // ── AI MAPPING LAYERS ──
   // L1 tool · L2 language · L3 subject group → L5/L6 model+provider plan → L8 trace.
   // (Language selector isn't built yet, so this defaults to 'en' and degrades safely.)
+  // Where the questions come from decides BOTH the pipeline and the model route:
+  // photos need a vision model, so the route context becomes 'ocr'.
+  const paperSrc  = document.getElementById('paperSource')?.value || 'ai';
+  const pastedTxt = (document.getElementById('inpPastedQuestions')?.value || '').trim();
+  const hasPhotos = !!(window.uploadedQPImages && window.uploadedQPImages.length);
+  const usingPhotos = currentTabKey === 'question_paper' && paperSrc === 'custom' && hasPhotos;
+
   const routeCtx = {
-    tool: currentTabKey,
+    tool: usingPhotos ? 'ocr' : currentTabKey,
     language: (document.getElementById('selectLanguage')?.value || 'en').toLowerCase(),
     subjectGroup: P.subjectGroup,
+    // Formatting the teacher's own questions is a light job → cheap tier.
+    tier: (currentTabKey === 'question_paper' && paperSrc === 'custom' && !hasPhotos) ? 'cheap' : 'smart',
     subject: P.subject, board: P.board, examType: P.examKey, marks: P.marksNum
   };
   const plan = planRoute(routeCtx);
@@ -3053,8 +3175,10 @@ async function executeGenerate(){
     else {
       // question_paper / worksheet → structured schema
       let data;
-      if(currentTabKey === 'question_paper' && window.uploadedQPImages && window.uploadedQPImages.length){
-        data = await generatePaperFromPhotos(P, trace);   // handwritten photo → clean paper
+      if(currentTabKey === 'question_paper' && paperSrc === 'custom'){
+        if(hasPhotos)      data = await generatePaperFromPhotos(P, trace);        // photo → OCR → paper
+        else if(pastedTxt) data = await generatePaperFromPastedText(P, pastedTxt, trace); // pasted → paper
+        else throw new Error('Add your questions first — paste them in, or upload a photo.');
       } else {
         const raw = await groqChat(buildPaperPrompt(P), { temperature:0.22, max_tokens:5500, jsonMode:true, plan, trace });
         data = normalizePaperData(extractJson(raw), P);
@@ -3245,6 +3369,55 @@ function collectPaperParams(){
    Board × ExamType × SubjectGroup → an exact section blueprint (counts + marks),
    fed to gpt as a hard structure and enforced by validatePaper(). Built from the
    official-board research (CBSE 5-section, ICSE 2-part, IGCSE structured, etc.). */
+
+/* ── QUESTION PAPER WIZARD ──────────────────────────────────────────────
+   All four steps stay mounted; only visibility changes. collectPaperParams()
+   reads every field by id at generate time, so nothing may be unmounted. */
+let currentWizStep = 1;
+
+function gotoWizStep(n){
+  const steps = document.querySelectorAll('.wiz-step');
+  if(!steps.length) return;
+  n = Math.max(1, Math.min(4, n));
+  // Step 1 requires a chapter before moving on.
+  if(n > 1 && currentWizStep === 1){
+    const topic = document.getElementById('inpTopicName');
+    if(topic && !topic.value.trim()){
+      toast('Enter at least one chapter or topic first.', 'err');
+      topic.focus(); return;
+    }
+  }
+  currentWizStep = n;
+  steps.forEach(s => s.classList.toggle('active', Number(s.dataset.step) === n));
+  document.querySelectorAll('.wiz-pip').forEach(p => {
+    const i = Number(p.dataset.step);
+    p.classList.toggle('active', i === n);
+    p.classList.toggle('done', i < n);
+  });
+  const panel = document.querySelector('.form-panel');
+  if(panel) panel.scrollTop = 0;
+  if(window.lucide) lucide.createIcons();
+}
+
+// AI vs the teacher's own questions.
+function selectPaperSource(mode){
+  const src = document.getElementById('paperSource');
+  if(src) src.value = mode;
+  document.getElementById('srcCardAi')?.classList.toggle('selected', mode === 'ai');
+  document.getElementById('srcCardCustom')?.classList.toggle('selected', mode === 'custom');
+  const panel = document.getElementById('srcCustomPanel');
+  if(panel) panel.classList.toggle('open', mode === 'custom');
+  if(window.lucide) lucide.createIcons();
+}
+
+// Within "My Own Questions": typed text vs photographed pages.
+function selectCustomMode(mode){
+  document.getElementById('srcTabPaste')?.classList.toggle('active', mode === 'paste');
+  document.getElementById('srcTabPhoto')?.classList.toggle('active', mode === 'photo');
+  document.getElementById('srcModePaste')?.classList.toggle('active', mode === 'paste');
+  document.getElementById('srcModePhoto')?.classList.toggle('active', mode === 'photo');
+  if(window.lucide) lucide.createIcons();
+}
 
 // Show the auto-derived marks/time under the Exam Type picker.
 function updateExamTypeInfo(){
@@ -4340,6 +4513,21 @@ ${transcription}
 """
 Output ONLY the JSON object.`;
   return [ { role:'system', content:system }, { role:'user', content: schema + '\n\n' + rules } ];
+}
+
+/* Teacher pasted their own questions → format them into a professional paper.
+   Reuses the OCR formatting prompt, which is already instructed to use ONLY the supplied
+   questions and never invent new ones. Runs on the cheap tier (it is a formatting job). */
+async function generatePaperFromPastedText(P, text, trace){
+  const loadMsg = document.getElementById('loadingSub');
+  if(loadMsg) loadMsg.textContent = 'Formatting your questions into a printable paper…';
+  const raw = await groqChat(buildFormatFromOcrPrompt(P, text), {
+    temperature:0.2, max_tokens:5500, jsonMode:true, tier:'cheap', trace
+  });
+  const data = normalizePaperData(extractJson(raw), P);
+  data.meta.examTitle = data.meta.examTitle || 'Question Paper';
+  data._fromPasted = true;
+  return data;
 }
 
 async function generatePaperFromPhotos(P, trace){
