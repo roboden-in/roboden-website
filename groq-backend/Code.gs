@@ -19,6 +19,12 @@ var GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 var ALLOWED_MODELS = [
   'openai/gpt-oss-120b',
   'openai/gpt-oss-20b',
+  // Rotation ladder — each model has its own rate-limit bucket, so rotating across
+  // them multiplies daily capacity. Keep in sync with GROQ_CONFIG.ladder in teachers.html.
+  'qwen/qwen3.8-27b',
+  'qwen/qwen3.6-27b',
+  'groq/compound-mini',
+  // Vision (handwriting OCR)
   'meta-llama/llama-4-scout-17b-16e-instruct',
   'meta-llama/llama-4-maverick-17b-128e-instruct'
 ];

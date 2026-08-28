@@ -479,6 +479,29 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
 .paper-sheet.density-compact .docx-section-header{margin:10px 0 6px; padding:4px 8px;}
 .paper-sheet.density-compact .docx-q-item{margin-bottom:8px;}
 .paper-sheet.density-compact .ruled-answer-lines{height:18px;}
+/* compact — squeeze onto as few pages as possible (short tests) */
+.density-compact .qp-doc{font-size:12.5px; line-height:1.32;}
+.density-compact .qp-q{margin-bottom:8px;}
+.density-compact .qp-line{height:17px;}
+.density-compact .qp-sec-bar{margin:11px 0 8px; padding:5px 12px;}
+.density-compact .qp-gi{padding:9px 13px; margin-bottom:11px;}
+
+/* standard — comfortable front & back (mid-size exams) */
+.paper-sheet.density-standard{font-size:10.5pt; line-height:1.55; padding:48px 54px;}
+.density-standard .qp-doc{font-size:14px; line-height:1.5;}
+.density-standard .qp-q{margin-bottom:13px;}
+.density-standard .qp-line{height:22px;}
+
+/* booklet — full board-exam booklet, generous spacing & writing room */
+.paper-sheet.density-booklet{font-size:11pt; line-height:1.65; padding:52px 58px;}
+.density-booklet .qp-doc{font-size:15px; line-height:1.6;}
+.density-booklet .qp-q{margin-bottom:18px;}
+.density-booklet .qp-line{height:26px;}
+.density-booklet .qp-sec-bar{margin:24px 0 15px; padding:9px 16px;}
+
+/* keep questions from splitting across printed/PDF pages */
+.qp-q, .qp-sec-bar{ break-inside:avoid; page-break-inside:avoid; }
+.pdf-render-holder .qp-q{ break-inside:avoid; page-break-inside:avoid; }
 
 /* Word Document Header Layout */
 .docx-header-box{
@@ -1246,6 +1269,18 @@ footer{
 .ocr-add{ display:inline-flex; align-items:center; gap:7px; margin-top:10px; cursor:pointer; font-size:0.8rem; font-weight:700; color:var(--p); background:#f1ebff; border:1px solid #ddd0fb; padding:8px 14px; border-radius:9px; transition:.15s; }
 .ocr-add:hover{ background:#e9dfff; }
 
+/* Pro / subscription card — clean and minimal */
+.pricing-card-banner{ text-align:center; padding:26px 20px 22px; }
+.pro-eyebrow{ font-size:0.7rem; text-transform:uppercase; letter-spacing:0.14em; font-weight:800; color:#c7d2fe; }
+.pricing-price{ font-size:2.6rem; font-weight:900; color:#fff; line-height:1.1; margin:6px 0 2px; letter-spacing:-0.02em; }
+.pro-per{ font-size:0.9rem; font-weight:500; color:#c7d2fe; }
+.pro-sub{ font-size:0.84rem; color:#e0e7ff; opacity:0.92; }
+.pro-pay-btn{ background:#0f766e !important; box-shadow:0 4px 14px rgba(15,118,110,0.3); margin-top:18px; }
+.pro-note{ text-align:center; font-size:0.73rem; color:#94a3b8; margin-top:8px; }
+.pro-promo{ margin-top:16px; border-top:1px solid var(--app-border); padding-top:12px; }
+.pro-promo > summary{ cursor:pointer; list-style:none; font-size:0.8rem; font-weight:600; color:var(--p); text-align:center; }
+.pro-promo > summary::-webkit-details-marker{ display:none; }
+
 /* Exam type info + Advanced settings */
 .exam-type-info{ font-size:0.82rem; margin-top:8px; color:var(--app-ink); }
 .adv-settings{ margin:6px 0 4px; border:1px solid var(--app-border); border-radius:10px; background:#fbfbfe; padding:0 14px; }
@@ -1541,7 +1576,7 @@ footer{
         </div>
 
         <!-- Rendered Sheet Canvas (For Exams, Worksheets, Plans & Aids) -->
-        <div class="paper-sheet density-compact" id="renderedPaperSheet" style="display:none;">
+        <div class="paper-sheet density-standard" id="renderedPaperSheet" style="display:none;">
           <div id="studentDocContent"></div>
           <div id="teacherDocContent" style="display:none;"></div>
         </div>
@@ -1583,27 +1618,24 @@ footer{
     <button class="modal-close-btn" onclick="closeModals()">✕</button>
     
     <div class="pricing-card-banner">
-      <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; font-weight:800; color:#a5b4fc;">Roboden Educator Pro</div>
-      <div class="pricing-price">₹300 <span style="font-size:0.9rem; font-weight:500; color:#c7d2fe;">/ year</span></div>
-      <p style="font-size:0.82rem; color:#e0e7ff; opacity:0.95;">Just <strong data-price-monthly>₹25</strong>/month · Unlimited question papers, Gamma-style slide decks, answer keys & DOCX/PDF exports.</p>
-      <p style="font-size:0.75rem; color:#c7d2fe; opacity:0.9; margin-top:4px;">Every account starts with a <strong data-trial-days>7</strong>-day free trial — no card needed.</p>
+      <div class="pro-eyebrow">Educator Pro</div>
+      <div class="pricing-price">₹300 <span class="pro-per">/ year</span></div>
+      <div class="pro-sub">Everything unlimited · <span data-price-monthly>₹25</span>/month</div>
     </div>
 
-    <div style="margin-bottom:16px;">
-      <label class="field-label">Have a workshop / promo code?</label>
-      <div class="promo-input-row">
-        <input type="text" class="field-input" id="promoCodeInput" placeholder="e.g. GREENBERG2026" style="text-transform:uppercase;">
+    <button id="btnCashfreePay" class="btn-generate pro-pay-btn" onclick="handleCashfreePayment()">
+      Pay <span data-price>₹300</span> &amp; Activate
+    </button>
+    <p class="pro-note">Secure payment via Cashfree — UPI, cards &amp; netbanking</p>
+
+    <details class="pro-promo">
+      <summary>Have a workshop code?</summary>
+      <div class="promo-input-row" style="margin-top:10px;">
+        <input type="text" class="field-input" id="promoCodeInput" placeholder="WORKSHOP CODE" style="text-transform:uppercase;">
         <button class="btn-generate" style="width:auto; margin:0; padding:10px 18px;" onclick="applyPromoCode()">Apply</button>
       </div>
-      <p id="promoMsg" style="font-size:0.78rem; margin-top:4px;"></p>
-    </div>
-
-    <button id="btnCashfreePay" class="btn-generate" style="background:#0f766e; box-shadow:0 4px 14px rgba(15,118,110,0.35);" onclick="handleCashfreePayment()">
-      <i data-lucide="shield-check" style="width:16px;height:16px;"></i> Pay <span data-price>₹300</span> via UPI / Card (Cashfree)
-    </button>
-    <div style="display:flex; justify-content:center; gap:8px; margin-top:10px; font-size:0.75rem; color:#64748b; align-items:center;">
-      <span>⚡ Instant UPI (GPay, PhonePe, Paytm)</span> &bull; <span>Cards &amp; Netbanking</span> &bull; <span style="color:#0f766e; font-weight:700;">Secure Cashfree Gateway</span>
-    </div>
+      <p id="promoMsg" style="font-size:0.78rem; margin-top:6px;"></p>
+    </details>
   </div>
 </div>
 
@@ -1787,6 +1819,25 @@ const GROQ_CONFIG = {
   model: "openai/gpt-oss-120b",           // primary deep-reasoning model
   fallbackModel: "openai/gpt-oss-20b",    // used automatically if primary is rate-limited
   visionModel: "meta-llama/llama-4-scout-17b-16e-instruct", // for handwriting OCR (image input)
+
+  // ── MODEL ROTATION ──────────────────────────────────────────────────────────
+  // Every model on Groq has its OWN rate-limit bucket (RPD/TPM/TPD). Rotating across
+  // models therefore multiplies real capacity instead of sharing one quota:
+  //   gpt-oss-120b 200K/day + qwen3.8-27b 2M/day + gpt-oss-20b 200K/day + qwen3.6-27b 200K/day
+  // ≈ 2.6M tokens/day instead of 200K — and it keeps working through the evening rush.
+  ladder: [
+    "openai/gpt-oss-120b",   // best quality — try first
+    "qwen/qwen3.8-27b",      // huge 2M/day budget
+    "openai/gpt-oss-20b",
+    "qwen/qwen3.6-27b"
+  ],
+  // Simple jobs (OCR clean-up, formatting pasted questions) don't need the big model.
+  cheapLadder: [
+    "openai/gpt-oss-20b",
+    "qwen/qwen3.6-27b",
+    "qwen/qwen3.8-27b",
+    "openai/gpt-oss-120b"
+  ],
   proxyEndpoint: "https://script.google.com/macros/s/AKfycbwiUQ3OH_bp3k-wJgALCKotmHwRavza6qEAlB66ZSKCPTLcIWFSsPUHbuROGfwBXV_AlA/exec",
   directEndpoint: "https://api.groq.com/openai/v1/chat/completions"
 };
@@ -1797,7 +1848,7 @@ async function groqChat(messages, opts = {}){
   // Groq free tier is limited to ~8000 tokens/minute (prompt + max_tokens together),
   // so we keep max_tokens modest and ask gpt-oss for "low" reasoning effort (it is a
   // reasoning model — high effort burns the token budget on hidden thinking).
-  const { temperature = 0.3, max_tokens = 5500, jsonMode = false, model, reasoningEffort = 'low' } = opts;
+  const { temperature = 0.3, max_tokens = 5500, jsonMode = false, model, reasoningEffort = 'low', tier = 'smart' } = opts;
   const useDirect = !!GROQ_CONFIG.apiKey;
   const url = useDirect ? GROQ_CONFIG.directEndpoint : GROQ_CONFIG.proxyEndpoint;
   const headers = useDirect
@@ -1824,21 +1875,46 @@ async function groqChat(messages, opts = {}){
     return { err: 'The AI returned an empty response — please try again.' };
   };
 
-  let res = await fetch(url, { method: 'POST', headers, body: build(model || GROQ_CONFIG.model) });
-  if (res.ok) {
+  // Walk the ladder: on a rate limit (or any failure) put that model on a short cooldown
+  // and immediately try the next one, so teachers never see a rate-limit error until
+  // every model is exhausted.
+  const ladder = model ? [model] : (tier === 'cheap' ? GROQ_CONFIG.cheapLadder : GROQ_CONFIG.ladder);
+  let lastErr = '';
+  for (const m of ladder) {
+    if (!modelAvailable(m)) { lastErr = lastErr || (m + ' cooling down'); continue; }
+    let res;
+    try { res = await fetch(url, { method:'POST', headers, body: build(m) }); }
+    catch(netErr){ lastErr = netErr.message; coolDownModel(m, 20); continue; }
+
+    if (!res.ok) {
+      lastErr = 'HTTP ' + res.status;
+      coolDownModel(m, res.status === 429 ? 60 : 20);
+      console.warn(`[AI] ${m} → ${lastErr}; rotating`);
+      continue;
+    }
     const r = await parse(res);
-    if (r.content) return r.content;
-    // fall back to the smaller model only for capacity errors, not rate limits
-    if (/rate limit|tokens per minute|TPM|requests per/i.test(r.err || '')) throw new Error(r.err);
-    console.warn('Primary returned no content: ' + r.err + ' — trying ' + GROQ_CONFIG.fallbackModel);
-  } else {
-    console.warn('Primary HTTP ' + res.status + ' — trying ' + GROQ_CONFIG.fallbackModel);
+    if (r.content) { if(m !== ladder[0]) console.info(`[AI] served by ${m}`); return r.content; }
+
+    lastErr = r.err || 'empty response';
+    const wait = retryAfterSeconds(lastErr);
+    const isLimit = /rate limit|tokens per minute|TPM|TPD|requests per|Request too large/i.test(lastErr);
+    coolDownModel(m, isLimit ? (wait || 60) : 15);
+    console.warn(`[AI] ${m} → ${lastErr.slice(0,80)}; rotating`);
   }
-  res = await fetch(url, { method: 'POST', headers, body: build(GROQ_CONFIG.fallbackModel) });
-  if (!res.ok) throw new Error('Groq request failed (' + res.status + '). ' + (await res.text().catch(()=> '')).slice(0, 160));
-  const r2 = await parse(res);
-  if (r2.err) throw new Error(r2.err);
-  return r2.content;
+  throw new Error(
+    /rate limit|tokens per minute|TPM|Request too large/i.test(lastErr)
+      ? 'All AI models are busy right now. Please try again in a minute.'
+      : (lastErr || 'AI request failed.')
+  );
+}
+
+/* ── model cooldown bookkeeping for the rotation ladder ── */
+const _modelCooldown = {};
+function modelAvailable(m){ return !_modelCooldown[m] || Date.now() > _modelCooldown[m]; }
+function coolDownModel(m, seconds){ _modelCooldown[m] = Date.now() + (Number(seconds)||30) * 1000; }
+function retryAfterSeconds(msg){
+  const t = /try again in ([\d.]+)s/i.exec(String(msg||''));
+  return t ? Math.ceil(parseFloat(t[1])) + 1 : 0;
 }
 
 // Tolerant JSON extraction — strips ```fences```, prose, and trailing junk that gpt-oss
@@ -1933,6 +2009,16 @@ document.addEventListener('DOMContentLoaded', () => {
   try { renderPromptLibrary('all'); } catch(e){ console.warn(e); }
   if(window.lucide) lucide.createIcons();
   if(typeof checkSavedUser === 'function') checkSavedUser();
+
+  // Complete a mobile Google sign-in that came back via full-page redirect.
+  if(typeof auth !== 'undefined' && sessionStorage.getItem('rob_gsi')){
+    sessionStorage.removeItem('rob_gsi');
+    auth.getRedirectResult()
+      .then(res => { if(res && res.user) toast(`Welcome, ${res.user.displayName || 'teacher'}!`, 'ok'); })
+      .catch(e => toast('Google login failed: ' + (e.message || e.code), 'err'));
+  }
+  // Workshop QR link (?promo=CODE)
+  setTimeout(() => { try { applyPromoFromUrl(); } catch(e){} }, 600);
 });
 
 // Tab Switcher and Dynamic Form Builder
@@ -1997,21 +2083,21 @@ function renderDynamicForm(tabKey){
       <div class="form-section-title">1. School & Header Details</div>
       <div class="field-group">
         <label class="field-label">School / Institution Name</label>
-        <input type="text" class="field-input" id="inpSchoolName" placeholder="e.g. Green Berg International School" value="Green Berg International School">
+        <input type="text" class="field-input" id="inpSchoolName" placeholder="e.g. Green Berg International School">
       </div>
       <div class="field-group">
         <label class="field-label">Location / Sub-header</label>
-        <input type="text" class="field-input" id="inpSchoolLoc" placeholder="e.g. Affiliated to CBSE, New Delhi" value="Affiliated to CBSE, New Delhi">
+        <input type="text" class="field-input" id="inpSchoolLoc" placeholder="e.g. Affiliated to CBSE, New Delhi">
       </div>
       <div class="field-group">
         <label class="field-label">Header Logo Configuration</label>
         <select class="field-select" id="selectLogoStyle" onchange="toggleLogoSlots(this.value)">
-          <option value="dual" selected>Dual Logo (Left: School Crest + Right: Partner/Board)</option>
+          <option value="dual">Dual Logo (Left: School Crest + Right: Partner/Board)</option>
           <option value="single">Single Logo (School Crest Only)</option>
-          <option value="none">No Logo (Text Only Header)</option>
+          <option value="none" selected>No Logo (Text Only Header)</option>
         </select>
       </div>
-      <div class="field-group" id="logoUploadSection">
+      <div class="field-group" id="logoUploadSection" style="display:none;">
         <div class="dual-logo-wrap two-slots" id="dualLogoWrap">
           <div class="logo-box" id="logoSlot1">
             <label>
@@ -2074,7 +2160,7 @@ function renderDynamicForm(tabKey){
       </div>
       <div class="field-group">
         <label class="field-label">Chapter(s) / Topic(s) <span style="font-weight:400; color:var(--app-ink-muted);">— separate multiple with commas</span></label>
-        <input type="text" class="field-input" id="inpTopicName" placeholder="e.g. Linear Equations, Triangles, Statistics" value="Introduction to AI & Project Cycle" required>
+        <input type="text" class="field-input" id="inpTopicName" placeholder="e.g. Linear Equations, Triangles, Statistics" required>
       </div>
 
       <div class="ocr-drop" id="ocrBox">
@@ -2176,7 +2262,7 @@ function renderDynamicForm(tabKey){
       <div class="form-section-title">1. Class & Subject Context</div>
       <div class="field-group">
         <label class="field-label">School / Institution Name</label>
-        <input type="text" class="field-input" id="inpSchoolName" value="Green Berg International School">
+        <input type="text" class="field-input" id="inpSchoolName" placeholder="e.g. Green Berg International School">
       </div>
       <div class="field-row">
         <div class="field-group">
@@ -2203,7 +2289,7 @@ function renderDynamicForm(tabKey){
       </div>
       <div class="field-group">
         <label class="field-label">Topic / Concept Focus</label>
-        <input type="text" class="field-input" id="inpTopicName" placeholder="e.g. Linear Equations in One Variable" value="Linear Equations in One Variable" required>
+        <input type="text" class="field-input" id="inpTopicName" placeholder="e.g. Linear Equations in One Variable" required>
       </div>
 
       <div class="form-section-title">2. Differentiation & Format</div>
@@ -2253,7 +2339,7 @@ function renderDynamicForm(tabKey){
       <div class="form-section-title">1. Presentation Topic</div>
       <div class="field-group">
         <label class="field-label">Topic / Chapter Title</label>
-        <input type="text" class="field-input" id="inpTopicName" placeholder="e.g. Photosynthesis & Cellular Respiration" value="Photosynthesis & Cellular Respiration" required>
+        <input type="text" class="field-input" id="inpTopicName" placeholder="e.g. Photosynthesis & Cellular Respiration" required>
       </div>
       <div class="field-row">
         <div class="field-group">
@@ -2287,8 +2373,8 @@ function renderDynamicForm(tabKey){
           <option value="5">5 Slides (Quick 15-Min Concept Starter)</option>
           <option value="8" selected>8 Slides (Standard 40-Min Classroom Period)</option>
           <option value="12">12 Slides (In-Depth Chapter Topic with Diagrams)</option>
-          <option value="18">18 Slides (Double Period Comprehensive Module)</option>
-          <option value="25">25 Slides (Complete Chapter Masterclass Unit)</option>
+          <option value="16">16 Slides (Double Period Module)</option>
+          <option value="20">20 Slides (Complete Chapter Unit)</option>
         </select>
       </div>
       <div class="field-row">
@@ -2354,7 +2440,7 @@ function renderDynamicForm(tabKey){
       </div>
       <div class="field-group">
         <label class="field-label">Topic / Chapter Name</label>
-        <input type="text" class="field-input" id="inpTopicName" placeholder="e.g. Light: Reflection and Refraction" value="Light: Reflection and Refraction" required>
+        <input type="text" class="field-input" id="inpTopicName" placeholder="e.g. Light: Reflection and Refraction" required>
       </div>
 
       <div class="form-section-title">2. Framework & Timeline</div>
@@ -2426,7 +2512,7 @@ function renderDynamicForm(tabKey){
       </div>
       <div class="field-group">
         <label class="field-label">Complex Concept to Explain</label>
-        <input type="text" class="field-input" id="inpTopicName" placeholder="e.g. Electricity & Electric Circuits" value="Electricity & Electric Circuits" required>
+        <input type="text" class="field-input" id="inpTopicName" placeholder="e.g. Electricity & Electric Circuits" required>
       </div>
 
       <div class="form-section-title">2. Pedagogical Aid Options</div>
@@ -2498,13 +2584,28 @@ function previewLogo(input, slot){
 }
 
 // Page Density Handler
-function applyPageDensity(mode){
+// Page-fitting. Previously only 'compact' was implemented (and it was hardcoded in the HTML),
+// so an 80-mark paper was always squeezed onto one page. All three modes now work, and the
+// mode is auto-chosen from the paper size unless the teacher picks one themselves.
+let densityTouched = false;
+
+function applyPageDensity(mode, auto){
   const sheet = document.getElementById('renderedPaperSheet');
   if(!sheet) return;
-  sheet.classList.remove('density-compact');
-  if(mode === 'compact'){
-    sheet.classList.add('density-compact');
-  }
+  if(!auto) densityTouched = true;              // teacher chose explicitly → stop auto-picking
+  sheet.classList.remove('density-compact','density-standard','density-booklet');
+  const m = mode || 'standard';
+  sheet.classList.add('density-' + m);
+}
+
+// Choose a sensible page budget from the paper's total marks.
+function autoApplyDensity(marks){
+  if(densityTouched) return;                    // respect a manual choice
+  const m = Number(marks) || 20;
+  const mode = m <= 25 ? 'compact' : m <= 50 ? 'standard' : 'booklet';
+  const sel = document.getElementById('selectDensity');
+  if(sel) sel.value = mode;
+  applyPageDensity(mode, true);
 }
 
 // Variant Switcher
@@ -2620,6 +2721,7 @@ async function executeGenerate(){
         data = normalizePaperData(extractJson(raw), P);
       }
       window.lastPaperData = data;
+      autoApplyDensity(data.meta.maxMarks || P.marksNum);   // page budget follows paper size
       renderPaperInto('studentDocContent', renderQuestionPaper(data));
       renderPaperInto('teacherDocContent', renderMarkingScheme(data));
       document.getElementById('renderedPaperSheet').style.display = 'block';
@@ -2890,10 +2992,13 @@ function blueprintToText(bp){
 function buildPaperPrompt(P){
   const isWorksheet = P.tab === 'worksheet';
   const kindWord = isWorksheet ? 'differentiated practice worksheet' : 'formal examination question paper';
-  const system = `You are an elite ${P.board} examination-board paper setter and B.Ed-qualified subject expert.
+  // NOTE: keep this system prompt 100% STATIC (no interpolated values). An identical prefix
+  // lets Groq's prompt caching reuse it, and cached tokens do not count against rate limits.
+  // Board/class/subject specifics go in the user message below.
+  const system = `You are an elite examination-board paper setter and B.Ed-qualified subject expert.
 You output ONE single valid JSON object and NOTHING else — no prose, no markdown fences.
 All mathematics, formulae, units and symbols MUST be written as LaTeX inside single-dollar delimiters, e.g. $3x+5=20$, $H_2O$, $\\frac{1}{2}mv^2$, $\\le$, $\\times$, $90^\\circ$. Never use raw < or > for inequalities — use $\\lt$ / $\\gt$ / $\\le$ / $\\ge$.
-Do NOT use emojis. Write academically and age-appropriately for ${P.grade}.`;
+Do NOT use emojis. Write academically and age-appropriately for the stated class.`;
 
   const schema = `Return exactly this JSON shape:
 {
@@ -3339,17 +3444,50 @@ async function exportPaperPdf(){
   const src = document.getElementById(id);
   if(!src || !src.innerText.trim()){ toast('Generate a document first.','err'); return; }
   toast('Building PDF…');
+
+  // ⚠️ ROOT CAUSE OF THE BLANK PDF: html2pdf clones the target element into its own wrapper
+  // to measure it. An element that is itself out of flow (position:fixed/absolute — the old
+  // code used `position:fixed;left:-9999px`) collapses to ZERO HEIGHT inside that wrapper,
+  // so html2canvas produced a 794x0 canvas → an empty white page.
+  // Fix: the OUTER wrapper is out of flow and clipped (invisible to the user), while the
+  // holder itself stays in NORMAL FLOW so it measures correctly.
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:absolute;left:0;top:0;width:794px;height:0;overflow:hidden;opacity:0;pointer-events:none;';
+  // Carry the active page-density class across so the PDF honours the chosen page budget.
+  const sheet = document.getElementById('renderedPaperSheet');
+  const density = ['density-compact','density-standard','density-booklet']
+    .find(c => sheet && sheet.classList.contains(c)) || 'density-standard';
   const holder = document.createElement('div');
-  holder.style.cssText='position:fixed;left:-9999px;top:0;width:794px;background:#fff;padding:38px 46px;color:#0f172a;';
+  holder.className = 'pdf-render-holder ' + density;
+  holder.style.cssText = 'width:794px;background:#ffffff;padding:40px 46px;color:#0f172a;box-sizing:border-box;'; // 794px = A4 @96dpi
   holder.innerHTML = src.innerHTML;
-  document.body.appendChild(holder);
-  const opt={ margin:[0,0,0,0], filename: docFileName(window.lastPaperData,'pdf'),
-    image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},
-    jsPDF:{unit:'px',format:'a4',orientation:'portrait',hotfixes:['px_scaling']},
-    pagebreak:{mode:['css','legacy'], avoid:'.qp-q'} };
-  try{ await html2pdf().set(opt).from(holder).save(); toast('PDF downloaded.','ok'); }
-  catch(e){ console.error(e); toast('Failed to build PDF.','err'); }
-  finally{ document.body.removeChild(holder); }
+  wrap.appendChild(holder);
+  document.body.appendChild(wrap);
+
+  // Fonts (Sora + KaTeX) must be ready or glyphs render blank//fallback in the canvas.
+  try { if(document.fonts && document.fonts.ready) await document.fonts.ready; } catch(e){}
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+  const opt = {
+    margin: [8, 8, 10, 8],                               // mm — real page margins
+    filename: docFileName(window.lastPaperData, 'pdf'),
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
+    // mm + a4 gives jsPDF correct, predictable pagination. The previous 'px' units were the
+    // reason "compact" produced many pages and "booklet" produced only the last page.
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+    pagebreak: { mode: ['css', 'legacy'], avoid: ['.qp-q', '.qp-sec-bar', 'tr'] }
+  };
+
+  try {
+    await html2pdf().set(opt).from(holder).save();
+    toast('PDF downloaded.', 'ok');
+  } catch(e){
+    console.error(e);
+    toast('Failed to build PDF: ' + (e.message || 'unknown'), 'err');
+  } finally {
+    if(wrap.parentNode) wrap.parentNode.removeChild(wrap);
+  }
 }
 
 /* ── file names & helpers ── */
@@ -3838,7 +3976,8 @@ async function generatePaperFromPhotos(P){
   });
   if(!transcription || transcription.trim().length < 5) throw new Error('Could not read the handwriting clearly. Try a sharper, well-lit photo.');
   if(loadMsg) loadMsg.textContent = 'Rebuilding a clean, print-ready paper…';
-  const raw = await groqChat(buildFormatFromOcrPrompt(P, transcription), { temperature:0.2, max_tokens:5500, jsonMode:true });
+  // Reformatting an existing transcription is a simple job → cheap model tier.
+  const raw = await groqChat(buildFormatFromOcrPrompt(P, transcription), { temperature:0.2, max_tokens:5500, jsonMode:true, tier:'cheap' });
   const data = normalizePaperData(extractJson(raw), P);
   data.meta.examTitle = data.meta.examTitle || 'Question Paper';
   data._fromPhotos = true;
@@ -3899,11 +4038,11 @@ function updatePricingUI(){
   document.querySelectorAll('[data-trial-days]').forEach(e => e.textContent = (PRICING.trialDays || 7));
   const priceEl = document.querySelector('.pricing-price');
   if(priceEl){
-    priceEl.innerHTML = `${money(price)} <span style="font-size:0.9rem; font-weight:500; color:#c7d2fe;">/ year</span>` +
-      (offer && PRICING.annual > price ? ` <span style="font-size:0.85rem; text-decoration:line-through; opacity:.55;">${money(PRICING.annual)}</span>` : '');
+    priceEl.innerHTML = `${money(price)} <span class="pro-per">/ year</span>` +
+      (offer && PRICING.annual > price ? ` <span style="font-size:0.9rem; font-weight:500; text-decoration:line-through; opacity:.5;">${money(PRICING.annual)}</span>` : '');
   }
   const payBtn = document.getElementById('btnCashfreePay');
-  if(payBtn) payBtn.innerHTML = `<i data-lucide="shield-check" style="width:16px;height:16px;"></i> Pay ${money(price)} via UPI / Card (Cashfree)`;
+  if(payBtn) payBtn.innerHTML = `Pay ${money(price)} &amp; Activate`;
   if(window.lucide) lucide.createIcons();
 }
 
@@ -3938,8 +4077,71 @@ auth.onAuthStateChanged(async (user) => {
   }
 });
 
+/* ── ADMIN ──────────────────────────────────────────────────────────────
+   Admins (Surya / any @roboden.in staff account flagged as admin) get full
+   access with no trial and no daily cap, plus the Workshop-QR tools. */
+const ADMIN_EMAILS = ['surya@roboden.in', 'roboden.in@gmail.com'];
+function isAdminUser(){
+  const u = auth.currentUser;
+  if(!u || !u.email) return false;
+  const em = u.email.toLowerCase();
+  if(ADMIN_EMAILS.includes(em)) return true;
+  return !!(currentTeacherProfile && currentTeacherProfile.role === 'admin');
+}
+
+function openAdminWorkshopModal(){
+  if(!isAdminUser()){ toast('Admin access only.', 'err'); return; }
+  document.getElementById('adminQrDisplay').style.display = 'none';
+  document.getElementById('adminCreateForm').style.display = 'block';
+  document.getElementById('adminWorkshopModal').classList.add('active');
+}
+
+// Create a single-use-per-teacher workshop pass and show its QR / join link.
+async function createLiveWorkshopPass(){
+  if(!isAdminUser()){ toast('Admin access only.', 'err'); return; }
+  const school = (document.getElementById('adminWsSchool')?.value || '').trim();
+  const capacity = Number(document.getElementById('adminWsCapacity')?.value || 30);
+  let code = (document.getElementById('adminWsCode')?.value || '').trim().toUpperCase();
+  if(!school){ toast('Enter the school / workshop name.', 'err'); return; }
+  if(!code){
+    const initials = school.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0,5);
+    code = `${initials}_${new Date().getFullYear()}_${Math.floor(100 + Math.random()*900)}`;
+  }
+  try {
+    const snap = await db.ref('workshop_passes/' + code).once('value');
+    if(snap.exists()){ toast('That code already exists — pick another.', 'err'); return; }
+    await db.ref('workshop_passes/' + code).set({
+      schoolName: school, capacity, durationDays: 365, redeemedCount: 0,
+      status: 'active', createdBy: auth.currentUser.email, createdAt: Date.now()
+    });
+    const joinUrl = `${location.origin}/teachers?promo=${encodeURIComponent(code)}`;
+    document.getElementById('adminCreateForm').style.display = 'none';
+    document.getElementById('adminQrDisplay').style.display = 'block';
+    document.getElementById('adminQrUrlText').innerText = joinUrl;
+    document.getElementById('adminQrLiveCounter').innerText = `0 / ${capacity} Teachers Activated`;
+    const qrBox = document.getElementById('adminQrCodeContainer');
+    qrBox.innerHTML = '';
+    if(typeof QRCode !== 'undefined') new QRCode(qrBox, { text: joinUrl, width: 200, height: 200 });
+    // live redemption counter
+    db.ref('workshop_passes/' + code + '/redeemedCount').on('value', s => {
+      const el = document.getElementById('adminQrLiveCounter');
+      if(el) el.innerText = `${s.val() || 0} / ${capacity} Teachers Activated`;
+    });
+    toast(`Workshop pass ${code} created.`, 'ok');
+  } catch(e){ console.error(e); toast('Could not create pass: ' + e.message, 'err'); }
+}
+
+// Prefill a promo code arriving from a workshop QR link (?promo=CODE)
+function applyPromoFromUrl(){
+  const c = new URLSearchParams(location.search).get('promo');
+  if(!c) return;
+  const box = document.getElementById('promoCodeInput');
+  if(box){ box.value = c.toUpperCase(); openSubscriptionModal(); toast('Workshop code applied — tap Apply to activate.'); }
+}
+
 function computeAccess(){
   if(!auth.currentUser) return { state: 'signedout' };
+  if(isAdminUser()) return { state: 'admin' };          // no trial, no cap
   const now = Date.now(), ent = currentEntitlement || {};
   if(ent.isPro && ent.proExpiry && ent.proExpiry > now)
     return { state: 'pro', daysLeft: Math.ceil((ent.proExpiry - now) / 86400000) };
@@ -3957,6 +4159,7 @@ function updateAccessUI(){
   if(badge){
     const map = {
       signedout: { t: 'LOG IN', b: 'var(--p)', c: '#fff' },
+      admin:     { t: 'ADMIN', b: '#ea580c', c: '#fff' },
       trial:     { t: `TRIAL · ${currentAccess.daysLeft}d LEFT`, b: '#0f766e', c: '#fff' },
       pro:       { t: 'PRO ACTIVE', b: '#FFC107', c: '#1e293b' },
       expired:   { t: 'UPGRADE NOW', b: '#dc2626', c: '#fff' }
@@ -3964,6 +4167,9 @@ function updateAccessUI(){
     const m = map[currentAccess.state] || map.signedout;
     badge.innerText = m.t; badge.style.background = m.b; badge.style.color = m.c;
   }
+  // Admin-only nav button (Create Workshop QR)
+  const adminBtn = document.getElementById('btnAdminWorkshopNav');
+  if(adminBtn) adminBtn.style.display = isAdminUser() ? 'inline-flex' : 'none';
 }
 
 // Gate: returns true if the user may generate; otherwise nudges to log in / upgrade.
@@ -3978,7 +4184,7 @@ function requireAccess(){
 function openProfileModal(){ document.getElementById('authModal')?.classList.add('active'); }
 
 /* ── Per-teacher daily generation cap (protects shared Groq credits) ── */
-function dailyCap(){ return Number(PRICING.dailyCap) || 15; }
+function dailyCap(){ return Number(PRICING.dailyCap) || 10; }
 function todayKey(){ return new Date().toISOString().slice(0,10); }
 function dailyCount(){
   const u = currentTeacherProfile && currentTeacherProfile.usage;
@@ -3986,6 +4192,7 @@ function dailyCount(){
 }
 function checkDailyCap(){
   if(!auth.currentUser) return true;           // signed-out is handled by requireAccess
+  if(isAdminUser()) return true;               // admins are uncapped
   if(dailyCount() >= dailyCap()){
     toast(`Daily limit reached (${dailyCap()} generations/day). Please continue tomorrow.`, 'err');
     return false;
@@ -3998,13 +4205,27 @@ async function bumpDailyUsage(){
   catch(e){ /* non-fatal */ }
 }
 
+function isMobileDevice(){
+  return /Android|iPhone|iPad|iPod|Mobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+}
+
 async function signInWithGoogle(){
+  const provider = new firebase.auth.GoogleAuthProvider();
+  // Mobile browsers routinely block/kill auth popups → use a full-page redirect there.
+  if(isMobileDevice()){
+    try { sessionStorage.setItem('rob_gsi','1'); await auth.signInWithRedirect(provider); return; }
+    catch(e){ console.warn('redirect sign-in failed, falling back to popup', e); }
+  }
   try {
-    const res = await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    const res = await auth.signInWithPopup(provider);
     closeModals();
     toast(`Welcome, ${res.user.displayName || 'teacher'}!`, 'ok');
   } catch(e){
     console.error(e);
+    // Popup blocked on desktop too → retry as a redirect instead of dead-ending.
+    if(e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request'){
+      try { sessionStorage.setItem('rob_gsi','1'); await auth.signInWithRedirect(provider); return; } catch(_){}
+    }
     // Same email already registered with a password → guide them to link (see Firebase
     // console setting "Link accounts that use the same email" for automatic linking).
     if(e.code === 'auth/account-exists-with-different-credential'){
