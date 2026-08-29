@@ -502,6 +502,9 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
 /* keep questions from splitting across printed/PDF pages */
 .qp-q, .qp-sec-bar{ break-inside:avoid; page-break-inside:avoid; }
 .pdf-render-holder .qp-q{ break-inside:avoid; page-break-inside:avoid; }
+.pdf-render-holder{ overflow:hidden; }
+.pdf-render-holder .qp-doc, .pdf-render-holder .qp-doc *{ max-width:100%; }
+.pdf-render-holder .katex-display{ overflow:hidden; }
 
 /* Word Document Header Layout */
 .docx-header-box{
@@ -1157,9 +1160,9 @@ footer{
    STRUCTURED QUESTION-PAPER ENGINE  (.qp-*)  — preview == DOCX == PDF
    ════════════════════════════════════════════════════════════════ */
 .qp-doc{
-  font-family:'Sora',system-ui,sans-serif;
-  color:#0f172a; font-size:14.5px; line-height:1.5;
-  --qp-ink:#0f172a; --qp-rule:#0f172a; --qp-soft:#475569;
+  font-family:'Times New Roman', Georgia, serif;
+  color:#000; font-size:14.5px; line-height:1.45;
+  --qp-ink:#000; --qp-rule:#000; --qp-soft:#000;
 }
 .qp-doc *{ box-sizing:border-box; }
 
@@ -1176,17 +1179,17 @@ footer{
 .qp-metabar .qp-name{ font-weight:600; color:var(--qp-soft); flex:1; text-align:center; }
 
 /* General instructions */
-.qp-gi{ border:1px solid #cbd5e1; border-radius:8px; padding:12px 16px; margin:0 0 16px; background:#f8fafc; }
-.qp-gi-title{ font-weight:800; font-size:13.5px; margin-bottom:6px; text-transform:uppercase; letter-spacing:.03em; }
+.qp-gi{ margin:0 0 16px; }
+.qp-gi-title{ font-weight:700; font-size:13px; margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em; color:#000; }
 .qp-gi ol{ margin:0; padding-left:20px; }
-.qp-gi li{ font-size:13px; color:#334155; margin-bottom:3px; }
+.qp-gi li{ font-size:12.5px; color:#000; margin-bottom:2px; }
 
 /* Section bar */
 .qp-section{ margin-bottom:18px; }
-.qp-sec-bar{ display:flex; align-items:baseline; gap:12px; background:#eef2ff; border-left:4px solid var(--p,#6d28d9);
-  padding:7px 14px; border-radius:4px; margin:18px 0 12px; }
-.qp-sec-name{ font-weight:800; font-size:15px; text-transform:uppercase; letter-spacing:.04em; color:#3730a3; }
-.qp-sec-note{ font-size:12.5px; color:var(--qp-soft); font-weight:600; }
+.qp-sec-bar{ display:flex; align-items:baseline; justify-content:center; gap:10px; text-align:center;
+  border-top:1px solid #000; border-bottom:1px solid #000; padding:5px 0; margin:20px 0 12px; }
+.qp-sec-name{ font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:.06em; color:#000; }
+.qp-sec-note{ font-size:12.5px; color:#000; font-weight:400; }
 
 /* Question row */
 .qp-q{ margin:0 0 13px; page-break-inside:avoid; break-inside:avoid; }
@@ -1194,8 +1197,8 @@ footer{
 .qp-q-num{ font-weight:700; }
 .qp-q-body{ min-width:0; }
 .qp-q-text{ }
-.qp-q-marks{ font-weight:700; color:var(--qp-soft); white-space:nowrap; font-size:13px; }
-.qp-or{ text-align:center; font-weight:800; font-size:12.5px; color:#3730a3; letter-spacing:.1em; margin:7px 0; }
+.qp-q-marks{ font-weight:400; color:#000; white-space:nowrap; font-size:13px; }
+.qp-or{ text-align:center; font-weight:700; font-size:12.5px; color:#000; letter-spacing:.12em; margin:6px 0; }
 
 /* MCQ options */
 .qp-opts{ display:grid; grid-template-columns:1fr 1fr; gap:4px 24px; margin:6px 0 0; }
@@ -1213,8 +1216,7 @@ footer{
 .qp-part-lbl{ font-weight:600; }
 
 /* Case study intro block */
-.qp-case-intro{ border-left:3px solid #cbd5e1; padding:6px 12px; margin:4px 0 8px; background:#f8fafc;
-  font-size:13.5px; color:#334155; border-radius:0 6px 6px 0; }
+.qp-case-intro{ padding:4px 0 6px; margin:2px 0 6px; font-size:13.5px; color:#000; font-style:italic; }
 
 /* Ruled answer lines */
 .qp-lines{ margin:8px 0 2px; }
@@ -2501,7 +2503,7 @@ function renderDynamicForm(tabKey){
         <div class="field-row">
           <div class="field-group">
             <label class="field-label">Subject</label>
-            <select class="field-select" id="selectSubject">
+            <select class="field-select" id="selectSubject" onchange="syncLanguageField()">
               <option value="Artificial Intelligence / Robotics" selected>Artificial Intelligence &amp; Robotics</option>
               <option value="Science (Physics/Chemistry/Biology)">Science (Physics / Chem / Bio)</option>
               <option value="Mathematics">Mathematics</option>
@@ -2512,8 +2514,8 @@ function renderDynamicForm(tabKey){
               <option value="Regional Language (Kannada/Telugu/Tamil)">Regional Language</option>
             </select>
           </div>
-          <div class="field-group">
-            <label class="field-label">Paper Language</label>
+          <div class="field-group" id="langField" style="display:none;">
+            <label class="field-label">Paper Language <span class="fl-hint">language papers only</span></label>
             <select class="field-select" id="selectLanguage">
               <option value="en" selected>English</option>
               <option value="te">Telugu</option>
@@ -3142,15 +3144,7 @@ async function executeGenerate(){
   const plan = planRoute(routeCtx);
   const trace = newTrace(routeCtx, plan);
   console.info(`[route] ${plan.reason} → intended ${plan.intended} (${plan.reasoningEffort} reasoning)`);
-  // O4 — live routing trace, visible to admins while the paper generates.
-  if(isAdminUser()){
-    const sub = document.getElementById('loadingSub');
-    if(sub) sub.innerHTML =
-      `<span style="font-family:var(--mono);font-size:0.74rem;">` +
-      `route: ${esc(plan.reason)}<br>→ ${esc(plan.intended || 'none')} · ${plan.reasoningEffort} reasoning` +
-      (plan.degraded ? `<br><span style="color:#b45309;">degraded — ideal ${esc(plan.ideal)} unavailable</span>` : '') +
-      `</span>`;
-  }
+  // Routing internals stay in the console/AI Monitor — never on screen for the user.
 
   document.getElementById('emptyView').style.display = 'none';
   document.getElementById('renderedPaperSheet').style.display = 'none';
@@ -3195,6 +3189,29 @@ async function executeGenerate(){
       } else {
         const raw = await groqChat(buildPaperPrompt(P), { temperature:0.22, max_tokens:5500, jsonMode:true, plan, trace });
         data = normalizePaperData(extractJson(raw), P);
+
+        // Marks MUST equal the target. If the model drifts, silently correct it — a teacher
+        // should never be told "72 of 80, regenerate". One retry with an explicit correction,
+        // then fall back to making the header consistent with the questions actually produced.
+        if(Math.abs((data.computedTotal||0) - P.marksNum) > 0.5){
+          trace.marksRetry = data.computedTotal;
+          const fix = buildPaperPrompt(P);
+          fix.push({ role:'assistant', content:'(previous attempt totalled ' + data.computedTotal + ' marks)' });
+          fix.push({ role:'user', content:
+            `That paper totalled ${data.computedTotal} marks but MUST total exactly ${P.marksNum}. ` +
+            `Regenerate the complete JSON with the section question counts adjusted so the marks sum to exactly ${P.marksNum}. ` +
+            `Do not change the section structure. Output ONLY the JSON object.` });
+          try {
+            const raw2 = await groqChat(fix, { temperature:0.15, max_tokens:5500, jsonMode:true, plan, trace });
+            const data2 = normalizePaperData(extractJson(raw2), P);
+            if(Math.abs((data2.computedTotal||0) - P.marksNum) < Math.abs((data.computedTotal||0) - P.marksNum)) data = data2;
+          } catch(e){ console.warn('[marks] retry failed:', e.message); }
+        }
+        // Last resort: keep the paper internally consistent rather than contradictory.
+        if(Math.abs((data.computedTotal||0) - P.marksNum) > 0.5){
+          trace.marksFinal = data.computedTotal;
+          data.meta.maxMarks = data.computedTotal;
+        }
       }
       window.lastPaperData = data;
       autoApplyDensity(data.meta.maxMarks || P.marksNum);   // page budget follows paper size
@@ -3205,9 +3222,6 @@ async function executeGenerate(){
       document.getElementById('btnPptAction').style.display = 'none';
       setDocVariant('student');
       typesetMath();
-      if(data.computedTotal && Math.abs(data.computedTotal - (data.meta.maxMarks||P.marksNum)) > 0.5){
-        toast(`Note: generated total is ${data.computedTotal} marks (target ${data.meta.maxMarks}). Regenerate if needed.`);
-      }
     }
     document.getElementById('loadingView').style.display = 'none';
     document.getElementById('toolActionsBar').style.display = 'flex';
@@ -3399,10 +3413,14 @@ function gradeBand(grade){
   return 'senior';                     // 11–12
 }
 
-const LANGUAGES_COMMON = [
-  'English Language & Literature', 'Hindi', 'Sanskrit',
-  'Telugu', 'Kannada', 'Tamil', 'Malayalam'
-];
+const LANGUAGES_COMMON = ['Hindi', 'Sanskrit', 'Telugu', 'Kannada', 'Tamil', 'Malayalam'];
+// Each board names its English paper differently — use the board's own terminology.
+function englishSubjectsFor(b, band){
+  if(b.startsWith('ICSE') && band === 'secondary') return ['English Language (Paper 1)', 'English Literature (Paper 2)'];
+  if(b.startsWith('CBSE'))  return ['English Language & Literature'];
+  if(b.startsWith('IGCSE')) return ['English First Language', 'English Literature'];
+  return ['English'];                       // State boards: plain "English"
+}
 
 function subjectsFor(board, grade){
   const band = gradeBand(grade);
@@ -3414,12 +3432,9 @@ function subjectsFor(board, grade){
   const out = [];
 
   // ── Languages (every band) ──
-  const langs = band === 'foundational'
-    ? ['English Language & Literature', 'Hindi', 'Telugu', 'Kannada', 'Tamil', 'Malayalam']
-    : LANGUAGES_COMMON.slice();
-  if(isICSE && band === 'secondary'){
-    langs.splice(0, 1, 'English Language (Paper 1)', 'English Literature (Paper 2)');
-  }
+  const langs = englishSubjectsFor(b, band).concat(
+    band === 'foundational' ? ['Hindi', 'Telugu', 'Kannada', 'Tamil', 'Malayalam'] : LANGUAGES_COMMON
+  );
   langs.forEach(s => out.push({ v:s, g:'Languages' }));
 
   // ── Core ──
@@ -3471,6 +3486,19 @@ function subjectsFor(board, grade){
   return out;
 }
 
+// Papers are written in English unless the subject itself is a language, so the language
+// picker only appears for language subjects — and defaults to that language.
+const LANG_CODE_BY_SUBJECT = { telugu:'te', kannada:'kn', tamil:'ta', malayalam:'ml', hindi:'hi', sanskrit:'hi' };
+function syncLanguageField(){
+  const subj = (document.getElementById('selectSubject')?.value || '').toLowerCase();
+  const field = document.getElementById('langField');
+  const sel = document.getElementById('selectLanguage');
+  const hit = Object.keys(LANG_CODE_BY_SUBJECT).find(k => subj.includes(k));
+  const isLang = !!hit || /english|language|literature/.test(subj);
+  if(field) field.style.display = isLang ? 'block' : 'none';
+  if(sel) sel.value = hit ? LANG_CODE_BY_SUBJECT[hit] : 'en';   // non-language papers are always English
+}
+
 // Rebuild #selectSubject whenever board or grade changes, keeping the current pick if valid.
 function refreshSubjectOptions(){
   const sel = document.getElementById('selectSubject');
@@ -3487,6 +3515,7 @@ function refreshSubjectOptions(){
   ).join('');
   // keep the teacher's choice when it still exists for the new board/grade
   if(prev && list.some(s => s.v === prev)) sel.value = prev;
+  syncLanguageField();
 }
 
 /* ── QUESTION PAPER WIZARD ──────────────────────────────────────────────
@@ -3706,7 +3735,7 @@ Do NOT use emojis. Write academically and age-appropriately for the stated class
 • ${blueprintToText(bp)}
 • The SUM of all question marks (counting each internal OR-group or attempt-any group once) MUST equal exactly ${P.marksNum}.
 • For MCQ give exactly 4 options; put the correct option text/letter in "answer".
-• For short/long/numeric set "answerSpaceLines" (objective:0, short:2, long:4-6). Keep compact if page budget is "${P.density}".
+• Do NOT include ruled answer space — students write in a separate answer booklet.
 • TEACHER ANSWER KEY: every question must include "answer", a brief "solution" (value points / steps), and a "bloom" level. ${boardMarkingRules(P.board)}
 Output ONLY the JSON object.`;
 
@@ -3787,7 +3816,6 @@ function renderQuestionPaper(data){
       </div>
       <div class="qp-metabar">
         <span>Time: ${esc(m.durationLabel)}</span>
-        <span class="qp-name">Name: __________________________ &nbsp; Roll No: ________</span>
         <span>Max. Marks: ${esc(String(m.maxMarks))}</span>
       </div>
     </div>`;
@@ -3847,10 +3875,7 @@ function renderQuestion(q){
     ).join('') + `</div>`;
   }
 
-  const lines = Number(q.answerSpaceLines)||0;
-  if(lines > 0){
-    body += `<div class="qp-lines">` + Array.from({length:lines}).map(()=>`<div class="qp-line"></div>`).join('') + `</div>`;
-  }
+  // Students answer in a separate booklet — a printed exam paper carries no ruled space.
 
   let html = `<div class="qp-q"><div class="qp-q-main">
     <span class="qp-q-num">${esc(num)}</span>
@@ -3862,8 +3887,6 @@ function renderQuestion(q){
     html += `<div class="qp-or">OR</div>`;
     html += `<div class="qp-q-main"><span class="qp-q-num"></span><div class="qp-q-body">`;
     html += `<div class="qp-q-text">${esc(q.orChoice.text||'')}</div>`;
-    const oc = Number(q.orChoice.answerSpaceLines)||lines;
-    if(oc>0) html += `<div class="qp-lines">`+Array.from({length:oc}).map(()=>`<div class="qp-line"></div>`).join('')+`</div>`;
     html += `</div>${q.orChoice.marks!=null?`<span class="qp-q-marks">[${q.orChoice.marks}]</span>`:''}</div>`;
   }
 
@@ -3973,7 +3996,6 @@ function docxPaper(data, variant){
     spacing:{before:60,after:40}, border:{bottom:{style:D.BorderStyle.SINGLE,size:10,color:'000000',space:6}},
     children:[ run(`Time: ${m.durationLabel}`,{bold:true,size:20}), run('\t'), run(`Max. Marks: ${m.maxMarks}`,{bold:true,size:20}) ]
   }));
-  P.push(make({ spacing:{before:80}, children:[run('Name: ______________________________     Roll No: __________',{size:20})] }));
 
   if((data.generalInstructions||[]).length){
     P.push(make({ spacing:{before:160,after:40}, children:[run('General Instructions:',{bold:true,size:20})] }));
@@ -4029,16 +4051,11 @@ function docxQuestion(P, q, variant){
     children:[ run(`${p.label||''} `,{bold:true,size:20}), run(p.text||'',{size:20}), run('\t'), run(p.marks!=null?`[${p.marks}]`:'',{size:19,color:'475569'}) ]
   })));
 
-  const lines = Number(q.answerSpaceLines)||0;
-  for(let i=0;i<lines;i++) P.push(make({ spacing:{after:60}, indent:{left:300},
-    border:{bottom:{style:D.BorderStyle.SINGLE,size:6,color:'94A3B8',space:2}}, children:[run('',{size:20})] }));
 
   if(q.orChoice){
     P.push(make({ alignment:D.AlignmentType.CENTER, spacing:{before:20,after:20}, children:[run('OR',{bold:true,size:19,color:'3730A3'})] }));
     P.push(make({ tabStops:[{type:D.TabStopType.RIGHT, position:DOCX_RIGHT_TAB}], indent:{left:300,hanging:300}, spacing:{after:20},
       children:[ run(q.orChoice.text||'',{size:21}), run('\t'), run(q.orChoice.marks!=null?`[${q.orChoice.marks}]`:'',{bold:true,size:20,color:'475569'}) ]}));
-    const oc = Number(q.orChoice.answerSpaceLines)||lines;
-    for(let i=0;i<oc;i++) P.push(make({ spacing:{after:60}, indent:{left:300}, border:{bottom:{style:D.BorderStyle.SINGLE,size:6,color:'94A3B8',space:2}}, children:[run('',{size:20})] }));
   }
 
   // Teacher key inline
@@ -4126,7 +4143,7 @@ async function exportPaperPdf(){
     .find(c => sheet && sheet.classList.contains(c)) || 'density-standard';
   const holder = document.createElement('div');
   holder.className = 'pdf-render-holder ' + density;
-  holder.style.cssText = 'width:794px;background:#ffffff;padding:40px 46px;color:#0f172a;box-sizing:border-box;'; // 794px = A4 @96dpi
+  holder.style.cssText = 'width:794px;background:#ffffff;padding:36px 40px;color:#000;box-sizing:border-box;overflow:hidden;'; // 794px = A4 @96dpi
   holder.innerHTML = src.innerHTML;
   wrap.appendChild(holder);
   document.body.appendChild(wrap);
@@ -4139,7 +4156,8 @@ async function exportPaperPdf(){
     margin: [8, 8, 10, 8],                               // mm — real page margins
     filename: docFileName(window.lastPaperData, 'pdf'),
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
+                   width: 794, windowWidth: 794, scrollX: 0, scrollY: 0 },
     // mm + a4 gives jsPDF correct, predictable pagination. The previous 'px' units were the
     // reason "compact" produced many pages and "booklet" produced only the last page.
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
