@@ -463,7 +463,7 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
   width:100%;
   box-shadow:0 10px 32px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
   min-height:1080px;
-  font-family:'Calibri', 'Times New Roman', 'Segoe UI', serif;
+  font-family:'Times New Roman', Georgia, serif;
   color:#0f172a;
   line-height:1.55;
   font-size:10.5pt;
@@ -535,7 +535,7 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
   text-transform:uppercase;
   letter-spacing:0.03em;
   color:#0f172a;
-  font-family:'Calibri', 'Segoe UI', sans-serif;
+  font-family:'Times New Roman', Georgia, serif;
   margin-bottom:2px;
 }
 .docx-school-sub{
@@ -560,7 +560,7 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
   border-collapse:collapse;
   margin:10px 0 16px;
   font-size:9.5pt;
-  font-family:'Calibri', 'Segoe UI', sans-serif;
+  font-family:'Times New Roman', Georgia, serif;
 }
 .docx-meta-table td{
   border:1px solid #94a3b8;
@@ -578,7 +578,7 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
   border-bottom:1px solid #e2e8f0;
   padding:6px 12px;
   margin:16px 0 10px;
-  font-family:'Calibri', 'Segoe UI', sans-serif;
+  font-family:'Times New Roman', Georgia, serif;
   font-size:9.8pt;
   font-weight:800;
   color:#0f172a;
@@ -632,7 +632,7 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
   border-collapse:collapse;
   margin:12px 0 16px;
   font-size:9.2pt;
-  font-family:'Calibri', 'Segoe UI', sans-serif;
+  font-family:'Times New Roman', Georgia, serif;
 }
 .docx-table th, .docx-table td{
   border:1px solid #94a3b8;
@@ -2503,7 +2503,7 @@ function renderDynamicForm(tabKey){
         <div class="field-row">
           <div class="field-group">
             <label class="field-label">Subject</label>
-            <select class="field-select" id="selectSubject" onchange="syncLanguageField()">
+            <select class="field-select" id="selectSubject">
               <option value="Artificial Intelligence / Robotics" selected>Artificial Intelligence &amp; Robotics</option>
               <option value="Science (Physics/Chemistry/Biology)">Science (Physics / Chem / Bio)</option>
               <option value="Mathematics">Mathematics</option>
@@ -2514,18 +2514,7 @@ function renderDynamicForm(tabKey){
               <option value="Regional Language (Kannada/Telugu/Tamil)">Regional Language</option>
             </select>
           </div>
-          <div class="field-group" id="langField" style="display:none;">
-            <label class="field-label">Paper Language <span class="fl-hint">language papers only</span></label>
-            <select class="field-select" id="selectLanguage">
-              <option value="en" selected>English</option>
-              <option value="te">Telugu</option>
-              <option value="kn">Kannada</option>
-              <option value="ta">Tamil</option>
-              <option value="ml">Malayalam</option>
-              <option value="hi">Hindi</option>
-            </select>
           </div>
-        </div>
         <div class="field-group">
           <label class="field-label">Chapter(s) / Topic(s) <span class="fl-hint">separate multiple with commas</span></label>
           <input type="text" class="field-input" id="inpTopicName" placeholder="e.g. Linear Equations, Triangles, Statistics" required>
@@ -3135,7 +3124,7 @@ async function executeGenerate(){
 
   const routeCtx = {
     tool: usingPhotos ? 'ocr' : currentTabKey,
-    language: (document.getElementById('selectLanguage')?.value || 'en').toLowerCase(),
+    language: languageForSubject(P.subject),   // inferred — never asked of the teacher
     subjectGroup: P.subjectGroup,
     // Formatting the teacher's own questions is a light job → cheap tier.
     tier: (currentTabKey === 'question_paper' && paperSrc === 'custom' && !hasPhotos) ? 'cheap' : 'smart',
@@ -3190,27 +3179,13 @@ async function executeGenerate(){
         const raw = await groqChat(buildPaperPrompt(P), { temperature:0.22, max_tokens:5500, jsonMode:true, plan, trace });
         data = normalizePaperData(extractJson(raw), P);
 
-        // Marks MUST equal the target. If the model drifts, silently correct it — a teacher
-        // should never be told "72 of 80, regenerate". One retry with an explicit correction,
-        // then fall back to making the header consistent with the questions actually produced.
+        // Marks are made exact IN CODE (no second AI call): we asked for a surplus of
+        // questions, so trimming each section to its blueprint count lands the total
+        // precisely on target. Only if a section came back short do we align the header.
+        enforceBlueprint(data, getBlueprint(P));
         if(Math.abs((data.computedTotal||0) - P.marksNum) > 0.5){
-          trace.marksRetry = data.computedTotal;
-          const fix = buildPaperPrompt(P);
-          fix.push({ role:'assistant', content:'(previous attempt totalled ' + data.computedTotal + ' marks)' });
-          fix.push({ role:'user', content:
-            `That paper totalled ${data.computedTotal} marks but MUST total exactly ${P.marksNum}. ` +
-            `Regenerate the complete JSON with the section question counts adjusted so the marks sum to exactly ${P.marksNum}. ` +
-            `Do not change the section structure. Output ONLY the JSON object.` });
-          try {
-            const raw2 = await groqChat(fix, { temperature:0.15, max_tokens:5500, jsonMode:true, plan, trace });
-            const data2 = normalizePaperData(extractJson(raw2), P);
-            if(Math.abs((data2.computedTotal||0) - P.marksNum) < Math.abs((data.computedTotal||0) - P.marksNum)) data = data2;
-          } catch(e){ console.warn('[marks] retry failed:', e.message); }
-        }
-        // Last resort: keep the paper internally consistent rather than contradictory.
-        if(Math.abs((data.computedTotal||0) - P.marksNum) > 0.5){
-          trace.marksFinal = data.computedTotal;
-          data.meta.maxMarks = data.computedTotal;
+          trace.marksShort = data.computedTotal;      // recorded for the AI Monitor only
+          data.meta.maxMarks = data.computedTotal;    // never print a self-contradictory paper
         }
       }
       window.lastPaperData = data;
@@ -3489,14 +3464,10 @@ function subjectsFor(board, grade){
 // Papers are written in English unless the subject itself is a language, so the language
 // picker only appears for language subjects — and defaults to that language.
 const LANG_CODE_BY_SUBJECT = { telugu:'te', kannada:'kn', tamil:'ta', malayalam:'ml', hindi:'hi', sanskrit:'hi' };
-function syncLanguageField(){
-  const subj = (document.getElementById('selectSubject')?.value || '').toLowerCase();
-  const field = document.getElementById('langField');
-  const sel = document.getElementById('selectLanguage');
-  const hit = Object.keys(LANG_CODE_BY_SUBJECT).find(k => subj.includes(k));
-  const isLang = !!hit || /english|language|literature/.test(subj);
-  if(field) field.style.display = isLang ? 'block' : 'none';
-  if(sel) sel.value = hit ? LANG_CODE_BY_SUBJECT[hit] : 'en';   // non-language papers are always English
+function languageForSubject(subject){
+  const s = (subject || '').toLowerCase();
+  const hit = Object.keys(LANG_CODE_BY_SUBJECT).find(k => s.includes(k));
+  return hit ? LANG_CODE_BY_SUBJECT[hit] : 'en';   // every non-language paper is in English
 }
 
 // Rebuild #selectSubject whenever board or grade changes, keeping the current pick if valid.
@@ -3515,7 +3486,6 @@ function refreshSubjectOptions(){
   ).join('');
   // keep the teacher's choice when it still exists for the new board/grade
   if(prev && list.some(s => s.v === prev)) sel.value = prev;
-  syncLanguageField();
 }
 
 /* ── QUESTION PAPER WIZARD ──────────────────────────────────────────────
@@ -3673,15 +3643,18 @@ function getBlueprint(P){
 // Human-readable blueprint the prompt hands to gpt (the "hard structure").
 function blueprintToText(bp){
   const lines = bp.sections.map(s => {
-    const cnt = s.count || '?';
+    // Request a couple of spare questions per section. We trim to the exact count in code,
+    // which makes the total deterministic in ONE call — far cheaper than regenerating.
+    const cnt = s.count ? (s.count + (s.marksEach ? 2 : 0)) : '?';
     const mk = s.marksEach ? ` × ${s.marksEach} mark${s.marksEach>1?'s':''}` : ' (mixed marks)';
     const ch = s.choice==='section' ? ` — student attempts any ${s.attemptCount} of ${cnt}` : s.choice==='internal' ? ' — with internal OR choice' : '';
     return ` • ${s.name}: ${cnt} question${cnt===1?'':'s'}${mk}${ch}. ${s.note}${s.note2 ? ' ('+s.note2+')' : ''}${s.caseParts ? ' Each has '+s.caseParts+'.' : ''}`;
   });
   const header = bp.approx
-    ? `Use approximately this structure (you may adjust question counts, but the marks MUST total exactly ${bp.total}):`
-    : `Follow this EXACT blueprint — do NOT add or drop sections; question counts and marks are fixed:`;
-  return `${header}\n${lines.join('\n')}\nThe section marks MUST sum to exactly ${bp.total}.\n${bp.choiceNote}`;
+    ? `Use approximately this structure:`
+    : `Follow this EXACT blueprint — do NOT add or drop sections:`;
+  return `${header}\n${lines.join('\n')}\n` +
+    `Every question in a section must carry exactly the marks stated for that section.\n${bp.choiceNote}`;
 }
 
 /* ── Build the chat messages for a QUESTION PAPER / WORKSHEET ── */
@@ -3766,6 +3739,25 @@ Use LaTeX in single-dollar delimiters for any math/units. No emojis.`;
 Use a mix of heading/para/bullets/table/callout blocks. Include at least one well-structured table.
 Duration: ${P.duration}. Output ONLY the JSON object.`;
   return [ {role:'system',content:system}, {role:'user',content:schema+'\n\n'+rules} ];
+}
+
+/* Make the paper match the blueprint EXACTLY, in code — no second AI call.
+   Because each section has a fixed question count and marks-per-question, trimming the
+   surplus guarantees the paper totals precisely the requested marks. */
+function enforceBlueprint(data, bp){
+  if(!bp || !Array.isArray(bp.sections) || bp.approx) return data;
+  bp.sections.forEach((spec, i) => {
+    const sec = data.sections[i];
+    if(!sec || !spec.count || !spec.marksEach) return;
+    if(sec.questions.length > spec.count) sec.questions = sec.questions.slice(0, spec.count);
+    sec.questions.forEach(q => { q.marks = spec.marksEach; if(q.orChoice) q.orChoice.marks = spec.marksEach; });
+  });
+  // Drop any extra sections the model invented.
+  if(data.sections.length > bp.sections.length) data.sections = data.sections.slice(0, bp.sections.length);
+  let n = 0;
+  data.sections.forEach(sec => sec.questions.forEach(q => { q.number = ++n; }));
+  data.computedTotal = data.sections.reduce((t,s)=>t + s.questions.reduce((a,q)=>a+(Number(q.marks)||0),0), 0);
+  return data;
 }
 
 /* ── Normalise / guard the parsed paper data ── */
@@ -3966,7 +3958,7 @@ async function exportNativeDocx(){
       ? docxBlocks(data)
       : docxPaper(data, currentVariant);
     const doc = new docx.Document({
-      styles:{ default:{ document:{ run:{ font:'Calibri', size:22 } } } },
+      styles:{ default:{ document:{ run:{ font:'Times New Roman', size:24 } } } },
       sections:[{
         properties:{ page:{ size:{ width:11906, height:16838 }, margin:{ top:900, right:900, bottom:900, left:900 } } },
         children
@@ -4033,11 +4025,13 @@ function docxQuestion(P, q, variant){
   }));
 
   if(q.type==='mcq' && Array.isArray(q.options)){
-    q.options.forEach((o,i)=> P.push(make({ indent:{left:620}, spacing:{after:10},
-      children:[run(`(${'abcd'[i]||i+1}) `,{bold:true,size:20}), run(o,{size:20})] })));
+    // Two options per line (a tab stop makes the second column) — stacking four options
+    // one per line wastes a lot of vertical space in the printed document.
+    docxOptionRows(P, q.options);
   } else if(q.type==='assertion_reason'){
     P.push(make({ indent:{left:620}, spacing:{after:10}, children:[run('Assertion (A): ',{bold:true,size:20}), run(q.assertion||'',{size:20})] }));
     P.push(make({ indent:{left:620}, spacing:{after:10}, children:[run('Reason (R): ',{bold:true,size:20}), run(q.reason||'',{size:20})] }));
+    // Assertion-Reason options are long sentences — keep these one per line.
     ['Both A and R are true and R is the correct explanation of A.',
      'Both A and R are true but R is not the correct explanation of A.',
      'A is true but R is false.','A is false but R is true.'].forEach((o,i)=>
@@ -4065,6 +4059,20 @@ function docxQuestion(P, q, variant){
     if(q.solution) kids.push(run(q.solution,{size:19,color:'334155'}));
     if(q.bloom) kids.push(run(`   [${q.bloom}]`,{size:18,italics:true,color:'6D28D9'}));
     P.push(make({ indent:{left:620}, spacing:{after:40}, children:kids }));
+  }
+}
+
+// MCQ options laid out two per line, second column aligned on a tab stop.
+function docxOptionRows(P, options){
+  const D = docx, make=(o)=>new D.Paragraph(o), run=(t,o)=>new D.TextRun(Object.assign({text:mathText(t)}, o||{}));
+  const HALF = 5200;   // twips — roughly the middle of the printable width
+  for(let i=0; i<options.length; i+=2){
+    const kids = [ run(`(${'abcd'[i]||i+1}) `,{bold:true,size:20}), run(options[i],{size:20}) ];
+    if(options[i+1] !== undefined){
+      kids.push(run('\t'), run(`(${'abcd'[i+1]||i+2}) `,{bold:true,size:20}), run(options[i+1],{size:20}));
+    }
+    P.push(make({ indent:{left:620}, spacing:{after:10},
+      tabStops:[{ type:D.TabStopType.LEFT, position:HALF }], children:kids }));
   }
 }
 
