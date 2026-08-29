@@ -1243,6 +1243,11 @@ footer{
 .qp-key-table td.qp-k-bl{ width:104px; }
 .qp-bloom-pill{ display:inline-block; background:#eef2ff; color:#3730a3; border-radius:999px;
   padding:1px 9px; font-size:11.5px; font-weight:700; }
+.qp-diff-pill{ display:inline-block; border-radius:999px; padding:1px 9px; font-size:11px; font-weight:700;
+  margin-top:3px; text-transform:capitalize; }
+.qp-diff-pill.easy{ background:#dcfce7; color:#166534; }
+.qp-diff-pill.medium{ background:#fef3c7; color:#92400e; }
+.qp-diff-pill.hard{ background:#fee2e2; color:#991b1b; }
 
 /* KaTeX sizing inside paper */
 .qp-doc .katex{ font-size:1.02em; }
@@ -3182,11 +3187,19 @@ async function executeGenerate(){
         // Marks are made exact IN CODE (no second AI call): we asked for a surplus of
         // questions, so trimming each section to its blueprint count lands the total
         // precisely on target. Only if a section came back short do we align the header.
-        enforceBlueprint(data, getBlueprint(P));
+        // Trim the surplus (free). Only if a section is genuinely SHORT do we make one small
+        // top-up call for just the missing questions — never a full regeneration.
+        const bpNow = getBlueprint(P);
+        enforceBlueprint(data, bpNow);
+        if(Math.abs((data.computedTotal||0) - P.marksNum) > 0.5){
+          await topUpSections(data, bpNow, P, plan, trace);
+          enforceBlueprint(data, bpNow);
+        }
         if(Math.abs((data.computedTotal||0) - P.marksNum) > 0.5){
           trace.marksShort = data.computedTotal;      // recorded for the AI Monitor only
           data.meta.maxMarks = data.computedTotal;    // never print a self-contradictory paper
         }
+        Object.assign(trace, auditPaperQuality(data));   // difficulty/cognitive spread → AI Monitor
       }
       window.lastPaperData = data;
       autoApplyDensity(data.meta.maxMarks || P.marksNum);   // page budget follows paper size
@@ -3582,6 +3595,62 @@ function boardMarkingRules(board){
   return 'Use CBSE step-wise positive marking: award marks for every correct step even if the final answer is wrong (e.g. 3-mark sum = formula 1 + substitution 1 + result 1); ignore minor spelling in non-language subjects; give full credit for any valid alternative method.';
 }
 
+/* ── PAPER DESIGN NORMS ─────────────────────────────────────────────────────
+   Boards don't only fix the structure — they fix the *quality mix*. A valid paper
+   must spread difficulty, cognitive level and chapter coverage, not just add up to
+   the right marks. These are the rules real paper-setters follow.
+   ───────────────────────────────────────────────────────────────────────── */
+const DIFFICULTY_MIX = { easy: 20, medium: 60, hard: 20 };   // % of total marks
+
+function paperDesignRules(P, bp){
+  const total = P.marksNum;
+  const pct = p => Math.round(total * p / 100);
+  const chapters = String(P.topic || '').split(',').map(t => t.trim()).filter(Boolean);
+  const isCBSE = P.board.startsWith('CBSE') || P.board === 'State Board';
+
+  const lines = [];
+
+  // 1. Difficulty gradient — every paper must have easy, average and hard questions.
+  lines.push(`DIFFICULTY MIX (by marks, approximately): ` +
+    `Easy ${DIFFICULTY_MIX.easy}% (~${pct(DIFFICULTY_MIX.easy)} marks) · ` +
+    `Average ${DIFFICULTY_MIX.medium}% (~${pct(DIFFICULTY_MIX.medium)} marks) · ` +
+    `Difficult ${DIFFICULTY_MIX.hard}% (~${pct(DIFFICULTY_MIX.hard)} marks). ` +
+    `Tag every question with "difficulty":"easy"|"medium"|"hard". Within each section order questions easiest first.`);
+
+  // 2. Cognitive / competency mix (CBSE 2026 pattern: ~50% competency-based).
+  if(isCBSE){
+    lines.push(`COGNITIVE MIX: about half the paper must be COMPETENCY-BASED — real-life application, ` +
+      `case/source-based, assertion-reason and analytical questions, not recall. Aim for roughly ` +
+      `Remembering+Understanding 40%, Applying 30%, Analysing+Evaluating+Creating 30%. ` +
+      `Set "bloom" on every question accordingly.`);
+  } else {
+    lines.push(`COGNITIVE MIX: mix recall, understanding and application; include some higher-order ` +
+      `analytical questions. Set "bloom" on every question.`);
+  }
+
+  // 3. Syllabus coverage — a paper must not be drawn from one chapter only.
+  if(chapters.length > 1){
+    lines.push(`CHAPTER COVERAGE: distribute questions across ALL ${chapters.length} chapters ` +
+      `(${chapters.join('; ')}) roughly evenly — do not draw most questions from one chapter.`);
+  }
+
+  // 4. No duplication.
+  lines.push(`NO REPETITION: never test the same concept, formula or fact twice, and never repeat a ` +
+    `question stem within the paper (including inside OR-choices).`);
+
+  // 5. Indian context only.
+  lines.push(`INDIAN CONTEXT ONLY: all names, places, currency, products and situations must be Indian. ` +
+    `Use the rupee symbol ₹ for money (never $ or any foreign currency), Indian names (Aarav, Meera, Ravi…), ` +
+    `Indian cities/states, and the metric system. Never use dollars, miles, pounds or foreign settings.`);
+
+  // 6. Command words must match the cognitive level.
+  lines.push(`COMMAND WORDS: match the verb to the level — State/Define/List for recall, ` +
+    `Explain/Describe for understanding, Calculate/Solve/Apply for application, ` +
+    `Analyse/Compare/Justify/Evaluate for higher order.`);
+
+  return lines.join('\n• ');
+}
+
 /* Returns { total, sections:[{name,note,count,marksEach,types,choice,caseParts}], choiceNote } */
 function getBlueprint(P){
   const board = P.board, grp = P.subjectGroup, size = P.examSize, total = P.marksNum;
@@ -3620,24 +3689,28 @@ function getBlueprint(P){
     }
   }
 
-  // ---- SCALED SMALLER PAPERS (10–50): board-style, proportioned & mark-balanced ----
+  // ---- SCALED SMALLER PAPERS (10–50) ----
+  // Allocated so the section marks sum EXACTLY to the total: the 5-mark and 2-mark blocks
+  // are taken first, and the 1-mark objective section absorbs the exact remainder. That
+  // makes the paper total deterministic without any second AI call.
   const secs = [];
   let budget = total, caseSec = null;
-  if(total >= 40){ caseSec = S('Section D','Case-Study Based (4 marks)',1,4,['case'],{caseParts:'sub-parts 1+1+2'}); budget -= 4; }
-  let obj = Math.max(2, Math.round(budget * (size==='quiz'?0.5:0.3)));           // 1-mark objective
-  if(obj > budget) obj = budget;
-  secs.push(S('Section A','Objective Type (1 mark each)', obj, 1, ['mcq','fill','truefalse','assertion_reason']));
-  let rem = budget - obj;
-  let longCount = Math.max(size==='quiz'?0:1, Math.round((rem*0.45)/5));         // 5-mark long
-  let longMk = Math.min(longCount*5, rem); longCount = Math.floor(longMk/5); longMk = longCount*5;
-  let shortMk = rem - longMk;                                                     // rest → short
-  if(shortMk > 0){
-    const per = (shortMk % 3 === 0) ? 3 : 2;
-    secs.push(S('Section B', `Short Answer (${per} marks each)`, Math.max(1,Math.round(shortMk/per)), per, ['short']));
+  if(total >= 40){
+    caseSec = S('Section D','Case-Study Based (4 marks)',1,4,['case'],{caseParts:'sub-parts 1+1+2'});
+    budget -= 4;
   }
-  if(longCount > 0) secs.push(S('Section C','Long Answer (5 marks each)', longCount, 5, ['long'], { choice: P.choicePolicy && P.choicePolicy.includes('OR') ? 'internal':'none' }));
+  const longCount  = size === 'quiz' ? 0 : Math.max(1, Math.floor(budget * 0.30 / 5));   // 5-mark
+  const longMarks  = longCount * 5;
+  const shortCount = Math.floor((budget - longMarks) * 0.5 / 2);                          // 2-mark
+  const shortMarks = shortCount * 2;
+  const objCount   = budget - longMarks - shortMarks;                                     // 1-mark remainder
+
+  if(objCount > 0)  secs.push(S('Section A','Objective Type (1 mark each)', objCount, 1, ['mcq','fill','truefalse','assertion_reason']));
+  if(shortCount > 0) secs.push(S('Section B','Short Answer (2 marks each)', shortCount, 2, ['short']));
+  if(longCount > 0)  secs.push(S('Section C','Long Answer (5 marks each)', longCount, 5, ['long'],
+                       { choice: P.choicePolicy && P.choicePolicy.includes('OR') ? 'internal' : 'none' }));
   if(caseSec) secs.push(caseSec);
-  return { total, sections: secs, choiceNote: P.choicePolicy || 'All questions compulsory.', approx: true };
+  return { total, sections: secs, choiceNote: P.choicePolicy || 'All questions compulsory.' };
 }
 
 // Human-readable blueprint the prompt hands to gpt (the "hard structure").
@@ -3667,7 +3740,11 @@ function buildPaperPrompt(P){
   const system = `You are an elite examination-board paper setter and B.Ed-qualified subject expert.
 You output ONE single valid JSON object and NOTHING else — no prose, no markdown fences.
 All mathematics, formulae, units and symbols MUST be written as LaTeX inside single-dollar delimiters, e.g. $3x+5=20$, $H_2O$, $\\frac{1}{2}mv^2$, $\\le$, $\\times$, $90^\\circ$. Never use raw < or > for inequalities — use $\\lt$ / $\\gt$ / $\\le$ / $\\ge$.
-Do NOT use emojis. Write academically and age-appropriately for the stated class.`;
+Do NOT use emojis. Write academically and age-appropriately for the stated class.
+Every context must be INDIAN: use the rupee symbol ₹ for all money (never $ or any foreign currency),
+Indian names, Indian cities and the metric system. Never use foreign settings or examples.
+Write currency as PLAIN TEXT outside the maths delimiters — e.g. write: the cost is ₹800 and the rate is $12\\%$.
+Never write \\₹ and never place ₹ inside $...$.`;
 
   const schema = `Return exactly this JSON shape:
 {
@@ -3695,7 +3772,8 @@ Do NOT use emojis. Write academically and age-appropriately for the stated class
           "answerSpaceLines": 0,                                      // ruled blank lines to print (0-6)
           "answer": "<correct option letter or crisp answer>",        // teacher key
           "solution": "<worked/value-point solution>",                // teacher key
-          "bloom": "Remembering | Understanding | Applying | Analysing | Evaluating | Creating"
+          "bloom": "Remembering | Understanding | Applying | Analysing | Evaluating | Creating",
+          "difficulty": "easy | medium | hard"
         }
       ]
     }
@@ -3709,6 +3787,7 @@ Do NOT use emojis. Write academically and age-appropriately for the stated class
 • The SUM of all question marks (counting each internal OR-group or attempt-any group once) MUST equal exactly ${P.marksNum}.
 • For MCQ give exactly 4 options; put the correct option text/letter in "answer".
 • Do NOT include ruled answer space — students write in a separate answer booklet.
+• ${paperDesignRules(P, bp)}
 • TEACHER ANSWER KEY: every question must include "answer", a brief "solution" (value points / steps), and a "bloom" level. ${boardMarkingRules(P.board)}
 Output ONLY the JSON object.`;
 
@@ -3741,6 +3820,42 @@ Duration: ${P.duration}. Output ONLY the JSON object.`;
   return [ {role:'system',content:system}, {role:'user',content:schema+'\n\n'+rules} ];
 }
 
+/* If a weaker fallback model under-delivers, ask ONLY for the missing questions.
+   This is not a regeneration: the prompt names just the shortfall and the reply carries
+   only those questions, so it costs a small fraction of a full paper. */
+async function topUpSections(data, bp, P, plan, trace){
+  const missing = [];
+  bp.sections.forEach((spec, i) => {
+    const sec = data.sections[i];
+    if(!spec.count || !spec.marksEach) return;
+    const have = sec ? sec.questions.length : 0;
+    if(have < spec.count) missing.push({ i, name: spec.name, need: spec.count - have, marks: spec.marksEach, note: spec.note });
+  });
+  if(!missing.length) return data;
+  trace.toppedUp = missing.map(m => `${m.name}+${m.need}`).join(',');
+
+  const asked = data.sections.flatMap(s => s.questions.map(q => q.text)).join(' | ');
+  const msgs = [
+    { role:'system', content:'You output ONE valid JSON object only. No prose, no fences. Maths in $…$ LaTeX. Indian context only; money as plain ₹ outside maths.' },
+    { role:'user', content:
+      `For a ${P.board} ${P.grade} ${P.subject} paper on "${P.topic}", write ONLY these additional questions:\n` +
+      missing.map(m => `• ${m.name}: ${m.need} more question(s) of ${m.marks} mark(s) each — ${m.note}`).join('\n') +
+      `\n\nDo NOT repeat any of these existing questions: ${asked.slice(0, 900)}\n` +
+      `Return: {"add":[{"section":"<section name>","text":"...","type":"mcq|short|long","marks":<n>,` +
+      `"options":["..."],"answer":"...","solution":"...","bloom":"...","difficulty":"easy|medium|hard"}]}` }
+  ];
+  try {
+    const raw = await groqChat(msgs, { temperature:0.25, max_tokens:2500, jsonMode:true, plan, trace });
+    const add = extractJson(raw).add || [];
+    add.forEach(q => {
+      const idx = bp.sections.findIndex(sp => sp.name === q.section);
+      const sec = data.sections[idx] || data.sections[bp.sections.findIndex(sp => sp.marksEach === q.marks)];
+      if(sec) sec.questions.push(q);
+    });
+  } catch(e){ console.warn('[topup] failed:', e.message); }
+  return data;
+}
+
 /* Make the paper match the blueprint EXACTLY, in code — no second AI call.
    Because each section has a fixed question count and marks-per-question, trimming the
    surplus guarantees the paper totals precisely the requested marks. */
@@ -3760,8 +3875,48 @@ function enforceBlueprint(data, bp){
   return data;
 }
 
+/* Measure the paper against the design norms (difficulty spread, higher-order share,
+   Indian-context compliance). Recorded on the trace so the AI Monitor shows whether the
+   rules are actually being followed — never surfaced to the teacher. */
+function auditPaperQuality(data){
+  const qs = (data.sections||[]).flatMap(s => s.questions||[]);
+  if(!qs.length) return {};
+  const marksBy = (pred) => qs.filter(pred).reduce((a,q)=>a+(Number(q.marks)||0),0);
+  const total = qs.reduce((a,q)=>a+(Number(q.marks)||0),0) || 1;
+  const pc = n => Math.round(n/total*100);
+  const HOTS = /analys|evaluat|creat/i;
+  // Strip LaTeX maths (delimited by $...$) before looking for a real currency symbol,
+  // otherwise every formula reads as a dollar sign.
+  const foreign = /USD|dollar|£|€|\bmiles?\b|\bpounds?\b/i;
+  const stripMath = t => String(t||'').replace(/\$[^$]*\$/g, '');
+  return {
+    qEasy:   pc(marksBy(q=>q.difficulty==='easy')),
+    qMedium: pc(marksBy(q=>q.difficulty==='medium')),
+    qHard:   pc(marksBy(q=>q.difficulty==='hard')),
+    qHots:   pc(marksBy(q=>HOTS.test(q.bloom||''))),
+    qUntagged: qs.filter(q=>!q.difficulty).length,
+    qForeignRefs: qs.filter(q=>foreign.test(stripMath(q.text))).length
+  };
+}
+
 /* ── Normalise / guard the parsed paper data ── */
+// Models sometimes emit "\₹" (an undefined LaTeX command) or trap ₹ inside $...$, which
+// KaTeX cannot render. Normalise currency back to a plain, printable rupee symbol.
+function fixCurrency(t){
+  if(typeof t !== 'string') return t;
+  return t.replace(/\\+₹/g, '₹')
+          .replace(/\\(?:rupee|textrupee|rs)\b/gi, '₹')
+          .replace(/\$\s*₹\s*([\d,.]+)\s*\$/g, '₹$1')   // $₹800$  → ₹800
+          .replace(/₹\s*\$([\d,.]+)\$/g, '₹$1');          // ₹$800$  → ₹800
+}
+function deepFixCurrency(o){
+  if(Array.isArray(o)) return o.map(deepFixCurrency);
+  if(o && typeof o === 'object'){ Object.keys(o).forEach(k => o[k] = deepFixCurrency(o[k])); return o; }
+  return fixCurrency(o);
+}
+
 function normalizePaperData(data, P){
+  deepFixCurrency(data);
   data.kind = 'paper';
   data.meta = data.meta || {};
   data.meta.school = P.school;
@@ -3899,7 +4054,7 @@ function renderMarkingScheme(data){
   data.sections.forEach(sec => {
     html += `<div class="qp-key-sec">${esc(sec.name||'Section')}</div>`;
     html += `<table class="qp-key-table"><thead><tr>
-      <th class="qp-k-no">Q.No</th><th>Answer &amp; Value Points</th><th class="qp-k-mk">Marks</th><th class="qp-k-bl">Bloom</th>
+      <th class="qp-k-no">Q.No</th><th>Answer &amp; Value Points</th><th class="qp-k-mk">Marks</th><th class="qp-k-bl">Level</th>
     </tr></thead><tbody>`;
     sec.questions.forEach(q => {
       const ans = [q.answer ? `<b>Ans:</b> ${esc(q.answer)}` : '', q.solution ? `<div>${esc(q.solution)}</div>` : '']
@@ -3908,7 +4063,7 @@ function renderMarkingScheme(data){
         <td class="qp-k-no">${esc(q.number!=null?q.number:'')}</td>
         <td>${ans || '<span style="color:#94a3b8">—</span>'}</td>
         <td class="qp-k-mk">${esc(q.marks!=null?q.marks:'')}</td>
-        <td class="qp-k-bl">${q.bloom?`<span class="qp-bloom-pill">${esc(q.bloom)}</span>`:''}</td>
+        <td class="qp-k-bl">${q.bloom?`<span class="qp-bloom-pill">${esc(q.bloom)}</span>`:''}${q.difficulty?`<span class="qp-diff-pill ${esc(q.difficulty)}">${esc(q.difficulty)}</span>`:''}</td>
       </tr>`;
       if(q.orChoice && (q.orChoice.answer || q.orChoice.solution)){
         html += `<tr><td class="qp-k-no">OR</td><td>${esc(q.orChoice.answer||'')} ${esc(q.orChoice.solution||'')}</td><td class="qp-k-mk">${esc(q.orChoice.marks!=null?q.orChoice.marks:'')}</td><td></td></tr>`;
