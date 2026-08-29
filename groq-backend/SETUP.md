@@ -42,3 +42,52 @@ with the Web app URL you copied. Commit and deploy the site.
 - To update the key later, just change the `GROQ_API_KEY` script property — no redeploy needed.
 - A teacher can still use their **own** Groq key (Profile ▸ Save Key); that path calls Groq
   directly from their browser and bypasses this proxy entirely.
+
+---
+
+# Adding more providers (keeping gpt-oss-120b running)
+
+## Why
+`gpt-oss-120b` is **open-weight**, so many companies host the identical model. Groq's free
+tier allows only **8,000 tokens per minute** (prompt + completion together) and 200K/day for
+that model, so during a busy evening the ladder used to give up on it and drop the teacher to
+a weaker model. With a second and third host configured, the ladder retries **the same model
+elsewhere** before it ever lowers quality.
+
+You can see this in the AI Monitor: `INTENDED` vs `SERVED`. Green = the model we wanted ran.
+
+## What to do for each provider
+
+1. Create an account and an API key.
+2. Apps Script → **Project Settings ▸ Script Properties ▸ Add** — use the exact property name
+   from the table. No redeploy is needed after adding a property.
+3. In `teachers.html`, find the `PROVIDERS` table and set that provider to `ready: true`.
+
+| Provider | Script property | Notes |
+|---|---|---|
+| Cerebras | `CEREBRAS_API_KEY` | Free tier; by far the fastest for this model. **Start here.** |
+| DeepInfra | `DEEPINFRA_API_KEY` | No free tier, but among the cheapest per token; pay-as-you-go. |
+| Together | `TOGETHER_API_KEY` | Free starter credit. |
+| Fireworks | `FIREWORKS_API_KEY` | Free starter credit. |
+| OpenRouter | `OPENROUTER_API_KEY` | One key fans out to many hosts; useful as a catch-all. |
+| Novita | `NOVITA_API_KEY` | Low cost. |
+
+Order matters: the ladder tries hosts in the order listed in `MODELS[].providers`.
+
+## Checking a provider works
+Generate one paper, then open **AI Monitor ▸ Test all models**. A provider with no key
+returns a clear `has no key configured` message and the ladder simply moves on — it is a
+configuration gap, never an outage for the teacher.
+
+## Model names differ per host
+`PROVIDER_CONFIG[provider].models` translates our canonical name to whatever that host calls
+it (Cerebras drops the `openai/` prefix, Fireworks wants a full `accounts/...` path). If a
+call returns *model not found*, check the provider's model list and update that map — nothing
+else about the request changes.
+
+## Token ceilings
+`PROVIDERS[x].maxOutput` in `teachers.html` is the largest completion we will request from
+that host. Groq's is deliberately **6000**: asking for more on the free tier is rejected
+outright as *Request too large*, which is one reason gpt-oss-120b was being skipped. Hosts
+without an 8K/min cap are set far higher, which is also what lets a full 80-mark paper be
+generated in a single call instead of being truncated.

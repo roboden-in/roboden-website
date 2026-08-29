@@ -2098,19 +2098,38 @@ const GROQ_CONFIG = {
 
 // L6 — which hosts can serve each model. First entry with a key wins.
 // (Only 'groq' is wired today; the rest activate when their key is added.)
+/* gpt-oss-120b is OPEN-WEIGHT, so the same model is served by many hosts. That is the whole
+   point of this table: when Groq rate-limits us we can keep running THE SAME MODEL somewhere
+   else, instead of dropping the teacher down to a weaker one. Previously the ladder only ever
+   held one provider per model, so a Groq limit meant an immediate quality drop.
+
+   maxOutput is the largest max_tokens we may ask that host for. Groq's free tier allows only
+   8,000 tokens PER MINUTE counting prompt + completion together, so a request for 8,000
+   output tokens is rejected outright as "Request too large" — which is one reason
+   gpt-oss-120b kept being skipped. 6,000 leaves ~2,000 for the prompt.
+
+   To switch a provider on: add its key to the proxy's Script Properties, then flip ready. */
 const PROVIDERS = {
-  groq:       { ready: true  },
-  cerebras:   { ready: false },
-  together:   { ready: false },
-  fireworks:  { ready: false },
-  openrouter: { ready: false },
-  google:     { ready: false },   // Gemini
-  sarvam:     { ready: false }
+  groq:       { ready: true,  maxOutput: 6000,  label:'Groq' },
+  cerebras:   { ready: false, maxOutput: 16000, label:'Cerebras' },
+  deepinfra:  { ready: false, maxOutput: 16000, label:'DeepInfra' },
+  together:   { ready: false, maxOutput: 16000, label:'Together' },
+  fireworks:  { ready: false, maxOutput: 16000, label:'Fireworks' },
+  openrouter: { ready: false, maxOutput: 16000, label:'OpenRouter' },
+  novita:     { ready: false, maxOutput: 16000, label:'Novita' },
+  google:     { ready: false, maxOutput: 8000,  label:'Gemini' },
+  sarvam:     { ready: false, maxOutput: 8000,  label:'Sarvam' }
 };
 
+// Largest completion we may request from a given host.
+function providerMaxOutput(provider){
+  const p = PROVIDERS[provider];
+  return (p && p.maxOutput) || 5500;
+}
+
 const MODELS = {
-  GPT_OSS_120B:  { id:'openai/gpt-oss-120b', providers:['groq','cerebras','together','fireworks','openrouter'] },
-  GPT_OSS_20B:   { id:'openai/gpt-oss-20b',  providers:['groq','cerebras','openrouter'] },
+  GPT_OSS_120B:  { id:'openai/gpt-oss-120b', providers:['groq','cerebras','deepinfra','together','fireworks','novita','openrouter'] },
+  GPT_OSS_20B:   { id:'openai/gpt-oss-20b',  providers:['groq','cerebras','deepinfra','openrouter'] },
   QWEN_38:       { id:'qwen/qwen3.8-27b',    providers:['groq','openrouter'] },
   QWEN_36:       { id:'qwen/qwen3.6-27b',    providers:['groq','openrouter'] },
   COMPOUND_MINI: { id:'groq/compound-mini',  providers:['groq'] },
@@ -2126,6 +2145,21 @@ const MODELS = {
 function providerFor(modelKey){
   const m = MODELS[modelKey]; if(!m) return null;
   return m.providers.find(p => PROVIDERS[p] && PROVIDERS[p].ready) || null;
+}
+// EVERY host that can serve this model today, in preference order.
+function providersFor(modelKey){
+  const m = MODELS[modelKey]; if(!m) return [];
+  return m.providers.filter(p => PROVIDERS[p] && PROVIDERS[p].ready);
+}
+
+/* A rung of the ladder is a model AND the host serving it: "openai/gpt-oss-120b@cerebras".
+   Rate limits are per host, so the two must be tracked together — Groq cooling down its
+   gpt-oss-120b says nothing about Cerebras's. */
+function makeRef(model, provider){ return model + '@' + provider; }
+function splitRef(ref){
+  const i = String(ref).lastIndexOf('@');
+  return i === -1 ? { model: ref, provider: 'groq' }
+                  : { model: ref.slice(0, i), provider: ref.slice(i + 1) };
 }
 
 /* L5 — the routing rules table. Read top-to-bottom, first match wins.
@@ -2183,19 +2217,18 @@ function planRoute(ctx = {}){
     Object.entries(r.when).every(([k, v]) => facts[k] === v)
   ) || ROUTE_RULES[ROUTE_RULES.length - 1];
 
-  // Resolve to concrete model ids, dropping any whose provider has no key yet.
-  const resolved = [];
-  rule.chain.forEach(key => {
-    const p = providerFor(key);
-    if(p) resolved.push({ key, model: MODELS[key].id, provider: p });
+  // Resolve to concrete (model, host) rungs, dropping any host we have no key for.
+  // A model appears ONCE PER READY HOST, so gpt-oss-120b is retried on Cerebras, DeepInfra,
+  // Together… before the ladder ever falls back to a weaker model. Staying on the best model
+  // at a different host beats dropping to a worse model at the same one.
+  const expand = (list, out) => list.forEach(key => {
+    if(!MODELS[key]) return;
+    providersFor(key).forEach(p => out.push({ key, model: MODELS[key].id, provider: p }));
   });
+  const resolved = [];
+  expand(rule.chain, resolved);
   // Safety net: never return an empty ladder.
-  if(!resolved.length){
-    ['GPT_OSS_120B','GPT_OSS_20B','COMPOUND_MINI'].forEach(key => {
-      const p = providerFor(key);
-      if(p) resolved.push({ key, model: MODELS[key].id, provider: p });
-    });
-  }
+  if(!resolved.length) expand(['GPT_OSS_120B','GPT_OSS_20B','COMPOUND_MINI'], resolved);
 
   // `ideal`   = the best model the rules ask for, even if we can't reach it yet (no key).
   // `intended` = the best model we can ACTUALLY call with today's configuration.
@@ -2209,8 +2242,11 @@ function planRoute(ctx = {}){
     ideal,
     intended,
     degraded: !!(intended && ideal !== intended),   // best model unreachable (missing key)
-    ladder: resolved.map(r => r.model),
-    providers: resolved.reduce((a,r) => (a[r.model] = r.provider, a), {}),
+    ladder: resolved.map(r => makeRef(r.model, r.provider)),
+    providers: resolved.reduce((a,r) => (a[makeRef(r.model, r.provider)] = r.provider, a), {}),
+    // How many different hosts we can reach for the BEST model — the number that decides
+    // whether gpt-oss-120b actually runs during the evening rush.
+    bestModelHosts: resolved.filter(r => r.model === (resolved[0] && resolved[0].model)).length,
     plannedChain: rule.chain.map(k => MODELS[k] ? MODELS[k].id : k),  // what we WANTED, incl. unavailable
     skipped: rule.chain.filter(k => !providerFor(k)).map(k => MODELS[k] ? MODELS[k].id : k),
     reason: rule.reason,
@@ -2271,15 +2307,27 @@ async function groqChat(messages, opts = {}){
   // A route plan (from planRoute) supplies the ladder, the reasoning effort AND the matching
   // token budget — the two must be chosen together or the response truncates mid-JSON.
   const reasoningEffort = opts.reasoningEffort || (plan && plan.reasoningEffort) || 'low';
-  const max_tokens = (plan && plan.maxTokens) || opts.max_tokens || 5500;
+  // The caller knows how long the OUTPUT needs to be (an 80-mark paper needs far more than a
+  // 10-mark slip test), so take the larger of the two asks — the plan's figure was capping
+  // the caller's and causing big papers to be cut off. The per-HOST ceiling is applied later,
+  // per rung, because it differs wildly (Groq's free tier 8K/min vs Cerebras's far higher).
+  const wantTokens = Math.max(Number(opts.max_tokens) || 0, (plan && plan.maxTokens) || 0) || 5500;
   const useDirect = !!GROQ_CONFIG.apiKey;
   const url = useDirect ? GROQ_CONFIG.directEndpoint : GROQ_CONFIG.proxyEndpoint;
   const headers = useDirect
     ? { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_CONFIG.apiKey}` }
     : { 'Content-Type': 'text/plain;charset=utf-8' };
 
-  const build = (m) => {
-    const body = { model: m, messages, temperature, max_tokens };
+  // `ref` is "model@provider". The proxy uses `provider` to pick the upstream host and its
+  // key; the model name itself is translated there, since hosts spell it differently.
+  const build = (ref) => {
+    const { model: m, provider } = splitRef(ref);
+    const body = {
+      model: m,
+      provider,
+      messages, temperature,
+      max_tokens: Math.min(wantTokens, providerMaxOutput(provider))
+    };
     // Compound (agentic) systems reject response_format/reasoning_effort — omit them there.
     // extractJson() is tolerant of prose-wrapped JSON, so output still parses.
     const plain = GROQ_CONFIG.noJsonModeModels.includes(m);
@@ -2320,8 +2368,12 @@ async function groqChat(messages, opts = {}){
     : (plan && plan.ladder && plan.ladder.length) ? plan.ladder
     : (tier === 'cheap' ? GROQ_CONFIG.cheapLadder : GROQ_CONFIG.ladder);
 
-  const note = (m, o) => {
-    if(trace) trace.attempts.push(Object.assign({ model:m, provider:(plan && plan.providers && plan.providers[m]) || 'groq' }, o));
+  // Record the model and the host separately, so the AI Monitor can show "gpt-oss-120b was
+  // rate-limited on Groq but served by Cerebras" rather than one opaque string.
+  const note = (ref, o) => {
+    if(!trace) return;
+    const { model: mm, provider } = splitRef(ref);
+    trace.attempts.push(Object.assign({ model: mm, provider }, o));
   };
 
   let lastErr = '';
@@ -2353,8 +2405,9 @@ async function groqChat(messages, opts = {}){
       note(m, Object.assign({ ok:true, ms, truncated: !!r.truncated }, r.usage));
       if(r.truncated && trace) trace.truncated = true;   // shows up in the AI Monitor
       if(trace){
-        trace.served = m;
-        trace.servedProvider = (plan && plan.providers && plan.providers[m]) || 'groq';
+        const s = splitRef(m);
+        trace.served = s.model;
+        trace.servedProvider = s.provider;
         trace.tokensIn += r.usage.tokensIn; trace.tokensOut += r.usage.tokensOut; trace.cached += r.usage.cached;
       }
       if(m !== ladder[0]) console.info(`[AI] served by ${m} (intended ${ladder[0]})`);
