@@ -2345,7 +2345,7 @@ const libraryItems = [
     desc: 'Dual-logo layout with MCQs ( ) boxes, fill-in blanks, and ruled handwriting lines.',
     tab: 'question_paper',
     grade: 'Class 9',
-    subject: 'Artificial Intelligence / Robotics',
+    subject: 'Artificial Intelligence (417)',
     topic: 'Introduction to AI & Project Cycle'
   },
   {
@@ -2510,16 +2510,7 @@ function renderDynamicForm(tabKey){
         <div class="field-row">
           <div class="field-group">
             <label class="field-label">Subject</label>
-            <select class="field-select" id="selectSubject">
-              <option value="Artificial Intelligence / Robotics" selected>Artificial Intelligence &amp; Robotics</option>
-              <option value="Science (Physics/Chemistry/Biology)">Science (Physics / Chem / Bio)</option>
-              <option value="Mathematics">Mathematics</option>
-              <option value="Social Science (Geography &amp; Economics)">Social Science (Geography &amp; Economics)</option>
-              <option value="English Language &amp; Literature">English</option>
-              <option value="Hindi">Hindi</option>
-              <option value="Computer Science / Python">Computer Science / Python</option>
-              <option value="Regional Language (Kannada/Telugu/Tamil)">Regional Language</option>
-            </select>
+            <select class="field-select" id="selectSubject"><!-- populated by refreshSubjectOptions() --></select>
           </div>
           </div>
         <div class="field-group">
@@ -3467,9 +3458,6 @@ function subjectsFor(board, grade){
     if(isCBSE)  extra.push('Computer Science', 'Informatics Practices', 'Artificial Intelligence', 'Biotechnology', 'Entrepreneurship', 'Physical Education');
     if(isICSE)  extra.push('Computer Science', 'Physical Education');
     if(isIGCSE) extra.push('Computer Science', 'ICT', 'Further Mathematics');
-  }
-  if(band === 'middle' || band === 'secondary' || band === 'senior'){
-    extra.push('Artificial Intelligence / Robotics');   // Roboden's own programme
   }
   extra.forEach(s => out.push({ v:s, g:'Electives & Skill Subjects' }));
 
