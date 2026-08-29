@@ -1235,8 +1235,9 @@ footer{
 
 /* Teacher marking-scheme table */
 .qp-key-sec{ font-weight:800; font-size:14px; text-transform:uppercase; color:#3730a3; margin:16px 0 6px; }
-.qp-key-table{ width:100%; border-collapse:collapse; font-size:13px; margin-bottom:8px; }
-.qp-key-table th, .qp-key-table td{ border:1px solid #cbd5e1; padding:7px 10px; vertical-align:top; }
+.qp-key-table{ width:100%; max-width:100%; table-layout:fixed; border-collapse:collapse; font-size:13px; margin-bottom:8px; }
+.qp-key-table th, .qp-key-table td{ border:1px solid #cbd5e1; padding:7px 10px; vertical-align:top;
+  overflow-wrap:anywhere; word-break:break-word; }
 .qp-key-table th{ background:#3730a3; color:#fff; font-weight:700; text-align:left; }
 .qp-key-table td.qp-k-no{ width:52px; font-weight:700; text-align:center; }
 .qp-key-table td.qp-k-mk{ width:64px; text-align:center; font-weight:700; }
@@ -3778,7 +3779,7 @@ Never write \\₹ and never place ₹ inside $...$.`;
 • For MCQ give exactly 4 options; put the correct option text/letter in "answer".
 • Do NOT include ruled answer space — students write in a separate answer booklet.
 • ${paperDesignRules(P, bp)}
-• TEACHER ANSWER KEY: every question must include "answer", a brief "solution" (value points / steps), and a "bloom" level. ${boardMarkingRules(P.board)}
+• TEACHER ANSWER KEY: EVERY question must include "answer", a brief "solution" (value points / steps), a "bloom" level and a "difficulty". For case-study/multi-part questions, EACH entry in "parts" must ALSO carry its own "answer" and "solution" — a blank answer key is unacceptable. Any "orChoice" needs its own answer and solution too. ${boardMarkingRules(P.board)}
 Output ONLY the JSON object.`;
 
   return [
@@ -4061,8 +4062,18 @@ function renderMarkingScheme(data){
       <th class="qp-k-no">Q.No</th><th>Answer &amp; Value Points</th><th class="qp-k-mk">Marks</th><th class="qp-k-bl">Level</th>
     </tr></thead><tbody>`;
     sec.questions.forEach(q => {
-      const ans = [q.answer ? `<b>Ans:</b> ${esc(q.answer)}` : '', q.solution ? `<div>${esc(q.solution)}</div>` : '']
-        .filter(Boolean).join('');
+      // Case-study and multi-part questions carry their answers on each sub-part, not at the
+      // top level. Those were being dropped, leaving the last row of the key blank.
+      const partAns = (q.parts || []).map(p => {
+        const bits = [p.answer ? `<b>Ans:</b> ${esc(p.answer)}` : '', p.solution ? esc(p.solution) : '']
+          .filter(Boolean).join(' — ');
+        return bits ? `<div><b>${esc(p.label||'')}</b> ${bits}${p.marks!=null?` <i>[${esc(p.marks)}]</i>`:''}</div>` : '';
+      }).filter(Boolean).join('');
+      const ans = [
+        q.answer ? `<b>Ans:</b> ${esc(q.answer)}` : '',
+        q.solution ? `<div>${esc(q.solution)}</div>` : '',
+        partAns
+      ].filter(Boolean).join('');
       html += `<tr>
         <td class="qp-k-no">${esc(q.number!=null?q.number:'')}</td>
         <td>${ans || '<span style="color:#94a3b8">—</span>'}</td>
@@ -4212,12 +4223,29 @@ function docxQuestion(P, q, variant){
   }
 
   // Teacher key inline
-  if(variant==='teacher' && (q.answer || q.solution)){
-    const kids=[ run('  ✔ Ans: ',{bold:true,size:19,color:'0F766E'}) ];
-    if(q.answer) kids.push(run(q.answer+'  ',{size:19,color:'0F766E'}));
-    if(q.solution) kids.push(run(q.solution,{size:19,color:'334155'}));
-    if(q.bloom) kids.push(run(`   [${q.bloom}]`,{size:18,italics:true,color:'6D28D9'}));
-    P.push(make({ indent:{left:620}, spacing:{after:40}, children:kids }));
+  if(variant==='teacher'){
+    if(q.answer || q.solution){
+      const kids=[ run('  Ans: ',{bold:true,size:19}) ];
+      if(q.answer) kids.push(run(q.answer+'  ',{size:19}));
+      if(q.solution) kids.push(run(q.solution,{size:19}));
+      if(q.bloom) kids.push(run(`   [${q.bloom}${q.difficulty?' · '+q.difficulty:''}]`,{size:18,italics:true}));
+      P.push(make({ indent:{left:620}, spacing:{after:40}, children:kids }));
+    }
+    // Case-study / multi-part answers live on the parts — emit those too.
+    (q.parts||[]).forEach(pt => {
+      if(!pt.answer && !pt.solution) return;
+      P.push(make({ indent:{left:900}, spacing:{after:30}, children:[
+        run(`  ${pt.label||''} Ans: `,{bold:true,size:19}),
+        run([pt.answer, pt.solution].filter(Boolean).join(' — '),{size:19}),
+        run(pt.marks!=null?`  [${pt.marks}]`:'',{size:18,italics:true})
+      ]}));
+    });
+    if(q.orChoice && (q.orChoice.answer || q.orChoice.solution)){
+      P.push(make({ indent:{left:620}, spacing:{after:40}, children:[
+        run('  OR — Ans: ',{bold:true,size:19}),
+        run([q.orChoice.answer,q.orChoice.solution].filter(Boolean).join(' — '),{size:19})
+      ]}));
+    }
   }
 }
 
