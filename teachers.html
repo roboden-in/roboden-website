@@ -481,7 +481,6 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
 /* compact — squeeze onto as few pages as possible (short tests) */
 .density-compact .qp-doc{font-size:12.5px; line-height:1.32;}
 .density-compact .qp-q{margin-bottom:8px;}
-.density-compact .qp-line{height:17px;}
 .density-compact .qp-sec-bar{margin:11px 0 8px; padding:5px 12px;}
 .density-compact .qp-gi{padding:9px 13px; margin-bottom:11px;}
 
@@ -489,13 +488,11 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
 .paper-sheet.density-standard{font-size:10.5pt; line-height:1.55; padding:48px 54px;}
 .density-standard .qp-doc{font-size:14px; line-height:1.5;}
 .density-standard .qp-q{margin-bottom:13px;}
-.density-standard .qp-line{height:22px;}
 
 /* booklet — full board-exam booklet, generous spacing & writing room */
 .paper-sheet.density-booklet{font-size:11pt; line-height:1.65; padding:52px 58px;}
 .density-booklet .qp-doc{font-size:15px; line-height:1.6;}
 .density-booklet .qp-q{margin-bottom:18px;}
-.density-booklet .qp-line{height:26px;}
 .density-booklet .qp-sec-bar{margin:24px 0 15px; padding:9px 16px;}
 
 /* keep questions from splitting across printed/PDF pages */
@@ -1166,15 +1163,15 @@ footer{
 .qp-doc *{ box-sizing:border-box; }
 
 /* Header */
-.qp-head{ text-align:center; border-bottom:2.5px solid var(--qp-rule); padding-bottom:12px; margin-bottom:14px; }
+.qp-head{ text-align:center; border-bottom:1.5px solid var(--qp-rule); padding-bottom:8px; margin-bottom:14px; }
 .qp-logos{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:6px; }
 .qp-logos img{ height:56px; width:56px; object-fit:contain; }
 .qp-logos .qp-logo-spacer{ flex:0 0 56px; }
-.qp-school{ font-size:22px; font-weight:800; letter-spacing:.02em; text-transform:uppercase; line-height:1.15; }
-.qp-line{ font-size:13px; color:var(--qp-soft); margin-top:2px; }
-.qp-exam{ font-size:15px; font-weight:700; margin-top:8px; text-transform:uppercase; letter-spacing:.03em; }
-.qp-metatop{ display:flex; justify-content:center; gap:26px; font-size:13.5px; font-weight:600; margin-top:6px; flex-wrap:wrap; }
-.qp-metabar{ display:flex; justify-content:space-between; align-items:flex-end; gap:12px; font-size:13.5px; font-weight:700; margin-top:10px; flex-wrap:wrap; }
+.qp-school{ font-size:19px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; line-height:1.2; }
+.qp-sub{ font-size:12.5px; color:var(--qp-soft); margin-top:1px; }
+.qp-exam{ font-size:14px; font-weight:700; margin-top:6px; text-transform:uppercase; letter-spacing:.03em; }
+.qp-metatop{ display:flex; justify-content:space-between; gap:16px; font-size:13px; font-weight:700; margin-top:8px; }
+.qp-metabar{ display:flex; justify-content:space-between; gap:16px; font-size:13px; font-weight:700; margin-top:3px; }
 .qp-metabar .qp-name{ font-weight:600; color:var(--qp-soft); flex:1; text-align:center; }
 
 /* General instructions */
@@ -1218,8 +1215,6 @@ footer{
 .qp-case-intro{ padding:4px 0 6px; margin:2px 0 6px; font-size:13.5px; color:#000; font-style:italic; }
 
 /* Ruled answer lines */
-.qp-lines{ margin:8px 0 2px; }
-.qp-line{ border-bottom:1px solid #94a3b8; height:22px; }
 .qp-answer-hint{ font-size:12.5px; color:#64748b; font-style:italic; margin-top:4px; }
 
 /* Generic content tables (lesson plans / aids) */
@@ -2376,6 +2371,14 @@ function retryAfterSeconds(msg){
 
 // Tolerant JSON extraction — strips ```fences```, prose, and trailing junk that gpt-oss
 // sometimes adds, then parses the first balanced {...} or [...] block.
+// Protect LaTeX commands from JSON escape processing (\theta -> TAB+"heta" etc.)
+function preserveLatexBackslashes(json){
+  return json
+    .replace(/\\\\/g, '\u0000')            // park already-escaped backslashes
+    .replace(/\\([a-zA-Z])/g, '\\\\$1')   // escape a lone backslash before a command
+    .replace(/\u0000/g, '\\\\');           // restore
+}
+
 function extractJson(raw){
   if (!raw) throw new Error('Empty AI response');
   let s = raw.replace(/```(?:json|html)?/gi, '').trim();
@@ -2400,7 +2403,8 @@ function extractJson(raw){
     }
   }
   const slice = end === -1 ? s.slice(start) : s.slice(start, end + 1);
-  return JSON.parse(slice);
+  try { return JSON.parse(preserveLatexBackslashes(slice)); }
+  catch(e){ return JSON.parse(slice); }   // fall back to the untouched text
 }
 
 let studentMarkdownStore = '';
@@ -3927,7 +3931,24 @@ async function topUpSections(data, bp, P, plan, trace){
 /* Make the paper match the blueprint EXACTLY, in code — no second AI call.
    Because each section has a fixed question count and marks-per-question, trimming the
    surplus guarantees the paper totals precisely the requested marks. */
+// A case-study worth 4 marks whose parts read [1] and [1] is simply wrong on the page.
+// Rebalance sub-part marks so they always total the parent question.
+function balanceParts(data){
+  (data.sections||[]).forEach(sec => (sec.questions||[]).forEach(q => {
+    const parts = q.parts;
+    if(!Array.isArray(parts) || !parts.length || !q.marks) return;
+    const sum = parts.reduce((a,p)=>a+(Number(p.marks)||0), 0);
+    if(sum === q.marks) return;
+    // Distribute evenly, giving any remainder to the last part (CBSE case studies run 1+1+2).
+    const base = Math.floor(q.marks / parts.length);
+    parts.forEach((p,i)=> p.marks = base);
+    parts[parts.length-1].marks = q.marks - base*(parts.length-1);
+  }));
+  return data;
+}
+
 function enforceBlueprint(data, bp){
+  balanceParts(data);
   if(!bp || !Array.isArray(bp.sections) || bp.approx) return data;
   bp.sections.forEach((spec, i) => {
     const sec = data.sections[i];
@@ -4037,7 +4058,7 @@ function renderQuestionPaper(data){
     <div class="qp-head">
       ${logos}
       ${m.school ? `<div class="qp-school">${esc(m.school)}</div>` : ''}
-      ${m.location ? `<div class="qp-line">${esc(m.location)}</div>` : ''}
+      ${m.location ? `<div class="qp-sub">${esc(m.location)}</div>` : ''}
       <div class="qp-exam">${esc(m.examTitle)}${m.session ? ' &nbsp;•&nbsp; ' + esc(m.session) : ''}</div>
       <div class="qp-metatop">
         <span>Class: ${esc(String(m.className).replace('Class ',''))}</span>
@@ -4173,7 +4194,7 @@ function renderBlocks(data){
   const m = data.meta || {};
   let html = `<div class="qp-doc"><div class="qp-head">
     <div class="qp-school" style="font-size:19px;">${esc(m.title||'Document')}</div>
-    ${m.subtitle?`<div class="qp-line">${esc(m.subtitle)}</div>`:''}
+    ${m.subtitle?`<div class="qp-sub">${esc(m.subtitle)}</div>`:''}
   </div>`;
   (data.blocks||[]).forEach(b => {
     if(b.type==='heading') html += `<div class="qp-h">${esc(b.text)}</div>`;
@@ -4408,14 +4429,14 @@ async function exportPaperPdf(){
   // Fix: the OUTER wrapper is out of flow and clipped (invisible to the user), while the
   // holder itself stays in NORMAL FLOW so it measures correctly.
   const wrap = document.createElement('div');
-  wrap.style.cssText = 'position:absolute;left:0;top:0;width:794px;height:0;overflow:hidden;opacity:0;pointer-events:none;';
+  wrap.style.cssText = 'position:absolute;left:0;top:0;width:734px;height:0;overflow:hidden;opacity:0;pointer-events:none;';
   // Carry the active page-density class across so the PDF honours the chosen page budget.
   const sheet = document.getElementById('renderedPaperSheet');
   const density = ['density-compact','density-standard','density-booklet']
     .find(c => sheet && sheet.classList.contains(c)) || 'density-standard';
   const holder = document.createElement('div');
   holder.className = 'pdf-render-holder ' + density;
-  holder.style.cssText = 'width:794px;background:#ffffff;padding:36px 40px;color:#000;box-sizing:border-box;overflow:hidden;'; // 794px = A4 @96dpi
+  holder.style.cssText = 'width:734px;background:#ffffff;padding:0;color:#000;box-sizing:border-box;overflow:hidden;';  // 734px = 194mm printable width // 794px = A4 @96dpi
   holder.innerHTML = src.innerHTML;
   wrap.appendChild(holder);
   document.body.appendChild(wrap);
