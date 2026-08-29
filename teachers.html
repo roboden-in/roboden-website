@@ -2460,7 +2460,7 @@ function renderDynamicForm(tabKey){
         <div class="field-row">
           <div class="field-group">
             <label class="field-label">Curriculum Board</label>
-            <select class="field-select" id="selectBoard">
+            <select class="field-select" id="selectBoard" onchange="refreshSubjectOptions()">
               <option value="CBSE" selected>CBSE</option>
               <option value="ICSE / ISC">ICSE</option>
               <option value="State Board">State Board</option>
@@ -2469,7 +2469,7 @@ function renderDynamicForm(tabKey){
           </div>
           <div class="field-group">
             <label class="field-label">Grade / Class</label>
-            <select class="field-select" id="selectGrade">
+            <select class="field-select" id="selectGrade" onchange="refreshSubjectOptions()">
               <option value="Class 1">Class 1</option>
               <option value="Class 2">Class 2</option>
               <option value="Class 3">Class 3</option>
@@ -2673,7 +2673,7 @@ function renderDynamicForm(tabKey){
       </div>
     `;
     currentWizStep = 1;
-    setTimeout(() => { updateExamTypeInfo(); applySavedSchoolToForm(); }, 0);
+    setTimeout(() => { refreshSubjectOptions(); updateExamTypeInfo(); applySavedSchoolToForm(); }, 0);
   }
   else if(tabKey === 'worksheet'){
     pTitle.innerHTML = '<i data-lucide="file-text"></i><span>Differentiated Worksheet Maker</span>';
@@ -3370,6 +3370,112 @@ function collectPaperParams(){
    fed to gpt as a hard structure and enforced by validatePaper(). Built from the
    official-board research (CBSE 5-section, ICSE 2-part, IGCSE structured, etc.). */
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   SUBJECT MATRIX — subjects offered depend on BOARD × GRADE
+   Primary has EVS and no separate sciences; middle school combines Science and
+   Social Science; ICSE/IGCSE split Physics/Chemistry/Biology at class 9; CBSE adds
+   the skill subjects (AI 417 / IT 402) at 9–10; class 11–12 becomes stream-based.
+   State boards stay deliberately plain — no skill/elective subjects.
+   ═══════════════════════════════════════════════════════════════════════════ */
+function gradeBand(grade){
+  const n = parseInt(String(grade).replace(/[^0-9]/g,''),10) || 9;
+  if(n <= 2)  return 'foundational';   // 1–2
+  if(n <= 5)  return 'primary';        // 3–5
+  if(n <= 8)  return 'middle';         // 6–8
+  if(n <= 10) return 'secondary';      // 9–10
+  return 'senior';                     // 11–12
+}
+
+const LANGUAGES_COMMON = [
+  'English Language & Literature', 'Hindi', 'Sanskrit',
+  'Telugu', 'Kannada', 'Tamil', 'Malayalam'
+];
+
+function subjectsFor(board, grade){
+  const band = gradeBand(grade);
+  const b = (board || 'CBSE').toUpperCase();
+  const isCBSE  = b.startsWith('CBSE');
+  const isICSE  = b.startsWith('ICSE');
+  const isIGCSE = b.startsWith('IGCSE');
+  const isState = b.startsWith('STATE');
+  const out = [];
+
+  // ── Languages (every band) ──
+  const langs = band === 'foundational'
+    ? ['English Language & Literature', 'Hindi', 'Telugu', 'Kannada', 'Tamil', 'Malayalam']
+    : LANGUAGES_COMMON.slice();
+  if(isICSE && band === 'secondary'){
+    langs.splice(0, 1, 'English Language (Paper 1)', 'English Literature (Paper 2)');
+  }
+  langs.forEach(s => out.push({ v:s, g:'Languages' }));
+
+  // ── Core ──
+  const core = [];
+  if(band === 'foundational'){
+    core.push('Mathematics', 'Environmental Studies (EVS)', 'General Knowledge');
+  } else if(band === 'primary'){
+    core.push('Mathematics', 'Environmental Studies (EVS)', 'General Knowledge', 'Computer Basics');
+  } else if(band === 'middle'){
+    core.push('Mathematics', 'Science');
+    if(isICSE) core.push('History & Civics', 'Geography');
+    else       core.push('Social Science');
+    core.push('Computer Applications');
+  } else if(band === 'secondary'){
+    if(isCBSE){
+      core.push('Mathematics (Standard)', 'Mathematics (Basic)', 'Science', 'Social Science');
+    } else if(isICSE){
+      core.push('Mathematics', 'Physics', 'Chemistry', 'Biology', 'History & Civics', 'Geography', 'Economics');
+    } else if(isIGCSE){
+      core.push('Mathematics', 'Physics', 'Chemistry', 'Biology', 'Combined Science',
+                'Geography', 'History', 'Business Studies', 'Economics');
+    } else { // State board — plain
+      core.push('Mathematics', 'Science', 'Social Studies');
+    }
+  } else { // senior 11–12 — stream based
+    core.push('Physics', 'Chemistry', 'Biology', 'Mathematics', 'Applied Mathematics',
+              'Accountancy', 'Business Studies', 'Economics',
+              'History', 'Political Science', 'Geography', 'Psychology', 'Sociology');
+  }
+  core.forEach(s => out.push({ v:s, g:'Core Subjects' }));
+
+  // ── Electives / skill subjects ──
+  const extra = [];
+  if(band === 'secondary'){
+    if(isCBSE)  extra.push('Artificial Intelligence (417)', 'Information Technology (402)', 'Computer Applications (165)');
+    if(isICSE)  extra.push('Computer Applications');
+    if(isIGCSE) extra.push('Computer Science', 'ICT');
+    // State board: intentionally none
+  } else if(band === 'senior'){
+    if(isCBSE)  extra.push('Computer Science', 'Informatics Practices', 'Artificial Intelligence', 'Biotechnology', 'Entrepreneurship', 'Physical Education');
+    if(isICSE)  extra.push('Computer Science', 'Physical Education');
+    if(isIGCSE) extra.push('Computer Science', 'ICT', 'Further Mathematics');
+  }
+  if(band === 'middle' || band === 'secondary' || band === 'senior'){
+    extra.push('Artificial Intelligence / Robotics');   // Roboden's own programme
+  }
+  extra.forEach(s => out.push({ v:s, g:'Electives & Skill Subjects' }));
+
+  return out;
+}
+
+// Rebuild #selectSubject whenever board or grade changes, keeping the current pick if valid.
+function refreshSubjectOptions(){
+  const sel = document.getElementById('selectSubject');
+  const gradeEl = document.getElementById('selectGrade');
+  const boardEl = document.getElementById('selectBoard');
+  if(!sel || !gradeEl) return;
+  const prev = sel.value;
+  const list = subjectsFor(boardEl ? boardEl.value : 'CBSE', gradeEl.value);
+  const groups = [...new Set(list.map(s => s.g))];
+  sel.innerHTML = groups.map(g =>
+    `<optgroup label="${esc(g)}">` +
+    list.filter(s => s.g === g).map(s => `<option value="${esc(s.v)}">${esc(s.v)}</option>`).join('') +
+    `</optgroup>`
+  ).join('');
+  // keep the teacher's choice when it still exists for the new board/grade
+  if(prev && list.some(s => s.v === prev)) sel.value = prev;
+}
+
 /* ── QUESTION PAPER WIZARD ──────────────────────────────────────────────
    All four steps stay mounted; only visibility changes. collectPaperParams()
    reads every field by id at generate time, so nothing may be unmounted. */
@@ -3449,9 +3555,9 @@ const EXAM_TYPES = {
 function subjectGroup(subject){
   const s = (subject || '').toLowerCase();
   if(/\bmath|algebra|geometry|calculus/.test(s)) return 'math';
-  if(/science|physics|chem|bio|computer|python|\bai\b|robot/.test(s)) return 'science';
+  if(/science|physics|chem|bio|computer|python|\bai\b|artificial|robot|environmental|\bevs\b|biotech|informatics|\bict\b/.test(s)) return 'science';
   if(/english|hindi|language|kannada|telugu|tamil|sanskrit|literature/.test(s)) return 'language';
-  if(/social|geograph|econ|history|civics|political/.test(s)) return 'social';
+  if(/social|geograph|econ|history|civics|political|account|business|psycholog|sociolog|entrepreneur/.test(s)) return 'social';
   return 'general';
 }
 
