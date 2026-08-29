@@ -1765,24 +1765,37 @@ footer{
       <p id="profileUsageText" style="font-size:0.76rem; color:var(--app-ink-muted); margin-top:4px;"></p>
     </div>
 
-    <div class="form-section-title">Saved School Profile</div>
-    <div class="field-group">
-      <label class="field-label">Default School Name</label>
-      <input type="text" class="field-input" id="savedSchoolName" placeholder="Green Berg International School">
+    <!-- Teachers only: saved school header, used to pre-fill their papers. -->
+    <div id="profileTeacherBlock">
+      <div class="form-section-title">Saved School Profile</div>
+      <p style="font-size:0.76rem; color:var(--app-ink-muted); margin:-6px 0 10px;">Saved once, then filled in automatically on every paper you create.</p>
+      <div class="field-group">
+        <label class="field-label">Default School Name</label>
+        <input type="text" class="field-input" id="savedSchoolName" placeholder="Enter your school name">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Default Subtitle / Location</label>
+        <input type="text" class="field-input" id="savedSchoolLocation" placeholder="Board and city, e.g. Affiliated to CBSE, Hyderabad">
+      </div>
     </div>
-    <div class="field-group">
-      <label class="field-label">Default Subtitle / Location</label>
-      <input type="text" class="field-input" id="savedSchoolLocation" placeholder="Affiliated to CBSE, New Delhi">
-    </div>
-    <div class="field-group">
-      <label class="field-label">Groq AI API Key (Free) (Optional / Custom)</label>
-      <input type="password" class="field-input" id="customGroqKey" placeholder="gsk_...">
-      <small style="font-size:0.7rem; color:var(--app-ink-muted);">Leave empty to use Roboden default AI backend.</small>
+
+    <!-- Admin only: developer tools. Teachers never see or need an API key. -->
+    <div id="profileAdminBlock" style="display:none;">
+      <div class="form-section-title">Developer Tools</div>
+      <div class="field-group">
+        <label class="field-label">Groq API Key Override <span class="fl-hint">testing only</span></label>
+        <input type="password" class="field-input" id="customGroqKey" placeholder="gsk_… (leave empty to use the Roboden proxy)">
+        <small style="font-size:0.7rem; color:var(--app-ink-muted);">Empty = all requests go through the secure server-side proxy.</small>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
+        <button type="button" class="btn-doc-tool" onclick="closeModals(); openAiMonitor();"><i data-lucide="activity"></i> AI Monitor</button>
+        <a class="btn-doc-tool" href="admin.html" style="text-decoration:none;"><i data-lucide="shield"></i> Admin Dashboard</a>
+      </div>
     </div>
 
     <div style="display:flex; gap:10px; margin-top:16px;">
-      <button class="btn-generate" style="margin:0; flex:1;" onclick="saveTeacherSchoolProfile()">
-        <i data-lucide="save" style="width:15px;height:15px;"></i> Save School Profile
+      <button class="btn-generate" id="btnSaveProfile" style="margin:0; flex:1;" onclick="saveTeacherSchoolProfile()">
+        <i data-lucide="save" style="width:15px;height:15px;"></i> Save
       </button>
       <button class="btn-doc-tool" style="padding:0 18px; color:#dc2626; border-color:#fca5a5;" onclick="firebaseSignOut()">
         <i data-lucide="log-out" style="width:15px;height:15px;"></i> Sign out
@@ -1827,7 +1840,7 @@ footer{
     <div id="adminCreateForm">
       <div class="field-group" style="text-align:left;">
         <label class="field-label">School / Institution Name</label>
-        <input type="text" class="field-input" id="adminWsSchool" placeholder="e.g. Green Berg International School">
+        <input type="text" class="field-input" id="adminWsSchool" placeholder="Enter school / workshop name">
       </div>
       <div class="field-row" style="text-align:left;">
         <div class="field-group">
@@ -1841,7 +1854,7 @@ footer{
         </div>
         <div class="field-group">
           <label class="field-label">Custom Pass Code</label>
-          <input type="text" class="field-input" id="adminWsCode" placeholder="e.g. GB_2026" style="text-transform:uppercase;">
+          <input type="text" class="field-input" id="adminWsCode" placeholder="Leave blank to auto-generate" style="text-transform:uppercase;">
         </div>
       </div>
       <button class="btn-generate" style="background:#ea580c; margin-top:8px;" onclick="createLiveWorkshopPass()">
@@ -2637,11 +2650,11 @@ function renderDynamicForm(tabKey){
         <div class="form-section-title">School Header</div>
         <div class="field-group">
           <label class="field-label">School / Institution Name</label>
-          <input type="text" class="field-input" id="inpSchoolName" placeholder="e.g. Green Berg International School">
+          <input type="text" class="field-input" id="inpSchoolName" placeholder="Enter your school name">
         </div>
         <div class="field-group">
           <label class="field-label">Location / Sub-header</label>
-          <input type="text" class="field-input" id="inpSchoolLoc" placeholder="e.g. Affiliated to CBSE, New Delhi">
+          <input type="text" class="field-input" id="inpSchoolLoc" placeholder="Board and city, e.g. Affiliated to CBSE, Hyderabad">
         </div>
         <div class="field-group">
           <label class="field-label">Header Logo</label>
@@ -2692,7 +2705,7 @@ function renderDynamicForm(tabKey){
       <div class="form-section-title">1. Class & Subject Context</div>
       <div class="field-group">
         <label class="field-label">School / Institution Name</label>
-        <input type="text" class="field-input" id="inpSchoolName" placeholder="e.g. Green Berg International School">
+        <input type="text" class="field-input" id="inpSchoolName" placeholder="Enter your school name">
       </div>
       <div class="field-row">
         <div class="field-group">
@@ -3354,7 +3367,7 @@ function collectPaperParams(){
     grade, classNum: grade.replace('Class ',''),
     subject, subjectGroup: subjectGroup(subject),
     board,
-    school: (g('inpSchoolName')?.value || '').trim() || 'Green Berg International School',
+    school: (g('inpSchoolName')?.value || '').trim(),   // blank = no school header (never invent one)
     location: (g('inpSchoolLoc')?.value || '').trim() || '',
     examKey, examType: et, examTitle: et.title, examSize,
     marksLabel: marksNum + ' Marks',
@@ -3765,7 +3778,7 @@ function renderQuestionPaper(data){
   let html = `<div class="qp-doc">
     <div class="qp-head">
       ${logos}
-      <div class="qp-school">${esc(m.school)}</div>
+      ${m.school ? `<div class="qp-school">${esc(m.school)}</div>` : ''}
       ${m.location ? `<div class="qp-line">${esc(m.location)}</div>` : ''}
       <div class="qp-exam">${esc(m.examTitle)}${m.session ? ' &nbsp;•&nbsp; ' + esc(m.session) : ''}</div>
       <div class="qp-metatop">
@@ -3950,8 +3963,8 @@ function docxPaper(data, variant){
   const D = docx, m = data.meta;
   const P=[], make=(o)=>new D.Paragraph(o), run=(t,o)=>new D.TextRun(Object.assign({text:mathText(t)}, o||{}));
 
-  // Header
-  P.push(make({ alignment:D.AlignmentType.CENTER, children:[run(m.school,{bold:true,size:30})] }));
+  // Header (school/location are optional — never invent one)
+  if(m.school) P.push(make({ alignment:D.AlignmentType.CENTER, children:[run(m.school,{bold:true,size:30})] }));
   if(m.location) P.push(make({ alignment:D.AlignmentType.CENTER, children:[run(m.location,{size:20,color:'444444'})] }));
   P.push(make({ alignment:D.AlignmentType.CENTER, spacing:{before:80,after:40}, children:[run(`${m.examTitle}${m.session?'  •  '+m.session:''}`,{bold:true,size:24})] }));
   P.push(make({ alignment:D.AlignmentType.CENTER, children:[run(`Class: ${String(m.className).replace('Class ','')}     Subject: ${m.subject}`,{size:20})] }));
@@ -5144,6 +5157,15 @@ function updateProfileModal(){
   else if(a.state === 'trial') expiry = `Free trial — ${a.daysLeft} day(s) remaining`;
   else if(a.state === 'expired') expiry = 'Trial ended — upgrade to continue';
   set('profileExpiryText', expiry);
+
+  // Admins are developers, not schoolteachers — they get dev tools, not a school header.
+  const admin = isAdminUser();
+  const tBlock = document.getElementById('profileTeacherBlock');
+  const aBlock = document.getElementById('profileAdminBlock');
+  if(tBlock) tBlock.style.display = admin ? 'none' : 'block';
+  if(aBlock) aBlock.style.display = admin ? 'block' : 'none';
+  const saveBtn = document.getElementById('btnSaveProfile');
+  if(saveBtn) saveBtn.style.display = admin ? 'none' : 'inline-flex';
 
   const p = currentTeacherProfile || {};
   const sn = document.getElementById('savedSchoolName');
