@@ -2302,7 +2302,12 @@ async function groqChat(messages, opts = {}){
     if (data && data.error) return { err: data.error.message || JSON.stringify(data.error), usage };
     const choice = data && data.choices && data.choices[0];
     const content = choice && choice.message && choice.message.content;
-    if (content && content.trim()) return { content, usage };
+    // A "length" finish means the reply was CUT OFF mid-sentence. The content is still
+    // returned (those tokens are already paid for) but flagged, so extractJson can salvage
+    // the complete questions instead of discarding the whole paper. Without the flag this
+    // reads as a normal success and JSON.parse dies with "Unterminated string in JSON".
+    if (content && content.trim())
+      return { content, usage, truncated: choice.finish_reason === 'length' };
     if (choice && choice.finish_reason === 'length')
       return { err: 'The AI response hit the token limit. Try lower total marks, fewer slides, or upgrade the Groq plan.', usage };
     return { err: 'The AI returned an empty response — please try again.', usage };
@@ -2345,7 +2350,8 @@ async function groqChat(messages, opts = {}){
     const r = await parse(res);
     const ms = Date.now() - t0;
     if (r.content) {
-      note(m, Object.assign({ ok:true, ms }, r.usage));
+      note(m, Object.assign({ ok:true, ms, truncated: !!r.truncated }, r.usage));
+      if(r.truncated && trace) trace.truncated = true;   // shows up in the AI Monitor
       if(trace){
         trace.served = m;
         trace.servedProvider = (plan && plan.providers && plan.providers[m]) || 'groq';
@@ -2379,87 +2385,10 @@ function retryAfterSeconds(msg){
   return t ? Math.ceil(parseFloat(t[1])) + 1 : 0;
 }
 
-// Tolerant JSON extraction — strips ```fences```, prose, and trailing junk that gpt-oss
-// sometimes adds, then parses the first balanced {...} or [...] block.
-// Protect LaTeX commands from JSON escape processing (\theta -> TAB+"heta" etc.)
-// Every LaTeX command name we expect a paper setter to use. Matching by NAME (rather than
-// "any backslash followed by a letter") matters: "\n" inside a JSON string is a genuine
-// newline in a worked solution, and blindly escaping it would print a literal "\n".
-const LATEX_CMD_NAMES = 'dfrac|tfrac|frac|sqrt|times|div|pm|mp|cdot|cdots|ldots|dots|vdots|' +
-  'alpha|beta|gamma|delta|epsilon|varepsilon|zeta|eta|theta|vartheta|iota|kappa|lambda|mu|nu|xi|' +
-  'rho|varrho|sigma|tau|upsilon|phi|varphi|chi|psi|omega|' +
-  'Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega|' +
-  'sinh|cosh|tanh|sin|cos|tan|cot|sec|csc|arcsin|arccos|arctan|log|ln|lg|exp|lim|limits|' +
-  'sum|prod|int|iint|oint|infty|partial|nabla|' +
-  'angle|triangle|square|parallel|perp|cong|simeq|sim|approx|equiv|propto|neq|ne|leq|le|geq|ge|' +
-  'll|gg|subseteq|supseteq|subset|supset|notin|in|cup|cap|emptyset|varnothing|forall|exists|' +
-  'Leftrightarrow|leftrightarrow|Rightarrow|rightarrow|Leftarrow|leftarrow|longrightarrow|to|implies|iff|mapsto|' +
-  'overline|underline|overrightarrow|widehat|widetilde|bar|hat|vec|tilde|ddot|dot|' +
-  'text|textbf|textit|mathrm|mathbf|mathbb|mathcal|operatorname|' +
-  'left|right|bigg|Bigg|big|Big|begin|end|quad|qquad|hspace|vspace|' +
-  'degree|circ|prime|binom|boxed|bmod|pmod|therefore|because|' +
-  'max|min|deg|gcd|lcm|det|dim|ker|rupee|textrupee|rs';
 
-// LaTeX also escapes punctuation ("\%", "\{", "\,", "\ "). None of those are legal JSON
-// escapes, so JSON.parse rejects the WHOLE document -- this is the "Unexpected token"
-// crash the teacher was shown. Repair them the same way as commands.
-const LATEX_PUNCT_CLASS = "[(){}\\[\\]|%$&#_^~,;!:+\\-*=<>'` ]";
 
-// A backslash is legal in JSON only before  " \ / b f n r t u.  Anything else is a stray
-// LaTeX backslash the model forgot to double -- last-resort repair so we never hard-fail.
-function escapeStrayBackslashes(json){
-  return json
-    .replace(/\\u(?![0-9a-fA-F]{4})/g, '\\\\u')
-    .replace(/\\(?!["\\/bfnrtu])/g, '\\\\');
-}
 
-// Protect LaTeX from JSON escape processing (\theta -> TAB + "heta", \frac -> FormFeed + "rac").
-// One pass, no sentinel: the first alternative matches an ALREADY-escaped pair and returns it
-// untouched, so a correct "\\frac" is never double-escaped.
-function preserveLatexBackslashes(json){
-  const RE = new RegExp(
-    '\\\\\\\\|\\\\(?:(' + LATEX_CMD_NAMES + ')(?![a-zA-Z])|(' + LATEX_PUNCT_CLASS + '))', 'g');
-  return json.replace(RE, (m, cmd, punct) => (cmd || punct) ? '\\' + m : m);
-}
 
-function extractJson(raw){
-  if (!raw) throw new Error('Empty AI response');
-  let s = raw.replace(/```(?:json|html)?/gi, '').trim();
-  // Find first { or [ and match to its balanced close
-  const startObj = s.indexOf('{');
-  const startArr = s.indexOf('[');
-  let start = startObj;
-  if (startArr !== -1 && (startArr < startObj || startObj === -1)) start = startArr;
-  if (start === -1) throw new Error('No JSON found in AI response');
-  const open = s[start], close = open === '{' ? '}' : ']';
-  let depth = 0, inStr = false, esc = false, end = -1;
-  for (let i = start; i < s.length; i++){
-    const c = s[i];
-    if (inStr){
-      if (esc) esc = false;
-      else if (c === '\\') esc = true;
-      else if (c === '"') inStr = false;
-    } else {
-      if (c === '"') inStr = true;
-      else if (c === open) depth++;
-      else if (c === close){ depth--; if (depth === 0){ end = i; break; } }
-    }
-  }
-  const slice = end === -1 ? s.slice(start) : s.slice(start, end + 1);
-  // Try progressively more aggressive repairs. Never give up on the first failure — a
-  // rejected parse means the teacher's tokens were already spent.
-  const attempts = [
-    slice,                                                  // the model got it right
-    preserveLatexBackslashes(slice),                        // rescue known LaTeX
-    escapeStrayBackslashes(slice),                          // escape every illegal backslash
-    escapeStrayBackslashes(preserveLatexBackslashes(slice)) // both
-  ];
-  let lastErr;
-  for(const text of attempts){
-    try { return JSON.parse(text); } catch(e){ lastErr = e; }
-  }
-  throw new Error('AI_BAD_JSON: ' + (lastErr && lastErr.message));
-}
 
 let studentMarkdownStore = '';
 let teacherMarkdownStore = '';
@@ -3317,8 +3246,13 @@ async function executeGenerate(){
         // at a lower temperature, instead of showing an error the teacher cannot act on.
         let raw, parsed;
         for(let attempt = 1; attempt <= 2; attempt++){
+          // Output length scales with the paper: an 80-mark paper is ~38 questions, each
+          // carrying an answer, a solution, a Bloom level and a difficulty. 5500 was not
+          // enough and the reply was silently cut off. 8000 is the proxy's hard cap.
           raw = await groqChat(buildPaperPrompt(P), {
-            temperature: attempt === 1 ? 0.22 : 0.1, max_tokens:5500, jsonMode:true, plan, trace });
+            temperature: attempt === 1 ? 0.22 : 0.1,
+            max_tokens: P.marksNum >= 70 ? 8000 : P.marksNum >= 40 ? 6500 : 5500,
+            jsonMode:true, plan, trace });
           try { parsed = extractJson(raw); break; }
           catch(e){
             if(attempt === 2) throw e;
@@ -3774,6 +3708,24 @@ function subjectGroup(subject){
 }
 
 // Board marking rules for the TEACHER answer key (from research).
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   LAYER 1 — THE BLUEPRINT  (everything BEFORE the AI is called)
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   Decides the SHAPE of the paper: how many sections, how many questions in each, how many
+   marks per question, the difficulty and Bloom mix, and the board's own conventions. None of
+   this is left to the model — it is arithmetic, so an 80-mark paper totals exactly 80.
+
+   getBlueprint       the section/marks allocator (the 1-mark section absorbs the remainder,
+                      which is what makes every exam size land exactly on target)
+   paperDesignRules   difficulty mix, cognitive mix, chapter coverage, Indian context
+   boardMarkingRules  how that board expects answers to be marked
+   blueprintToText    renders the blueprint into the prompt
+   buildPaperPrompt   assembles the final system + user messages
+
+   The result is handed to LAYER 2 (the AI), whose only job is to write question CONTENT.
+   What comes back is then repaired and enforced by LAYER 3 — search "THE PAPER COMPILER".
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+
 function boardMarkingRules(board){
   if(board.startsWith('IGCSE'))
     return 'Use Cambridge principles: positive marking (award marks for what is correct), Error-Carried-Forward (if an early value is wrong but used correctly later, award later marks), and Levels-of-Response for extended writing.';
@@ -3903,9 +3855,13 @@ function getBlueprint(P){
 // Human-readable blueprint the prompt hands to gpt (the "hard structure").
 function blueprintToText(bp){
   const lines = bp.sections.map(s => {
-    // Request a couple of spare questions per section. We trim to the exact count in code,
-    // which makes the total deterministic in ONE call — far cheaper than regenerating.
-    const cnt = s.count ? (s.count + (s.marksEach ? 2 : 0)) : '?';
+    // Request spare questions per section so trimming in code lands the total exactly.
+    // Spares cost OUTPUT tokens though, and on a full 80-mark paper (≈38 questions, each with
+    // an answer, a solution, a Bloom level and a difficulty) asking for 2 spares per section
+    // pushed the reply past the token ceiling — it was cut off mid-question and the whole
+    // paper failed to parse. Big papers therefore get 1 spare, small ones 2.
+    const spares = bp.total >= 70 ? 1 : 2;
+    const cnt = s.count ? (s.count + (s.marksEach ? spares : 0)) : '?';
     const mk = s.marksEach ? ` × ${s.marksEach} mark${s.marksEach>1?'s':''}` : ' (mixed marks)';
     const ch = s.choice==='section' ? ` — student attempts any ${s.attemptCount} of ${cnt}` : s.choice==='internal' ? ' — with internal OR choice' : '';
     return ` • ${s.name}: ${cnt} question${cnt===1?'':'s'}${mk}${ch}. ${s.note}${s.note2 ? ' ('+s.note2+')' : ''}${s.caseParts ? ' Each has '+s.caseParts+'.' : ''}`;
@@ -4017,6 +3973,337 @@ Duration: ${P.duration}. Output ONLY the JSON object.`;
   return [ {role:'system',content:system}, {role:'user',content:schema+'\n\n'+rules} ];
 }
 
+
+
+
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   THE PAPER COMPILER
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   Generating a question paper is NOT one prompt. It is three layers, and only the middle one
+   is a language model:
+
+     LAYER 1  BLUEPRINT     code   Decides the paper's SHAPE before the AI is called:
+              (above)              sections, question counts, marks per question, difficulty
+                                   mix, board conventions.
+                                   -> getBlueprint, paperDesignRules, blueprintToText,
+                                      boardMarkingRules, buildPaperPrompt
+
+     LAYER 2  THE AI        Groq   Writes ONE thing: the question content. It does not decide
+                                   the structure, the marks, the header or the instructions.
+
+     LAYER 3  ENFORCEMENT   code   THIS FILE SECTION. Takes the model's reply and turns it into
+              (below)              a real exam paper: repairs the JSON, forces the blueprint,
+                                   fixes the marks arithmetic, writes the general instructions,
+                                   and renumbers everything.
+
+   Why so much of it is code rather than prompt: code cannot hallucinate, costs no tokens, and
+   is deterministic — the marks add up because of Math.floor, not because a model was asked
+   nicely. It is also why a weak fallback model still yields a usable paper.
+
+   The teacher's own choices (school, class, subject, marks, duration, logo) never pass through
+   the AI at all; they come straight from the form and are stamped on in STAGE 2.
+
+   Pipeline order below matches execution order in executeGenerate().
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ── STAGE 1 — PARSE. Turn the model's raw reply into JSON, repairing LaTeX that JSON.parse
+   would otherwise destroy or reject outright. ── */
+
+// Tolerant JSON extraction — strips ```fences```, prose, and trailing junk that gpt-oss
+// sometimes adds, then parses the first balanced {...} or [...] block.
+// Protect LaTeX commands from JSON escape processing (\theta -> TAB+"heta" etc.)
+// Every LaTeX command name we expect a paper setter to use. Matching by NAME (rather than
+// "any backslash followed by a letter") matters: "\n" inside a JSON string is a genuine
+// newline in a worked solution, and blindly escaping it would print a literal "\n".
+const LATEX_CMD_NAMES = 'dfrac|tfrac|frac|sqrt|times|div|pm|mp|cdot|cdots|ldots|dots|vdots|' +
+  'alpha|beta|gamma|delta|epsilon|varepsilon|zeta|eta|theta|vartheta|iota|kappa|lambda|mu|nu|xi|' +
+  'rho|varrho|sigma|tau|upsilon|phi|varphi|chi|psi|omega|' +
+  'Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega|' +
+  'sinh|cosh|tanh|sin|cos|tan|cot|sec|csc|arcsin|arccos|arctan|log|ln|lg|exp|lim|limits|' +
+  'sum|prod|int|iint|oint|infty|partial|nabla|' +
+  'angle|triangle|square|parallel|perp|cong|simeq|sim|approx|equiv|propto|neq|ne|leq|le|geq|ge|' +
+  'll|gg|subseteq|supseteq|subset|supset|notin|in|cup|cap|emptyset|varnothing|forall|exists|' +
+  'Leftrightarrow|leftrightarrow|Rightarrow|rightarrow|Leftarrow|leftarrow|longrightarrow|to|implies|iff|mapsto|' +
+  'overline|underline|overrightarrow|widehat|widetilde|bar|hat|vec|tilde|ddot|dot|' +
+  'text|textbf|textit|mathrm|mathbf|mathbb|mathcal|operatorname|' +
+  'left|right|bigg|Bigg|big|Big|begin|end|quad|qquad|hspace|vspace|' +
+  'degree|circ|prime|binom|boxed|bmod|pmod|therefore|because|' +
+  'max|min|deg|gcd|lcm|det|dim|ker|rupee|textrupee|rs';
+
+// LaTeX also escapes punctuation ("\%", "\{", "\,", "\ "). None of those are legal JSON
+// escapes, so JSON.parse rejects the WHOLE document -- this is the "Unexpected token"
+// crash the teacher was shown. Repair them the same way as commands.
+const LATEX_PUNCT_CLASS = "[(){}\\[\\]|%$&#_^~,;!:+\\-*=<>'` ]";
+
+// A backslash is legal in JSON only before  " \ / b f n r t u.  Anything else is a stray
+// LaTeX backslash the model forgot to double -- last-resort repair so we never hard-fail.
+function escapeStrayBackslashes(json){
+  return json
+    .replace(/\\u(?![0-9a-fA-F]{4})/g, '\\\\u')
+    .replace(/\\(?!["\\/bfnrtu])/g, '\\\\');
+}
+
+/* A reply that hit the token ceiling stops mid-sentence:
+     …{"number":17,"text":"A train travels 360 km at a un
+   No amount of escape-fixing can parse that — the document is INCOMPLETE, not corrupt. But
+   the first sixteen questions are perfectly good and already paid for. Rather than throw the
+   whole paper away (which is what "Unterminated string in JSON at position 5547" was), cut
+   back to the last question that finished cleanly and close the brackets ourselves. The
+   result is a short but VALID paper, and STAGE 4's top-up then fills the gap.
+   Returns null when there is nothing worth salvaging. */
+function closeTruncatedJson(s){
+  let inStr = false, esc = false, depth = 0, lastComplete = -1;
+  for(let i = 0; i < s.length; i++){
+    const c = s[i];
+    if(inStr){
+      if(esc) esc = false;
+      else if(c === '\\') esc = true;
+      else if(c === '"') inStr = false;
+      continue;
+    }
+    if(c === '"') inStr = true;
+    else if(c === '{' || c === '[') depth++;
+    else if(c === '}' || c === ']'){
+      depth--;
+      // A '}' closing a question object, still nested inside its section array, is a clean
+      // place to cut. Depth 3 = root > sections[] > section{} > question{}.
+      if(c === '}' && depth >= 2) lastComplete = i;
+    }
+  }
+  if(lastComplete < 0) return null;
+
+  const head = s.slice(0, lastComplete + 1);
+  // Re-walk the kept prefix to learn exactly which brackets are still open, then close them.
+  const stack = [];
+  inStr = false; esc = false;
+  for(let i = 0; i < head.length; i++){
+    const c = head[i];
+    if(inStr){
+      if(esc) esc = false;
+      else if(c === '\\') esc = true;
+      else if(c === '"') inStr = false;
+      continue;
+    }
+    if(c === '"') inStr = true;
+    else if(c === '{') stack.push('}');
+    else if(c === '[') stack.push(']');
+    else if(c === '}' || c === ']') stack.pop();
+  }
+  return head + stack.reverse().join('');
+}
+
+// Protect LaTeX from JSON escape processing (\theta -> TAB + "heta", \frac -> FormFeed + "rac").
+// One pass, no sentinel: the first alternative matches an ALREADY-escaped pair and returns it
+// untouched, so a correct "\\frac" is never double-escaped.
+function preserveLatexBackslashes(json){
+  const RE = new RegExp(
+    '\\\\\\\\|\\\\(?:(' + LATEX_CMD_NAMES + ')(?![a-zA-Z])|(' + LATEX_PUNCT_CLASS + '))', 'g');
+  return json.replace(RE, (m, cmd, punct) => (cmd || punct) ? '\\' + m : m);
+}
+
+function extractJson(raw){
+  if (!raw) throw new Error('Empty AI response');
+  let s = raw.replace(/```(?:json|html)?/gi, '').trim();
+  // Find first { or [ and match to its balanced close
+  const startObj = s.indexOf('{');
+  const startArr = s.indexOf('[');
+  let start = startObj;
+  if (startArr !== -1 && (startArr < startObj || startObj === -1)) start = startArr;
+  if (start === -1) throw new Error('No JSON found in AI response');
+  const open = s[start], close = open === '{' ? '}' : ']';
+  let depth = 0, inStr = false, esc = false, end = -1;
+  for (let i = start; i < s.length; i++){
+    const c = s[i];
+    if (inStr){
+      if (esc) esc = false;
+      else if (c === '\\') esc = true;
+      else if (c === '"') inStr = false;
+    } else {
+      if (c === '"') inStr = true;
+      else if (c === open) depth++;
+      else if (c === close){ depth--; if (depth === 0){ end = i; break; } }
+    }
+  }
+  const slice = end === -1 ? s.slice(start) : s.slice(start, end + 1);
+  // Try progressively more aggressive repairs. Never give up on the first failure — a
+  // rejected parse means the teacher's tokens were already spent.
+  const attempts = [
+    slice,                                                  // the model got it right
+    preserveLatexBackslashes(slice),                        // rescue known LaTeX
+    escapeStrayBackslashes(slice),                          // escape every illegal backslash
+    escapeStrayBackslashes(preserveLatexBackslashes(slice)) // both
+  ];
+  let lastErr;
+  for(const text of attempts){
+    try { return JSON.parse(text); } catch(e){ lastErr = e; }
+  }
+
+  // Still failing: the reply was probably CUT OFF. Salvage the questions that did arrive
+  // rather than binning a paper the teacher has already paid tokens for.
+  const salvaged = closeTruncatedJson(slice);
+  if(salvaged){
+    for(const text of [salvaged, preserveLatexBackslashes(salvaged), escapeStrayBackslashes(preserveLatexBackslashes(salvaged))]){
+      try {
+        const data = JSON.parse(text);
+        console.warn('[AI] reply was truncated — salvaged the complete questions');
+        return data;
+      } catch(e){ /* try the next repair */ }
+    }
+  }
+  throw new Error('AI_BAD_JSON: ' + (lastErr && lastErr.message));
+}
+
+/* ── STAGE 2 — CLEAN + NORMALISE. Fix currency and stray LaTeX, then stamp the header from the
+   TEACHER'S form. The teacher chose the class, subject and marks; the AI does not get a vote. ── */
+
+/* ── Normalise / guard the parsed paper data ── */
+// Models sometimes emit "\₹" (an undefined LaTeX command) or trap ₹ inside $...$, which
+// KaTeX cannot render. Normalise currency back to a plain, printable rupee symbol.
+function fixCurrency(t){
+  if(typeof t !== 'string') return t;
+  let x = t.replace(/\\+₹/g, '₹')
+           .replace(/\\(?:rupee|textrupee|rs)\b/gi, '₹')
+           .replace(/\$\s*₹\s*([\d,.]+)\s*\$/g, '₹$1')   // $₹800$  → ₹800
+           .replace(/₹\s*\$([\d,.]+)\$/g, '₹$1');          // ₹$800$  → ₹800
+
+  // Models sometimes put a literal "\n" inside a JSON string; it must not print as text.
+  x = x.replace(/\\n\s*/g, ' ');
+
+  // A single backslash before a LaTeX command is not a valid JSON escape, so parsing can
+  // strip it — "$20^\circ$" arrives as "$20^circ$" and KaTeX then prints "20°irc".
+  // Restore the backslash for known commands when they appear inside maths.
+  const CMDS = 'circ|frac|sqrt|times|div|pm|leq|geq|neq|approx|cdot|infty|alpha|beta|gamma|delta|theta|lambda|mu|pi|rho|sigma|phi|omega|Delta|Omega|Sigma|angle|perp|parallel|sum|int|rightarrow|leftarrow|Rightarrow|implies|ldots|dots|text|mathrm|le|ge';
+  x = x.replace(/\$([^$]*)\$/g, (m, inner) => {
+    const fixed = inner.replace(new RegExp('(^|[^\\\\A-Za-z])(' + CMDS + ')\\b', 'g'), '$1\\$2');
+    return '$' + fixed + '$';
+  });
+
+  // LaTeX the model wrote WITHOUT $…$ delimiters never reaches KaTeX in the preview and
+  // never reaches the Word converter either, so "\frac{1}{2}" printed as "{1}{2}" and
+  // "30^{\circ}" as "30^{°}". Convert those stray fragments to Unicode in the DATA, so the
+  // preview, the PDF and the Word file all show the same thing.
+  x = x.split(/(\$[^$]*\$)/).map(seg => {
+    if(seg.charAt(0) === '$') return seg;                       // real maths — leave for KaTeX
+    if(!/\\[a-zA-Z]|\\[^a-zA-Z]|[\^_]\s*\{/.test(seg)) return seg;
+    const lead = (seg.match(/^\s*/) || [''])[0];
+    const tail = (seg.match(/\s*$/) || [''])[0];
+    return lead + convTex(seg) + tail;                          // convTex trims, so restore spacing
+  }).join('');
+
+  return x;
+}
+
+function deepFixCurrency(o){
+  if(Array.isArray(o)) return o.map(deepFixCurrency);
+  if(o && typeof o === 'object'){ Object.keys(o).forEach(k => o[k] = deepFixCurrency(o[k])); return o; }
+  return fixCurrency(o);
+}
+
+function normalizePaperData(data, P){
+  deepFixCurrency(data);
+  data.kind = 'paper';
+  data.meta = data.meta || {};
+  // THE HEADER BELONGS TO THE TEACHER, NOT THE AI.
+  // These came from the form the teacher filled in. Previously each line read
+  // `data.meta.x = data.meta.x || P.x`, which let a value the MODEL echoed back win — so a
+  // teacher who selected Class 9 / Mathematics / 80 marks could be handed a paper headed
+  // something else. The form is the single source of truth; only examTitle falls back to the
+  // model, and only when the exam type did not supply one.
+  data.meta.school        = P.school;
+  data.meta.location      = P.location;
+  data.meta.board         = P.board;
+  data.meta.className     = P.grade;
+  data.meta.subject       = P.subject;
+  data.meta.maxMarks      = P.marksNum;
+  data.meta.durationLabel = P.duration;
+  data.meta.examTitle     = P.examTitle || data.meta.examTitle
+                            || (P.tab === 'worksheet' ? 'Practice Worksheet' : 'Examination');
+  data.generalInstructions = Array.isArray(data.generalInstructions) ? data.generalInstructions : [];
+  data.sections = Array.isArray(data.sections) ? data.sections : [];
+  // renumber questions continuously as a safeguard
+  let n = 0;
+  data.sections.forEach(sec => {
+    sec.questions = Array.isArray(sec.questions) ? sec.questions : [];
+    sec.questions.forEach(q => { n++; if(!q.number) q.number = n; });
+  });
+  data.computedTotal = data.sections.reduce((t,s)=>t + s.questions.reduce((a,q)=>a + (Number(q.marks)||0),0), 0);
+  return data;
+}
+
+/* ── STAGE 3 — QUALITY GATE. Reject question shapes no teacher would accept. ── */
+
+/* Degenerate MCQs: every option is "A) Correct / B) Incorrect / C) Both A and B /
+   D) None of the above", turning the stem into a statement rather than a question. That is
+   not a multiple-choice item — it is a True/False item wearing a costume. Rather than throw
+   the question away (the stem itself is usually fine), demote it to a proper True/False. */
+function fixDegenerateMcq(data){
+  const GENERIC = /^(?:\(?[a-dA-D][).]\s*)?(correct|incorrect|true|false|both a and b|all of the above|none of the above|both of the above|neither a nor b)\.?$/i;
+  (data.sections||[]).forEach(sec => (sec.questions||[]).forEach(q => {
+    if(q.type !== 'mcq' || !Array.isArray(q.options) || q.options.length < 2) return;
+    const generic = q.options.filter(o => GENERIC.test(String(o||'').trim())).length;
+    if(generic < q.options.length - 1) return;      // a single "None of the above" is legitimate
+    q.type = 'truefalse';
+    delete q.options;
+    if(q.answer) q.answer = /^\s*\(?[aA][).]?\s*|correct|true/.test(String(q.answer)) ? 'True' : 'False';
+  }));
+  return data;
+}
+
+/* ── STAGE 4 — STRUCTURE. Make the paper match the blueprint EXACTLY. Everything here is code,
+   so the marks always add up and it costs no tokens. topUpSections is the ONLY step allowed
+   to call the AI again, and only for the questions that are genuinely missing. ── */
+
+/* Make the paper match the blueprint EXACTLY, in code — no second AI call.
+   Because each section has a fixed question count and marks-per-question, trimming the
+   surplus guarantees the paper totals precisely the requested marks. */
+// A case-study worth 4 marks whose parts read [1] and [1] is simply wrong on the page.
+// Rebalance sub-part marks so they always total the parent question.
+function balanceParts(data){
+  (data.sections||[]).forEach(sec => (sec.questions||[]).forEach(q => {
+    const parts = q.parts;
+    if(!Array.isArray(parts) || !parts.length || !q.marks) return;
+    const sum = parts.reduce((a,p)=>a+(Number(p.marks)||0), 0);
+    if(sum === q.marks) return;
+    // Distribute evenly, giving any remainder to the last part (CBSE case studies run 1+1+2).
+    const base = Math.floor(q.marks / parts.length);
+    parts.forEach((p,i)=> p.marks = base);
+    parts[parts.length-1].marks = q.marks - base*(parts.length-1);
+  }));
+  return data;
+}
+
+/* A weaker fallback model sometimes returns only Section A. The top-up call then had nowhere
+   to put the missing questions (data.sections[idx] was undefined) so they were silently
+   dropped — which is how an 80-mark paper printed as "Max. Marks: 18". Create the empty
+   sections up front so the top-up has a home, and remove any that stay empty. */
+function ensureBlueprintSections(data, bp){
+  if(!bp || !Array.isArray(bp.sections) || bp.approx) return data;
+  data.sections = data.sections || [];
+  bp.sections.forEach((spec, i) => {
+    if(!data.sections[i]) data.sections[i] = { name: spec.name, note: spec.note, questions: [] };
+    data.sections[i].questions = data.sections[i].questions || [];
+  });
+  return data;
+}
+
+function enforceBlueprint(data, bp){
+  balanceParts(data);
+  if(!bp || !Array.isArray(bp.sections) || bp.approx) return data;
+  bp.sections.forEach((spec, i) => {
+    const sec = data.sections[i];
+    if(!sec || !spec.count || !spec.marksEach) return;
+    if(sec.questions.length > spec.count) sec.questions = sec.questions.slice(0, spec.count);
+    sec.questions.forEach(q => { q.marks = spec.marksEach; if(q.orChoice) q.orChoice.marks = spec.marksEach; });
+  });
+  // Drop any extra sections the model invented.
+  if(data.sections.length > bp.sections.length) data.sections = data.sections.slice(0, bp.sections.length);
+  let n = 0;
+  data.sections.forEach(sec => sec.questions.forEach(q => { q.number = ++n; }));
+  data.computedTotal = data.sections.reduce((t,s)=>t + s.questions.reduce((a,q)=>a+(Number(q.marks)||0),0), 0);
+  return data;
+}
+
 /* If a weaker fallback model under-delivers, ask ONLY for the missing questions.
    This is not a regeneration: the prompt names just the shortfall and the reply carries
    only those questions, so it costs a small fraction of a full paper. */
@@ -4055,64 +4342,16 @@ async function topUpSections(data, bp, P, plan, trace){
   return data;
 }
 
-/* Make the paper match the blueprint EXACTLY, in code — no second AI call.
-   Because each section has a fixed question count and marks-per-question, trimming the
-   surplus guarantees the paper totals precisely the requested marks. */
-// A case-study worth 4 marks whose parts read [1] and [1] is simply wrong on the page.
-// Rebalance sub-part marks so they always total the parent question.
-function balanceParts(data){
-  (data.sections||[]).forEach(sec => (sec.questions||[]).forEach(q => {
-    const parts = q.parts;
-    if(!Array.isArray(parts) || !parts.length || !q.marks) return;
-    const sum = parts.reduce((a,p)=>a+(Number(p.marks)||0), 0);
-    if(sum === q.marks) return;
-    // Distribute evenly, giving any remainder to the last part (CBSE case studies run 1+1+2).
-    const base = Math.floor(q.marks / parts.length);
-    parts.forEach((p,i)=> p.marks = base);
-    parts[parts.length-1].marks = q.marks - base*(parts.length-1);
-  }));
-  return data;
-}
-
-/* A weaker fallback model sometimes returns only Section A. The top-up call then had nowhere
-   to put the missing questions (data.sections[idx] was undefined) so they were silently
-   dropped — which is how an 80-mark paper printed as "Max. Marks: 18". Create the empty
-   sections up front so the top-up has a home, and remove any that stay empty. */
-function ensureBlueprintSections(data, bp){
-  if(!bp || !Array.isArray(bp.sections) || bp.approx) return data;
-  data.sections = data.sections || [];
-  bp.sections.forEach((spec, i) => {
-    if(!data.sections[i]) data.sections[i] = { name: spec.name, note: spec.note, questions: [] };
-    data.sections[i].questions = data.sections[i].questions || [];
-  });
-  return data;
-}
 function pruneEmptySections(data){
   data.sections = (data.sections || []).filter(s => (s.questions || []).length);
   return data;
 }
+
 function renumberQuestions(data){
   let n = 0;
   (data.sections||[]).forEach(sec => (sec.questions||[]).forEach(q => { q.number = ++n; }));
   data.computedTotal = (data.sections||[]).reduce(
     (t,s) => t + (s.questions||[]).reduce((a,q)=>a + (Number(q.marks)||0), 0), 0);
-  return data;
-}
-
-/* Degenerate MCQs: every option is "A) Correct / B) Incorrect / C) Both A and B /
-   D) None of the above", turning the stem into a statement rather than a question. That is
-   not a multiple-choice item — it is a True/False item wearing a costume. Rather than throw
-   the question away (the stem itself is usually fine), demote it to a proper True/False. */
-function fixDegenerateMcq(data){
-  const GENERIC = /^(?:\(?[a-dA-D][).]\s*)?(correct|incorrect|true|false|both a and b|all of the above|none of the above|both of the above|neither a nor b)\.?$/i;
-  (data.sections||[]).forEach(sec => (sec.questions||[]).forEach(q => {
-    if(q.type !== 'mcq' || !Array.isArray(q.options) || q.options.length < 2) return;
-    const generic = q.options.filter(o => GENERIC.test(String(o||'').trim())).length;
-    if(generic < q.options.length - 1) return;      // a single "None of the above" is legitimate
-    q.type = 'truefalse';
-    delete q.options;
-    if(q.answer) q.answer = /^\s*\(?[aA][).]?\s*|correct|true/.test(String(q.answer)) ? 'True' : 'False';
-  }));
   return data;
 }
 
@@ -4140,6 +4379,8 @@ function fixDegenerateMcq(data){
    the paper we actually built. Every clause below is derived from the finished paper, so it
    can never contradict what the student is holding.
    ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── STAGE 5 — INSTRUCTIONS. Written from the FINISHED paper, so they can never contradict it. ── */
 
 // Walk the finished paper once and describe each section factually.
 function sectionFacts(data){
@@ -4322,22 +4563,8 @@ function buildGeneralInstructions(data, P){
     style: 'numbered'
   };
 }
-function enforceBlueprint(data, bp){
-  balanceParts(data);
-  if(!bp || !Array.isArray(bp.sections) || bp.approx) return data;
-  bp.sections.forEach((spec, i) => {
-    const sec = data.sections[i];
-    if(!sec || !spec.count || !spec.marksEach) return;
-    if(sec.questions.length > spec.count) sec.questions = sec.questions.slice(0, spec.count);
-    sec.questions.forEach(q => { q.marks = spec.marksEach; if(q.orChoice) q.orChoice.marks = spec.marksEach; });
-  });
-  // Drop any extra sections the model invented.
-  if(data.sections.length > bp.sections.length) data.sections = data.sections.slice(0, bp.sections.length);
-  let n = 0;
-  data.sections.forEach(sec => sec.questions.forEach(q => { q.number = ++n; }));
-  data.computedTotal = data.sections.reduce((t,s)=>t + s.questions.reduce((a,q)=>a+(Number(q.marks)||0),0), 0);
-  return data;
-}
+
+/* ── STAGE 6 — AUDIT. Measure the finished paper for the AI Monitor. Never shown to the teacher. ── */
 
 /* Measure the paper against the design norms (difficulty spread, higher-order share,
    Indian-context compliance). Recorded on the trace so the AI Monitor shows whether the
@@ -4361,73 +4588,6 @@ function auditPaperQuality(data){
     qUntagged: qs.filter(q=>!q.difficulty).length,
     qForeignRefs: qs.filter(q=>foreign.test(stripMath(q.text))).length
   };
-}
-
-/* ── Normalise / guard the parsed paper data ── */
-// Models sometimes emit "\₹" (an undefined LaTeX command) or trap ₹ inside $...$, which
-// KaTeX cannot render. Normalise currency back to a plain, printable rupee symbol.
-function fixCurrency(t){
-  if(typeof t !== 'string') return t;
-  let x = t.replace(/\\+₹/g, '₹')
-           .replace(/\\(?:rupee|textrupee|rs)\b/gi, '₹')
-           .replace(/\$\s*₹\s*([\d,.]+)\s*\$/g, '₹$1')   // $₹800$  → ₹800
-           .replace(/₹\s*\$([\d,.]+)\$/g, '₹$1');          // ₹$800$  → ₹800
-
-  // Models sometimes put a literal "\n" inside a JSON string; it must not print as text.
-  x = x.replace(/\\n\s*/g, ' ');
-
-  // A single backslash before a LaTeX command is not a valid JSON escape, so parsing can
-  // strip it — "$20^\circ$" arrives as "$20^circ$" and KaTeX then prints "20°irc".
-  // Restore the backslash for known commands when they appear inside maths.
-  const CMDS = 'circ|frac|sqrt|times|div|pm|leq|geq|neq|approx|cdot|infty|alpha|beta|gamma|delta|theta|lambda|mu|pi|rho|sigma|phi|omega|Delta|Omega|Sigma|angle|perp|parallel|sum|int|rightarrow|leftarrow|Rightarrow|implies|ldots|dots|text|mathrm|le|ge';
-  x = x.replace(/\$([^$]*)\$/g, (m, inner) => {
-    const fixed = inner.replace(new RegExp('(^|[^\\\\A-Za-z])(' + CMDS + ')\\b', 'g'), '$1\\$2');
-    return '$' + fixed + '$';
-  });
-
-  // LaTeX the model wrote WITHOUT $…$ delimiters never reaches KaTeX in the preview and
-  // never reaches the Word converter either, so "\frac{1}{2}" printed as "{1}{2}" and
-  // "30^{\circ}" as "30^{°}". Convert those stray fragments to Unicode in the DATA, so the
-  // preview, the PDF and the Word file all show the same thing.
-  x = x.split(/(\$[^$]*\$)/).map(seg => {
-    if(seg.charAt(0) === '$') return seg;                       // real maths — leave for KaTeX
-    if(!/\\[a-zA-Z]|\\[^a-zA-Z]|[\^_]\s*\{/.test(seg)) return seg;
-    const lead = (seg.match(/^\s*/) || [''])[0];
-    const tail = (seg.match(/\s*$/) || [''])[0];
-    return lead + convTex(seg) + tail;                          // convTex trims, so restore spacing
-  }).join('');
-
-  return x;
-}
-
-function deepFixCurrency(o){
-  if(Array.isArray(o)) return o.map(deepFixCurrency);
-  if(o && typeof o === 'object'){ Object.keys(o).forEach(k => o[k] = deepFixCurrency(o[k])); return o; }
-  return fixCurrency(o);
-}
-
-function normalizePaperData(data, P){
-  deepFixCurrency(data);
-  data.kind = 'paper';
-  data.meta = data.meta || {};
-  data.meta.school = P.school;
-  data.meta.location = P.location;
-  data.meta.board = data.meta.board || P.board;
-  data.meta.className = data.meta.className || P.grade;
-  data.meta.subject = data.meta.subject || P.subject;
-  data.meta.maxMarks = data.meta.maxMarks || P.marksNum;
-  data.meta.durationLabel = data.meta.durationLabel || P.duration;
-  data.meta.examTitle = data.meta.examTitle || (P.tab === 'worksheet' ? 'Practice Worksheet' : 'Examination');
-  data.generalInstructions = Array.isArray(data.generalInstructions) ? data.generalInstructions : [];
-  data.sections = Array.isArray(data.sections) ? data.sections : [];
-  // renumber questions continuously as a safeguard
-  let n = 0;
-  data.sections.forEach(sec => {
-    sec.questions = Array.isArray(sec.questions) ? sec.questions : [];
-    sec.questions.forEach(q => { n++; if(!q.number) q.number = n; });
-  });
-  data.computedTotal = data.sections.reduce((t,s)=>t + s.questions.reduce((a,q)=>a + (Number(q.marks)||0),0), 0);
-  return data;
 }
 
 /* ═══════════════ RENDER: STUDENT QUESTION PAPER ═══════════════ */
@@ -4468,6 +4628,7 @@ function renderQuestionPaper(data){
     if(data.instructionPreamble) html += `<div class="qp-gi-lead">${esc(data.instructionPreamble)}</div>`;
     html += plain ? `<ul class="qp-gi-plain">` : `<ol>`;
     html += data.generalInstructions.map(i => `<li>${esc(i)}</li>`).join('');
+
     html += plain ? `</ul>` : `</ol>`;
     html += `</div>`;
   }
