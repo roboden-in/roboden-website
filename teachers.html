@@ -1479,9 +1479,11 @@ footer{
 .sl-quote blockquote{ font-size:4.4cqw; font-weight:700; color:var(--sl-ink); line-height:1.3; margin:1cqw 0 2.4cqw; }
 .sl-quote cite{ font-size:2.9cqw; color:var(--sl-sub); font-style:normal; font-weight:600; }
 
-/* AI Teacher nav accent */
-.nav-links a.nav-ai{color:#c4b5fd;font-weight:700;}
+/* AI Teacher nav accent — bold WHITE so it stands out as the flagship product without
+   looking like the "current page" state, which is the accent purple (.active). */
+.nav-links a.nav-ai{color:#fff;font-weight:700;}
 .nav-links a.nav-ai:hover{color:#fff;background:rgba(124,58,237,0.20);}
+.nav-links a.nav-ai.active{color:var(--accent);}   /* only on the AI Teacher page itself */
 
 /* Nav collapses to hamburger on tablets too (7 items don't fit under ~1024px) */
 @media(max-width:1024px){
