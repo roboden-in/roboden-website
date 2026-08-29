@@ -350,7 +350,12 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
 .btn-generate{
   width:100%;
   padding:14px;
-  background:linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
+  /* premium glossy: depth gradient + top sheen + layered shadow */
+  background:linear-gradient(180deg, #8b5cf6 0%, #6d28d9 46%, #5b21b6 100%);
+  box-shadow:0 1px 0 rgba(255,255,255,.28) inset, 0 -1px 0 rgba(0,0,0,.18) inset,
+             0 6px 18px rgba(109,40,217,.34), 0 1px 2px rgba(15,23,42,.12);
+  position:relative;
+  overflow:hidden;
   color:#ffffff;
   border:none;
   border-radius:8px;
@@ -362,14 +367,8 @@ nav .nav-right { min-width: 160px; justify-content: flex-end; display: flex; ali
   align-items:center;
   justify-content:center;
   gap:9px;
-  box-shadow:0 4px 14px rgba(109,40,217,0.3);
   transition:all 0.2s ease;
   margin-top:20px;
-}
-.btn-generate:hover{
-  background:linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-  box-shadow:0 6px 18px rgba(109,40,217,0.4);
-  transform:translateY(-1px);
 }
 .btn-generate:disabled{opacity:0.6; cursor:not-allowed; transform:none;}
 .btn-generate svg{width:18px; height:18px;}
@@ -1316,6 +1315,35 @@ footer{
   font-size:0.63rem; font-weight:800; }
 .aim-empty{ padding:26px; text-align:center; color:var(--app-ink-muted); font-size:0.85rem; }
 
+/* ── PREMIUM GLOSSY BUTTONS (AI Teacher workspace) ── */
+.btn-generate::after{               /* soft sheen across the top half */
+  content:''; position:absolute; inset:0 0 52% 0; pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0));
+}
+.btn-generate:hover{ filter:brightness(1.06);
+  box-shadow:0 1px 0 rgba(255,255,255,.32) inset, 0 -1px 0 rgba(0,0,0,.18) inset,
+             0 10px 26px rgba(109,40,217,.42), 0 2px 4px rgba(15,23,42,.14); }
+.btn-generate:active{ transform:translateY(1px);
+  box-shadow:0 1px 0 rgba(255,255,255,.2) inset, 0 3px 10px rgba(109,40,217,.3); }
+
+.btn-doc-tool{
+  background:linear-gradient(180deg, #ffffff 0%, #f4f5f9 100%);
+  box-shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 1px 2px rgba(15,23,42,.07);
+}
+.btn-doc-tool:hover{ background:linear-gradient(180deg,#ffffff 0%, #ecedf5 100%);
+  border-color:#a78bfa; color:var(--p); box-shadow:0 2px 6px rgba(109,40,217,.14); }
+.btn-doc-tool:active{ transform:translateY(1px); }
+
+.wiz-btn.next{
+  background:linear-gradient(180deg, #8b5cf6 0%, #6d28d9 48%, #5b21b6 100%);
+  box-shadow:0 1px 0 rgba(255,255,255,.26) inset, 0 4px 12px rgba(109,40,217,.32);
+}
+.wiz-btn.next:hover{ filter:brightness(1.07); box-shadow:0 1px 0 rgba(255,255,255,.3) inset, 0 7px 18px rgba(109,40,217,.4); }
+.wiz-btn.next:active{ transform:translateY(1px); }
+.wiz-btn.back{ background:linear-gradient(180deg,#fff 0%, #f4f5f9 100%); box-shadow:0 1px 2px rgba(15,23,42,.06); }
+
+.btn-variant.active{ box-shadow:0 1px 0 rgba(255,255,255,.25) inset, 0 3px 10px rgba(109,40,217,.28); }
+
 /* Pro / subscription card — clean and minimal */
 .pricing-card-banner{ text-align:center; padding:26px 20px 22px; }
 .pro-eyebrow{ font-size:0.7rem; text-transform:uppercase; letter-spacing:0.14em; font-weight:800; color:#c7d2fe; }
@@ -1647,12 +1675,6 @@ footer{
 
         <!-- Actions -->
         <div class="action-buttons" id="toolActionsBar" style="display:none;">
-          <button class="btn-doc-tool" id="btnCopyAction" onclick="copyActiveDoc()" title="Copy Text">
-            <i data-lucide="copy"></i> Copy
-          </button>
-          <button class="btn-doc-tool whatsapp-btn" onclick="sendWhatsApp()" title="Share to WhatsApp">
-            <i data-lucide="share-2"></i> WhatsApp
-          </button>
           <button class="btn-doc-tool" id="btnPrintAction" onclick="printOrPdf()" title="Download as PDF (matches preview)">
             <i data-lucide="file-down"></i> PDF
           </button>
@@ -1944,7 +1966,7 @@ footer{
 <footer>
   <div class="footer-inner">
     <div>
-      <span><strong>Roboden</strong> — STEAM & Robotics Education Platform</span>
+      <span><strong>Roboden</strong> — Think · Build · Innovate</span>
     </div>
     <div>
       <span>AI assists preparation; final classroom review rests with the educator.</span>
@@ -2440,6 +2462,9 @@ function activateTab(tabKey){
 
 // ── DYNAMIC FORM RENDERER FOR EACH TAB ──
 function renderDynamicForm(tabKey){
+  // Non-wizard tabs always show Generate; the question-paper wizard re-hides it at step 1.
+  const genBtn = document.getElementById('btnSubmitGen');
+  if(genBtn) genBtn.style.display = 'flex';
   const container = document.getElementById('dynamicFormFields');
   const pTitle = document.getElementById('panelHeading');
   const pSub = document.getElementById('panelSubheading');
@@ -2672,10 +2697,10 @@ function renderDynamicForm(tabKey){
             </div>
           </div>
         </div>
-        <div class="wiz-nav"><button type="button" class="wiz-btn back" onclick="gotoWizStep(3)">Back</button><span class="fl-hint">Ready — tap Generate below</span></div>
+        <div class="wiz-nav"><button type="button" class="wiz-btn back" onclick="gotoWizStep(3)">Back</button><span class="fl-hint">Everything set — tap Generate below</span></div>
       </div>
     `;
-    currentWizStep = 1;
+    gotoWizStep(1);   // sets step visibility AND hides Generate until step 4
     setTimeout(() => { refreshSubjectOptions(); updateExamTypeInfo(); applySavedSchoolToForm(); }, 0);
   }
   else if(tabKey === 'worksheet'){
@@ -3516,6 +3541,10 @@ function gotoWizStep(n){
     p.classList.toggle('active', i === n);
     p.classList.toggle('done', i < n);
   });
+  // Generate only appears on the final step — otherwise teachers hit it before the paper
+  // is configured. Next is the primary action on steps 1–3.
+  const gen = document.getElementById('btnSubmitGen');
+  if(gen) gen.style.display = (n === 4) ? 'flex' : 'none';
   const panel = document.querySelector('.form-panel');
   if(panel) panel.scrollTop = 0;
   if(window.lucide) lucide.createIcons();
