@@ -2110,7 +2110,11 @@ const GROQ_CONFIG = {
 
    To switch a provider on: add its key to the proxy's Script Properties, then flip ready. */
 const PROVIDERS = {
-  groq:       { ready: true,  maxOutput: 6000,  label:'Groq' },
+  // 5000, not 6000. Our prompt measures ~1,700 tokens, and Groq counts prompt + completion
+  // together against the free tier's 8,000/minute. 1700 + 6000 = 7700 left only 300 tokens of
+  // headroom, so normal tokeniser variance tipped it over and Groq answered 413 "Request
+  // Entity Too Large" — no output at all, and a silent drop to a weaker model.
+  groq:       { ready: true,  maxOutput: 5000,  label:'Groq' },
   cerebras:   { ready: true,  maxOutput: 16000, label:'Cerebras' },
   deepinfra:  { ready: false, maxOutput: 16000, label:'DeepInfra' },
   together:   { ready: false, maxOutput: 16000, label:'Together' },
@@ -2208,6 +2212,24 @@ const AI_PAID_TIER = false;
  * ctx: { tool, language, subjectGroup, tier }
  * → { intended, ladder, plannedChain, reason, tier, reasoningEffort, providers }
  */
+/* HOW MUCH OUTPUT WILL THIS JOB ACTUALLY NEED?
+   This is the number that decides which HOST can do the work at all, and it was the missing
+   piece: an 80-mark paper is 39 questions, each carrying options, an answer, a worked
+   solution, a Bloom level and a difficulty — roughly 9,000 output tokens (a real run measured
+   9,062). Groq's free tier allows 8,000 for prompt AND completion combined, so that job can
+   never succeed there. It returned 413 and the teacher silently got a weaker model's paper.
+   Measured against real generations rather than guessed. */
+function estimateOutputTokens(ctx){
+  const tool = ctx.tool || 'question_paper';
+  if(tool === 'ocr')         return 1500;
+  if(tool === 'ppt_slides')  return 4500;
+  if(tool === 'lesson_plan' || tool === 'teaching_aid') return 3500;
+  if(ctx.tier === 'cheap')   return 2500;   // reformatting the teacher's own questions
+  // Papers and worksheets scale with the mark total.
+  const marks = Number(ctx.marks) || 40;
+  return Math.round(600 + marks * 105);     // 10→1650, 20→2700, 40→4800, 80→9000
+}
+
 function planRoute(ctx = {}){
   const tool = ctx.tool || 'question_paper';
   const language = (ctx.language || 'en').toLowerCase();
@@ -2237,23 +2259,38 @@ function planRoute(ctx = {}){
   // Safety net: never return an empty ladder.
   if(!resolved.length) expand(['GPT_OSS_120B','GPT_OSS_20B','COMPOUND_MINI'], resolved);
 
+  /* CAPACITY-AWARE ORDERING — the fix for "gpt-oss-120b never runs".
+     A host that cannot produce the required number of tokens does not merely do it badly; it
+     refuses with 413 and returns NOTHING, burning a slot in the ladder for no output. So rungs
+     whose host can actually deliver this job come FIRST, in quality order, and the ones that
+     will refuse are kept only as a last resort. For an 80-mark paper this promotes
+     gpt-oss-120b@cerebras above gpt-oss-120b@groq — the same top model, at the only host that
+     can finish it. For a 20-mark test everything fits and the order is unchanged. */
+  const needed = estimateOutputTokens(ctx);
+  const fits    = resolved.filter(r => providerMaxOutput(r.provider) >= needed);
+  const tooBig  = resolved.filter(r => providerMaxOutput(r.provider) <  needed);
+  const ordered = fits.concat(tooBig);
+
   // `ideal`   = the best model the rules ask for, even if we can't reach it yet (no key).
   // `intended` = the best model we can ACTUALLY call with today's configuration.
   // When they differ we are running degraded — a configuration gap, not a runtime failure,
   // so it is reported separately from the green/amber/red verdict.
   const idealKey = rule.chain[0];
   const ideal = MODELS[idealKey] ? MODELS[idealKey].id : idealKey;
-  const intended = resolved.length ? resolved[0].model : null;
+  const intended = ordered.length ? ordered[0].model : null;
 
   return {
     ideal,
     intended,
     degraded: !!(intended && ideal !== intended),   // best model unreachable (missing key)
-    ladder: resolved.map(r => makeRef(r.model, r.provider)),
-    providers: resolved.reduce((a,r) => (a[makeRef(r.model, r.provider)] = r.provider, a), {}),
+    ladder: ordered.map(r => makeRef(r.model, r.provider)),
+    providers: ordered.reduce((a,r) => (a[makeRef(r.model, r.provider)] = r.provider, a), {}),
     // How many different hosts we can reach for the BEST model — the number that decides
     // whether gpt-oss-120b actually runs during the evening rush.
-    bestModelHosts: resolved.filter(r => r.model === (resolved[0] && resolved[0].model)).length,
+    bestModelHosts: ordered.filter(r => r.model === (ordered[0] && ordered[0].model)).length,
+    // For the AI Monitor: what this job needs, and how many hosts can actually deliver it.
+    outputNeeded: needed,
+    hostsThatFit: fits.length,
     plannedChain: rule.chain.map(k => MODELS[k] ? MODELS[k].id : k),  // what we WANTED, incl. unavailable
     skipped: rule.chain.filter(k => !providerFor(k)).map(k => MODELS[k] ? MODELS[k].id : k),
     reason: rule.reason,
@@ -3249,6 +3286,9 @@ async function executeGenerate(){
     tier: (currentTabKey === 'question_paper' && paperSrc === 'custom' && !hasPhotos) ? 'cheap' : 'smart',
     subject: P.subject, board: P.board, examType: P.examKey, marks: P.marksNum
   };
+  // Routing needs to know how big the answer will be, so it can pick a host that can
+  // actually produce it rather than one that will refuse with 413.
+  routeCtx.outputTokens = estimateOutputTokens(routeCtx);
   const plan = planRoute(routeCtx);
   const trace = newTrace(routeCtx, plan);
   console.info(`[route] ${plan.reason} → intended ${plan.intended} (${plan.reasoningEffort} reasoning)`);
