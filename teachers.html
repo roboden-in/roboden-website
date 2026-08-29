@@ -2298,7 +2298,9 @@ function planRoute(ctx = {}){
     // Reasoning burns OUTPUT tokens, so effort and max_tokens must be chosen together and
     // kept under the plan's tokens-per-minute ceiling (8K on the Groq free tier).
     reasoningEffort: highReasoning ? (AI_PAID_TIER ? 'high' : 'medium') : 'low',
-    maxTokens: highReasoning ? (AI_PAID_TIER ? 8000 : 6000) : 5500,
+    // ONE number sizes the job: it picks the host (above) and the token ask (in groqChat).
+    // Previously this was a separate, smaller figure that silently capped the caller.
+    maxTokens: needed,
     facts
   };
 }
@@ -3346,12 +3348,12 @@ async function executeGenerate(){
         // at a lower temperature, instead of showing an error the teacher cannot act on.
         let raw, parsed;
         for(let attempt = 1; attempt <= 2; attempt++){
-          // Output length scales with the paper: an 80-mark paper is ~38 questions, each
-          // carrying an answer, a solution, a Bloom level and a difficulty. 5500 was not
-          // enough and the reply was silently cut off. 8000 is the proxy's hard cap.
+          // Ask for exactly what routing sized the job at. Hard-coded steps (8000 for a big
+          // paper) were BELOW the real need of ~9000, so an 80-mark paper truncated even on a
+          // host with the headroom. One estimate now drives both host choice and token ask.
           raw = await groqChat(buildPaperPrompt(P), {
             temperature: attempt === 1 ? 0.22 : 0.1,
-            max_tokens: P.marksNum >= 70 ? 8000 : P.marksNum >= 40 ? 6500 : 5500,
+            max_tokens: plan.outputNeeded || 5500,
             jsonMode:true, plan, trace });
           try { parsed = extractJson(raw); break; }
           catch(e){
