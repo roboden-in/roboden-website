@@ -23,6 +23,8 @@ var ALLOWED_MODELS = [
   // Production models
   'openai/gpt-oss-120b',
   'openai/gpt-oss-20b',
+  'llama-3.3-70b-versatile',        // Groq production 70B — the safe non-preview fallback
+  'gemma-4-31b',                    // Cerebras public endpoint
   // Production systems — no daily token cap, high tokens/minute (the reserve tank)
   'groq/compound',
   'groq/compound-mini',
@@ -64,7 +66,9 @@ var PROVIDER_CONFIG = {
   cerebras: {
     url: 'https://api.cerebras.ai/v1/chat/completions',
     keyProp: 'CEREBRAS_API_KEY',
-    models: { 'openai/gpt-oss-120b': 'gpt-oss-120b', 'openai/gpt-oss-20b': 'gpt-oss-20b' }
+    // Cerebras public endpoints serve ONLY these two. gpt-oss-20b is NOT among them, so it is
+    // deliberately absent — mapping it would produce a call that can only fail.
+    models: { 'openai/gpt-oss-120b': 'gpt-oss-120b' }
   },
   deepinfra: {
     url: 'https://api.deepinfra.com/v1/openai/chat/completions',

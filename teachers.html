@@ -2129,7 +2129,14 @@ function providerMaxOutput(provider){
 
 const MODELS = {
   GPT_OSS_120B:  { id:'openai/gpt-oss-120b', providers:['groq','cerebras','deepinfra','together','fireworks','novita','openrouter'] },
-  GPT_OSS_20B:   { id:'openai/gpt-oss-20b',  providers:['groq','cerebras','deepinfra','openrouter'] },
+  // ⚠️ NOT on Cerebras. Their public endpoints serve only gpt-oss-120b and gemma-4-31b, so
+  // listing cerebras here produced a rung that could only ever fail with "model not found".
+  GPT_OSS_20B:   { id:'openai/gpt-oss-20b',  providers:['groq','deepinfra','openrouter'] },
+  // Production-grade fallback on Groq. Preferred over the qwen models below because those are
+  // Groq "Preview" — explicitly discontinuable at short notice, which is not a foundation for
+  // a product people pay for.
+  LLAMA_33_70B:  { id:'llama-3.3-70b-versatile', providers:['groq'] },
+  GEMMA_4_31B:   { id:'gemma-4-31b',         providers:['cerebras'] },
   QWEN_38:       { id:'qwen/qwen3.8-27b',    providers:['groq','openrouter'] },
   QWEN_36:       { id:'qwen/qwen3.6-27b',    providers:['groq','openrouter'] },
   COMPOUND_MINI: { id:'groq/compound-mini',  providers:['groq'] },
@@ -2170,22 +2177,22 @@ const ROUTE_RULES = [
   { when:{ tool:'ocr' },                  chain:['QWEN_VISION','QWEN_VISION_2','GEMINI_FLASH'],   reason:'English handwriting → Qwen multimodal vision' },
 
   // ── Cheap/simple jobs (formatting an existing transcription or pasted text) ──
-  { when:{ tier:'cheap' },                chain:['GPT_OSS_20B','QWEN_36','COMPOUND_MINI','GPT_OSS_120B'], reason:'Simple formatting job → cheap tier' },
+  { when:{ tier:'cheap' },                chain:['GPT_OSS_20B','GEMMA_4_31B','COMPOUND_MINI','QWEN_36','GPT_OSS_120B'], reason:'Simple formatting job → cheap tier' },
 
   // ── Slides (English only for now) ──
-  { when:{ tool:'ppt_slides' },           chain:['GPT_OSS_120B','GEMINI_FLASH','QWEN_38','GPT_OSS_20B','COMPOUND_MINI','COMPOUND'], reason:'Slides → best English reasoning model' },
+  { when:{ tool:'ppt_slides' },           chain:['GPT_OSS_120B','GEMINI_FLASH','LLAMA_33_70B','GPT_OSS_20B','GEMMA_4_31B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'Slides → best English reasoning model' },
 
   // ── Indic papers ──
-  { when:{ indic:true, group:'math' },    chain:['GEMINI_FLASH','SARVAM_105B','QWEN_38','GPT_OSS_120B','COMPOUND_MINI'], reason:'Indic + maths → Gemini (maths + Indic strength)' },
-  { when:{ indic:true, group:'science' }, chain:['GEMINI_FLASH','SARVAM_105B','QWEN_38','GPT_OSS_120B','COMPOUND_MINI'], reason:'Indic + science → Gemini' },
-  { when:{ indic:true },                  chain:['SARVAM_105B','GEMINI_FLASH','QWEN_38','GPT_OSS_120B','COMPOUND_MINI'], reason:'Indic language/social → Sarvam (native-script specialist)' },
+  { when:{ indic:true, group:'math' },    chain:['GEMINI_FLASH','SARVAM_105B','GPT_OSS_120B','LLAMA_33_70B','QWEN_38','COMPOUND_MINI'], reason:'Indic + maths → Gemini (maths + Indic strength)' },
+  { when:{ indic:true, group:'science' }, chain:['GEMINI_FLASH','SARVAM_105B','GPT_OSS_120B','LLAMA_33_70B','QWEN_38','COMPOUND_MINI'], reason:'Indic + science → Gemini' },
+  { when:{ indic:true },                  chain:['SARVAM_105B','GEMINI_FLASH','GPT_OSS_120B','LLAMA_33_70B','QWEN_38','COMPOUND_MINI'], reason:'Indic language/social → Sarvam (native-script specialist)' },
 
   // ── English papers ──
-  { when:{ group:'math', highReasoning:true },    chain:['GPT_OSS_120B','GEMINI_FLASH','QWEN_38','GPT_OSS_20B','COMPOUND_MINI','COMPOUND'], reason:'English maths → gpt-oss-120b at HIGH reasoning' },
-  { when:{ group:'science', highReasoning:true }, chain:['GPT_OSS_120B','GEMINI_FLASH','QWEN_38','GPT_OSS_20B','COMPOUND_MINI','COMPOUND'], reason:'English science → gpt-oss-120b at HIGH reasoning' },
+  { when:{ group:'math', highReasoning:true },    chain:['GPT_OSS_120B','GEMINI_FLASH','LLAMA_33_70B','GPT_OSS_20B','GEMMA_4_31B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'English maths → gpt-oss-120b at HIGH reasoning' },
+  { when:{ group:'science', highReasoning:true }, chain:['GPT_OSS_120B','GEMINI_FLASH','LLAMA_33_70B','GPT_OSS_20B','GEMMA_4_31B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'English science → gpt-oss-120b at HIGH reasoning' },
 
   // ── Default ──
-  { when:{},                              chain:['GPT_OSS_120B','GEMINI_FLASH','QWEN_38','GPT_OSS_20B','COMPOUND_MINI','COMPOUND'], reason:'Default → best English reasoning model' }
+  { when:{},                              chain:['GPT_OSS_120B','GEMINI_FLASH','LLAMA_33_70B','GPT_OSS_20B','GEMMA_4_31B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'Default → best English reasoning model' }
 ];
 
 const INDIC_LANGS = ['te','kn','ta','ml','hi'];
