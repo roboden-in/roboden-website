@@ -1170,9 +1170,15 @@ footer{
 .qp-school{ font-size:19px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; line-height:1.2; }
 .qp-sub{ font-size:12.5px; color:var(--qp-soft); margin-top:1px; }
 .qp-exam{ font-size:14px; font-weight:700; margin-top:6px; text-transform:uppercase; letter-spacing:.03em; }
+/* Class + Subject stacked on the left, Max. Marks above Time on the right — the layout
+   every Indian board paper uses. text-align on each column (not the flex row) keeps the
+   two lines of a column flush with each other. */
+.qp-meta{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
+  font-size:13px; font-weight:700; margin-top:8px; }
+.qp-meta-l{ text-align:left; }
+.qp-meta-r{ text-align:right; }
+.qp-meta div{ line-height:1.5; white-space:nowrap; }
 .qp-metatop{ display:flex; justify-content:space-between; gap:16px; font-size:13px; font-weight:700; margin-top:8px; }
-.qp-metabar{ display:flex; justify-content:space-between; gap:16px; font-size:13px; font-weight:700; margin-top:3px; }
-.qp-metabar .qp-name{ font-weight:600; color:var(--qp-soft); flex:1; text-align:center; }
 
 /* General instructions */
 .qp-gi{ margin:0 0 16px; }
@@ -2372,11 +2378,44 @@ function retryAfterSeconds(msg){
 // Tolerant JSON extraction — strips ```fences```, prose, and trailing junk that gpt-oss
 // sometimes adds, then parses the first balanced {...} or [...] block.
 // Protect LaTeX commands from JSON escape processing (\theta -> TAB+"heta" etc.)
-function preserveLatexBackslashes(json){
+// Every LaTeX command name we expect a paper setter to use. Matching by NAME (rather than
+// "any backslash followed by a letter") matters: "\n" inside a JSON string is a genuine
+// newline in a worked solution, and blindly escaping it would print a literal "\n".
+const LATEX_CMD_NAMES = 'dfrac|tfrac|frac|sqrt|times|div|pm|mp|cdot|cdots|ldots|dots|vdots|' +
+  'alpha|beta|gamma|delta|epsilon|varepsilon|zeta|eta|theta|vartheta|iota|kappa|lambda|mu|nu|xi|' +
+  'rho|varrho|sigma|tau|upsilon|phi|varphi|chi|psi|omega|' +
+  'Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega|' +
+  'sinh|cosh|tanh|sin|cos|tan|cot|sec|csc|arcsin|arccos|arctan|log|ln|lg|exp|lim|limits|' +
+  'sum|prod|int|iint|oint|infty|partial|nabla|' +
+  'angle|triangle|square|parallel|perp|cong|simeq|sim|approx|equiv|propto|neq|ne|leq|le|geq|ge|' +
+  'll|gg|subseteq|supseteq|subset|supset|notin|in|cup|cap|emptyset|varnothing|forall|exists|' +
+  'Leftrightarrow|leftrightarrow|Rightarrow|rightarrow|Leftarrow|leftarrow|longrightarrow|to|implies|iff|mapsto|' +
+  'overline|underline|overrightarrow|widehat|widetilde|bar|hat|vec|tilde|ddot|dot|' +
+  'text|textbf|textit|mathrm|mathbf|mathbb|mathcal|operatorname|' +
+  'left|right|bigg|Bigg|big|Big|begin|end|quad|qquad|hspace|vspace|' +
+  'degree|circ|prime|binom|boxed|bmod|pmod|therefore|because|' +
+  'max|min|deg|gcd|lcm|det|dim|ker|rupee|textrupee|rs';
+
+// LaTeX also escapes punctuation ("\%", "\{", "\,", "\ "). None of those are legal JSON
+// escapes, so JSON.parse rejects the WHOLE document -- this is the "Unexpected token"
+// crash the teacher was shown. Repair them the same way as commands.
+const LATEX_PUNCT_CLASS = "[(){}\\[\\]|%$&#_^~,;!:+\\-*=<>'` ]";
+
+// A backslash is legal in JSON only before  " \ / b f n r t u.  Anything else is a stray
+// LaTeX backslash the model forgot to double -- last-resort repair so we never hard-fail.
+function escapeStrayBackslashes(json){
   return json
-    .replace(/\\\\/g, '\u0000')            // park already-escaped backslashes
-    .replace(/\\([a-zA-Z])/g, '\\\\$1')   // escape a lone backslash before a command
-    .replace(/\u0000/g, '\\\\');           // restore
+    .replace(/\\u(?![0-9a-fA-F]{4})/g, '\\\\u')
+    .replace(/\\(?!["\\/bfnrtu])/g, '\\\\');
+}
+
+// Protect LaTeX from JSON escape processing (\theta -> TAB + "heta", \frac -> FormFeed + "rac").
+// One pass, no sentinel: the first alternative matches an ALREADY-escaped pair and returns it
+// untouched, so a correct "\\frac" is never double-escaped.
+function preserveLatexBackslashes(json){
+  const RE = new RegExp(
+    '\\\\\\\\|\\\\(?:(' + LATEX_CMD_NAMES + ')(?![a-zA-Z])|(' + LATEX_PUNCT_CLASS + '))', 'g');
+  return json.replace(RE, (m, cmd, punct) => (cmd || punct) ? '\\' + m : m);
 }
 
 function extractJson(raw){
@@ -2403,8 +2442,19 @@ function extractJson(raw){
     }
   }
   const slice = end === -1 ? s.slice(start) : s.slice(start, end + 1);
-  try { return JSON.parse(preserveLatexBackslashes(slice)); }
-  catch(e){ return JSON.parse(slice); }   // fall back to the untouched text
+  // Try progressively more aggressive repairs. Never give up on the first failure — a
+  // rejected parse means the teacher's tokens were already spent.
+  const attempts = [
+    slice,                                                  // the model got it right
+    preserveLatexBackslashes(slice),                        // rescue known LaTeX
+    escapeStrayBackslashes(slice),                          // escape every illegal backslash
+    escapeStrayBackslashes(preserveLatexBackslashes(slice)) // both
+  ];
+  let lastErr;
+  for(const text of attempts){
+    try { return JSON.parse(text); } catch(e){ lastErr = e; }
+  }
+  throw new Error('AI_BAD_JSON: ' + (lastErr && lastErr.message));
 }
 
 let studentMarkdownStore = '';
@@ -3252,8 +3302,19 @@ async function executeGenerate(){
         else if(pastedTxt) data = await generatePaperFromPastedText(P, pastedTxt, trace); // pasted → paper
         else throw new Error('Add your questions first — paste them in, or upload a photo.');
       } else {
-        const raw = await groqChat(buildPaperPrompt(P), { temperature:0.22, max_tokens:5500, jsonMode:true, plan, trace });
-        data = normalizePaperData(extractJson(raw), P);
+        // A malformed reply is a MODEL slip, not a teacher mistake. Retry once, quietly and
+        // at a lower temperature, instead of showing an error the teacher cannot act on.
+        let raw, parsed;
+        for(let attempt = 1; attempt <= 2; attempt++){
+          raw = await groqChat(buildPaperPrompt(P), {
+            temperature: attempt === 1 ? 0.22 : 0.1, max_tokens:5500, jsonMode:true, plan, trace });
+          try { parsed = extractJson(raw); break; }
+          catch(e){
+            if(attempt === 2) throw e;
+            trace.jsonRetry = (trace.jsonRetry || 0) + 1;   // visible in the AI Monitor only
+          }
+        }
+        data = normalizePaperData(parsed, P);
 
         // Marks are made exact IN CODE (no second AI call): we asked for a surplus of
         // questions, so trimming each section to its blueprint count lands the total
@@ -3261,15 +3322,24 @@ async function executeGenerate(){
         // Trim the surplus (free). Only if a section is genuinely SHORT do we make one small
         // top-up call for just the missing questions — never a full regeneration.
         const bpNow = getBlueprint(P);
+        fixDegenerateMcq(data);
+        ensureBlueprintSections(data, bpNow);   // a missing section must exist before we can fill it
         enforceBlueprint(data, bpNow);
         if(Math.abs((data.computedTotal||0) - P.marksNum) > 0.5){
           await topUpSections(data, bpNow, P, plan, trace);
+          fixDegenerateMcq(data);
           enforceBlueprint(data, bpNow);
         }
+        // Prune AFTER the blueprint pass — pruning first would shift section indices and
+        // hand Section C's 5-mark rule to whatever moved into its slot.
+        pruneEmptySections(data);
+        renumberQuestions(data);
         if(Math.abs((data.computedTotal||0) - P.marksNum) > 0.5){
           trace.marksShort = data.computedTotal;      // recorded for the AI Monitor only
           data.meta.maxMarks = data.computedTotal;    // never print a self-contradictory paper
         }
+        // State the instructions from the FINAL paper, replacing whatever the model imagined.
+        data.generalInstructions = buildGeneralInstructions(data, P);
         Object.assign(trace, auditPaperQuality(data));   // difficulty/cognitive spread → AI Monitor
       }
       window.lastPaperData = data;
@@ -3291,7 +3361,7 @@ async function executeGenerate(){
     reportTrace(trace);
   } catch (err) {
     console.error(err);
-    toast('Generation failed: ' + (err.message || 'check network / proxy config'), 'err');
+    toast(teacherFacingError(err), 'err');
     document.getElementById('loadingView').style.display = 'none';
     document.getElementById('emptyView').style.display = 'flex';
     finalizeTrace(trace, { ok:false });
@@ -3390,6 +3460,37 @@ function esc(s){
   return String(s == null ? '' : s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;');
+}
+
+/* Teachers must never see a stack trace, a JSON parser message, a model name or a proxy URL:
+   it is meaningless to them, it looks broken, and it tells a competitor how the product is
+   built. Every failure becomes one plain sentence that says what to do next. The real error
+   still goes to console.error and to the AI Monitor trace for us. */
+function teacherFacingError(err){
+  const raw = String((err && err.message) || err || '');
+  // Only messages WE wrote for teachers pass through verbatim. A heuristic ("looks like a
+  // sentence") is not safe enough — it let "Failed to fetch" straight through to the screen.
+  const OURS = [
+    /^Add your questions first/,
+    /daily limit|daily cap|generations? (today|left)/i,
+    /^Generate a document first/,
+    /^Choose (a|at least)/i,
+    /^Enter (a|your)/i,
+    /still loading/i
+  ];
+  if(OURS.some(re => re.test(raw))) return raw;
+
+  if(/AI_BAD_JSON|JSON|Unexpected token|position \d+/i.test(raw))
+    return 'That draft came back garbled. Tap Generate once more — it usually works the second time.';
+  if(/rate.?limit|429|quota|capacity/i.test(raw))
+    return 'The AI is busy right now. Please wait a few seconds and tap Generate again.';
+  if(/failed to fetch|networkerror|network|timeout|abort/i.test(raw))
+    return 'Could not reach the internet. Check your connection and tap Generate again.';
+  if(/401|403|unauthor|forbidden|api key/i.test(raw))
+    return 'The AI service is temporarily unavailable. Please try again shortly.';
+  if(/50\d|server error|internal/i.test(raw))
+    return 'The AI service had a hiccup. Please tap Generate again.';
+  return 'Could not build the paper this time. Please tap Generate again.';
 }
 
 function toast(msg, type){
@@ -3825,7 +3926,6 @@ Never write \\₹ and never place ₹ inside $...$.`;
     "examTitle": "${P.examTitle}",
     "session": "2025-26", "maxMarks": ${P.marksNum}, "durationLabel": "${P.duration}"
   },
-  "generalInstructions": ["<5-7 concise, board-authentic instructions>"],
   "sections": [
     {
       "name": "Section A",
@@ -3857,7 +3957,18 @@ Never write \\₹ and never place ₹ inside $...$.`;
 • Chapter(s)/topic: "${P.topic}" — spread questions across ALL listed chapters. Subject: ${P.subject}. Board: ${P.board}. Class: ${P.grade}. Exam: ${P.examType.label}.
 • ${blueprintToText(bp)}
 • The SUM of all question marks (counting each internal OR-group or attempt-any group once) MUST equal exactly ${P.marksNum}.
-• For MCQ give exactly 4 options; put the correct option text/letter in "answer".
+• Do NOT output "generalInstructions" — the application writes them from the final paper.
+• MCQ RULES (a paper full of lazy MCQs is worthless to a teacher):
+  – The "text" must be a QUESTION or an incomplete statement to be completed — never a
+    finished statement the student merely judges true or false.
+  – Give exactly 4 options that are all PLAUSIBLE, SUBJECT-SPECIFIC answers to that question
+    (e.g. for $\\tan 30^\\circ$: $\\frac{1}{\\sqrt3}$, $\\sqrt3$, $1$, $\\frac{\\sqrt3}{2}$).
+    Distractors should reflect realistic student errors.
+  – FORBIDDEN option sets: "Correct / Incorrect", "True / False", "Both A and B",
+    "All of the above", "None of the above", or any variation of them. Every one of the
+    4 options must be a different concrete value, term, or statement.
+  – Never reuse the same 4 options across questions.
+• Put the correct option's full text in "answer".
 • Do NOT include ruled answer space — students write in a separate answer booklet.
 • ${paperDesignRules(P, bp)}
 • TEACHER ANSWER KEY: EVERY question must include "answer", a brief "solution" (value points / steps), a "bloom" level and a "difficulty". For case-study/multi-part questions, EACH entry in "parts" must ALSO carry its own "answer" and "solution" — a blank answer key is unacceptable. Any "orChoice" needs its own answer and solution too. ${boardMarkingRules(P.board)}
@@ -3912,7 +4023,9 @@ async function topUpSections(data, bp, P, plan, trace){
     { role:'user', content:
       `For a ${P.board} ${P.grade} ${P.subject} paper on "${P.topic}", write ONLY these additional questions:\n` +
       missing.map(m => `• ${m.name}: ${m.need} more question(s) of ${m.marks} mark(s) each — ${m.note}`).join('\n') +
-      `\n\nDo NOT repeat any of these existing questions: ${asked.slice(0, 900)}\n` +
+      `\n\nEach MCQ must be a real question with 4 plausible, subject-specific options. ` +
+      `NEVER use "Correct/Incorrect", "True/False", "Both A and B", "All/None of the above".\n` +
+      `\nDo NOT repeat any of these existing questions: ${asked.slice(0, 900)}\n` +
       `Return: {"add":[{"section":"<section name>","text":"...","type":"mcq|short|long","marks":<n>,` +
       `"options":["..."],"answer":"...","solution":"...","bloom":"...","difficulty":"easy|medium|hard"}]}` }
   ];
@@ -3945,6 +4058,91 @@ function balanceParts(data){
     parts[parts.length-1].marks = q.marks - base*(parts.length-1);
   }));
   return data;
+}
+
+/* A weaker fallback model sometimes returns only Section A. The top-up call then had nowhere
+   to put the missing questions (data.sections[idx] was undefined) so they were silently
+   dropped — which is how an 80-mark paper printed as "Max. Marks: 18". Create the empty
+   sections up front so the top-up has a home, and remove any that stay empty. */
+function ensureBlueprintSections(data, bp){
+  if(!bp || !Array.isArray(bp.sections) || bp.approx) return data;
+  data.sections = data.sections || [];
+  bp.sections.forEach((spec, i) => {
+    if(!data.sections[i]) data.sections[i] = { name: spec.name, note: spec.note, questions: [] };
+    data.sections[i].questions = data.sections[i].questions || [];
+  });
+  return data;
+}
+function pruneEmptySections(data){
+  data.sections = (data.sections || []).filter(s => (s.questions || []).length);
+  return data;
+}
+function renumberQuestions(data){
+  let n = 0;
+  (data.sections||[]).forEach(sec => (sec.questions||[]).forEach(q => { q.number = ++n; }));
+  data.computedTotal = (data.sections||[]).reduce(
+    (t,s) => t + (s.questions||[]).reduce((a,q)=>a + (Number(q.marks)||0), 0), 0);
+  return data;
+}
+
+/* Degenerate MCQs: every option is "A) Correct / B) Incorrect / C) Both A and B /
+   D) None of the above", turning the stem into a statement rather than a question. That is
+   not a multiple-choice item — it is a True/False item wearing a costume. Rather than throw
+   the question away (the stem itself is usually fine), demote it to a proper True/False. */
+function fixDegenerateMcq(data){
+  const GENERIC = /^(?:\(?[a-dA-D][).]\s*)?(correct|incorrect|true|false|both a and b|all of the above|none of the above|both of the above|neither a nor b)\.?$/i;
+  (data.sections||[]).forEach(sec => (sec.questions||[]).forEach(q => {
+    if(q.type !== 'mcq' || !Array.isArray(q.options) || q.options.length < 2) return;
+    const generic = q.options.filter(o => GENERIC.test(String(o||'').trim())).length;
+    if(generic < q.options.length - 1) return;      // a single "None of the above" is legitimate
+    q.type = 'truefalse';
+    delete q.options;
+    if(q.answer) q.answer = /^\s*\(?[aA][).]?\s*|correct|true/.test(String(q.answer)) ? 'True' : 'False';
+  }));
+  return data;
+}
+
+/* General Instructions are NOT a creative writing task — they are a factual description of
+   the paper the student is holding. Letting the model invent them produced filler like
+   "Time management is essential", and worse, statements that contradicted the real paper.
+   So we state them from the FINAL structure, after trimming: section count, the marks each
+   section carries, where internal choice actually exists, and the board's own conventions.
+   Deterministic, always true, and costs zero tokens. */
+function buildGeneralInstructions(data, P){
+  const secs  = (data.sections || []).filter(s => (s.questions || []).length);
+  if(!secs.length) return [];
+  const total = secs.reduce((t,s) => t + s.questions.length, 0);
+  const names = secs.map(s => (s.name || '').replace(/^Section\s*/i, '').trim()).filter(Boolean);
+  const list  = names.length > 1 ? names.slice(0,-1).join(', ') + ' and ' + names.slice(-1) : names[0];
+  const subj  = String(P.subject || '').toLowerCase();
+  const isMath    = /math/.test(subj);
+  const isScience = /science|physic|chem|bio/.test(subj);
+
+  const out = [
+    `This question paper contains ${total} question${total===1?'':'s'} divided into ${secs.length} section${secs.length===1?'':'s'} — ${list}.`,
+    'All questions are compulsory.'
+  ];
+
+  // Describe each section by what it actually contains, in the paper's own words.
+  const perSection = secs.map(s => {
+    const n = s.questions.length;
+    const marks = [...new Set(s.questions.map(q => Number(q.marks) || 0))];
+    const mk = marks.length === 1 ? `${marks[0]} mark${marks[0]===1?'':'s'} each` : 'varying marks';
+    return `${s.name} has ${n} question${n===1?'':'s'} of ${mk}`;
+  });
+  out.push(perSection.join('; ') + '.');
+
+  // Only claim internal choice if a question really carries an OR.
+  const choiceSecs = secs.filter(s => s.questions.some(q => q.orChoice)).map(s => s.name);
+  if(choiceSecs.length){
+    out.push(`Internal choice is provided in ${choiceSecs.join(' and ')}. Attempt any ONE of the two alternatives in such questions.`);
+  }
+
+  if(isMath || isScience) out.push('Draw neat, labelled figures wherever required.');
+  if(isMath)              out.push('Use of a calculator is NOT permitted.');
+  if(isMath || isScience) out.push('Show all steps of your working; marks are awarded for correct method.');
+  out.push('Write your name, roll number and section clearly on the answer booklet.');
+  return out;
 }
 
 function enforceBlueprint(data, bp){
@@ -4009,6 +4207,19 @@ function fixCurrency(t){
     const fixed = inner.replace(new RegExp('(^|[^\\\\A-Za-z])(' + CMDS + ')\\b', 'g'), '$1\\$2');
     return '$' + fixed + '$';
   });
+
+  // LaTeX the model wrote WITHOUT $…$ delimiters never reaches KaTeX in the preview and
+  // never reaches the Word converter either, so "\frac{1}{2}" printed as "{1}{2}" and
+  // "30^{\circ}" as "30^{°}". Convert those stray fragments to Unicode in the DATA, so the
+  // preview, the PDF and the Word file all show the same thing.
+  x = x.split(/(\$[^$]*\$)/).map(seg => {
+    if(seg.charAt(0) === '$') return seg;                       // real maths — leave for KaTeX
+    if(!/\\[a-zA-Z]|\\[^a-zA-Z]|[\^_]\s*\{/.test(seg)) return seg;
+    const lead = (seg.match(/^\s*/) || [''])[0];
+    const tail = (seg.match(/\s*$/) || [''])[0];
+    return lead + convTex(seg) + tail;                          // convTex trims, so restore spacing
+  }).join('');
+
   return x;
 }
 
@@ -4060,13 +4271,15 @@ function renderQuestionPaper(data){
       ${m.school ? `<div class="qp-school">${esc(m.school)}</div>` : ''}
       ${m.location ? `<div class="qp-sub">${esc(m.location)}</div>` : ''}
       <div class="qp-exam">${esc(m.examTitle)}${m.session ? ' &nbsp;•&nbsp; ' + esc(m.session) : ''}</div>
-      <div class="qp-metatop">
-        <span>Class: ${esc(String(m.className).replace('Class ',''))}</span>
-        <span>Subject: ${esc(m.subject)}</span>
-      </div>
-      <div class="qp-metabar">
-        <span>Time: ${esc(m.durationLabel)}</span>
-        <span>Max. Marks: ${esc(String(m.maxMarks))}</span>
+      <div class="qp-meta">
+        <div class="qp-meta-l">
+          <div>Class: ${esc(String(m.className).replace('Class ',''))}</div>
+          <div>Subject: ${esc(m.subject)}</div>
+        </div>
+        <div class="qp-meta-r">
+          <div>Max. Marks: ${esc(String(m.maxMarks))}</div>
+          <div>Time: ${esc(m.durationLabel)}</div>
+        </div>
       </div>
     </div>`;
 
@@ -4248,13 +4461,19 @@ function docxPaper(data, variant){
 
   // Header (school/location are optional — never invent one)
   if(m.school) P.push(make({ alignment:D.AlignmentType.CENTER, children:[run(m.school,{bold:true,size:30})] }));
-  if(m.location) P.push(make({ alignment:D.AlignmentType.CENTER, children:[run(m.location,{size:20,color:'444444'})] }));
+  if(m.location) P.push(make({ alignment:D.AlignmentType.CENTER, children:[run(m.location,{size:20})] }));
   P.push(make({ alignment:D.AlignmentType.CENTER, spacing:{before:80,after:40}, children:[run(`${m.examTitle}${m.session?'  •  '+m.session:''}`,{bold:true,size:24})] }));
-  P.push(make({ alignment:D.AlignmentType.CENTER, children:[run(`Class: ${String(m.className).replace('Class ','')}     Subject: ${m.subject}`,{size:20})] }));
+  // Class + Subject on the left, Max. Marks above Time on the right (mirrors the preview/PDF).
+  // A right tab stop keeps the two columns aligned in Word without a visible table.
+  const metaRow = (left, right) => make({
+    tabStops:[{type:D.TabStopType.RIGHT, position:DOCX_RIGHT_TAB}],
+    spacing:{after:0}, children:[ run(left,{bold:true,size:20}), run('\t'), run(right,{bold:true,size:20}) ]
+  });
+  P.push(metaRow(`Class: ${String(m.className).replace('Class ','')}`, `Max. Marks: ${m.maxMarks}`));
   P.push(make({
     tabStops:[{type:D.TabStopType.RIGHT, position:DOCX_RIGHT_TAB}],
-    spacing:{before:60,after:40}, border:{bottom:{style:D.BorderStyle.SINGLE,size:10,color:'000000',space:6}},
-    children:[ run(`Time: ${m.durationLabel}`,{bold:true,size:20}), run('\t'), run(`Max. Marks: ${m.maxMarks}`,{bold:true,size:20}) ]
+    spacing:{after:40}, border:{bottom:{style:D.BorderStyle.SINGLE,size:10,color:'000000',space:6}},
+    children:[ run(`Subject: ${m.subject}`,{bold:true,size:20}), run('\t'), run(`Time: ${m.durationLabel}`,{bold:true,size:20}) ]
   }));
 
   if((data.generalInstructions||[]).length){
@@ -4267,10 +4486,14 @@ function docxPaper(data, variant){
 
   (data.sections||[]).forEach(sec=>{
     const secMarks = sec.questions.reduce((a,q)=>a+(Number(q.marks)||0),0);
+    // An exam paper is printed on a school photocopier: it must be pure black on white.
+    // Centred, ruled above and below — identical to the on-screen preview and the PDF.
     P.push(make({
-      spacing:{before:200,after:80}, shading:{type:D.ShadingType.CLEAR, fill:'EEF2FF'},
-      border:{ left:{style:D.BorderStyle.SINGLE,size:24,color:'6D28D9',space:8} },
-      children:[ run(`${sec.name}`,{bold:true,size:22,color:'3730A3'}), run(`    ${sec.note||''}${secMarks?`  (${secMarks} marks)`:''}`,{size:18,color:'475569'}) ]
+      alignment:D.AlignmentType.CENTER, spacing:{before:240,after:120},
+      border:{ top:{style:D.BorderStyle.SINGLE,size:6,color:'000000',space:5},
+               bottom:{style:D.BorderStyle.SINGLE,size:6,color:'000000',space:5} },
+      children:[ run(`${(sec.name||'').toUpperCase()}`,{bold:true,size:22}),
+                 run(`   ${sec.note||''}${secMarks?`  (${secMarks} marks)`:''}`,{size:18}) ]
     }));
     sec.questions.forEach(q=> docxQuestion(P, q, variant));
   });
@@ -4283,13 +4506,13 @@ function docxQuestion(P, q, variant){
   const num = q.number!=null ? q.number+'. ' : '';
 
   if(q.type==='case' && q.caseIntro){
-    P.push(make({ spacing:{before:80,after:20}, indent:{left:300}, children:[run(q.caseIntro,{italics:true,size:19,color:'334155'})] }));
+    P.push(make({ spacing:{before:80,after:20}, indent:{left:300}, children:[run(q.caseIntro,{italics:true,size:19})] }));
   }
   // Question stem line with right-aligned marks
   P.push(make({
     tabStops:[{type:D.TabStopType.RIGHT, position:DOCX_RIGHT_TAB}],
     spacing:{before:100,after:20}, indent:{left:300,hanging:300},
-    children:[ run(num,{bold:true,size:21}), run(q.text||'',{size:21}), run('\t'), run(q.marks!=null?`[${q.marks}]`:'',{bold:true,size:20,color:'475569'}) ]
+    children:[ run(num,{bold:true,size:21}), run(q.text||'',{size:21}), run('\t'), run(q.marks!=null?`[${q.marks}]`:'',{bold:true,size:20}) ]
   }));
 
   if(q.type==='mcq' && Array.isArray(q.options)){
@@ -4310,14 +4533,14 @@ function docxQuestion(P, q, variant){
 
   if(Array.isArray(q.parts)) q.parts.forEach(p=> P.push(make({
     tabStops:[{type:D.TabStopType.RIGHT, position:DOCX_RIGHT_TAB}], indent:{left:620,hanging:260}, spacing:{after:16},
-    children:[ run(`${p.label||''} `,{bold:true,size:20}), run(p.text||'',{size:20}), run('\t'), run(p.marks!=null?`[${p.marks}]`:'',{size:19,color:'475569'}) ]
+    children:[ run(`${p.label||''} `,{bold:true,size:20}), run(p.text||'',{size:20}), run('\t'), run(p.marks!=null?`[${p.marks}]`:'',{size:19}) ]
   })));
 
 
   if(q.orChoice){
-    P.push(make({ alignment:D.AlignmentType.CENTER, spacing:{before:20,after:20}, children:[run('OR',{bold:true,size:19,color:'3730A3'})] }));
+    P.push(make({ alignment:D.AlignmentType.CENTER, spacing:{before:20,after:20}, children:[run('OR',{bold:true,size:19})] }));
     P.push(make({ tabStops:[{type:D.TabStopType.RIGHT, position:DOCX_RIGHT_TAB}], indent:{left:300,hanging:300}, spacing:{after:20},
-      children:[ run(q.orChoice.text||'',{size:21}), run('\t'), run(q.orChoice.marks!=null?`[${q.orChoice.marks}]`:'',{bold:true,size:20,color:'475569'}) ]}));
+      children:[ run(q.orChoice.text||'',{size:21}), run('\t'), run(q.orChoice.marks!=null?`[${q.orChoice.marks}]`:'',{bold:true,size:20}) ]}));
   }
 
   // Teacher key inline
@@ -4410,6 +4633,12 @@ function convTex(x){
   s = s.replace(/\^\{([^{}]+)\}/g,(_,g)=>toScript(g,SUP)).replace(/\^(\w)/g,(_,g)=>toScript(g,SUP));
   s = s.replace(/_\{([^{}]+)\}/g,(_,g)=>toScript(g,SUB)).replace(/_(\w)/g,(_,g)=>toScript(g,SUB));
   s = s.replace(/\\left|\\right|\\!|\\,|\\;|\\ /g,'').replace(/[{}]/g,'').replace(/\\[a-zA-Z]+/g,'');
+  // A backslash before punctuation ("45\°", "50\%") is a LaTeX escape — print the character,
+  // not the slash.
+  s = s.replace(/\\(?=[^a-zA-Z])/g,'');
+  // "30^\circ" becomes "30^°" once \circ resolves — the degree sign IS the superscript.
+  s = s.replace(/\^\s*°/g, '°');
+  s = s.replace(/ {2,}/g, ' ');   // trig/log names add a trailing space; don't double it up
   return s.trim();
 }
 function toScript(g, map){ return g.split('').map(ch=>map[ch]||('^'==map['+']? '^'+ch : ch)).join(''); }
