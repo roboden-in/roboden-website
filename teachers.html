@@ -1315,7 +1315,60 @@ footer{
   font-size:0.63rem; font-weight:800; }
 .aim-empty{ padding:26px; text-align:center; color:var(--app-ink-muted); font-size:0.85rem; }
 
-/* ── PREMIUM GLOSSY BUTTONS (AI Teacher workspace) ── */
+/* ── PREMIUM GLOSSY BUTTONS (AI Teacher workspace) ──
+   One shared treatment: selected/primary controls get a depth gradient, a top sheen,
+   an inner highlight and a coloured glow; unselected controls get a subtle raised look. */
+
+/* Tool tabs — Question Paper / Worksheet / Slides / … */
+.tool-tab-btn{ background:linear-gradient(180deg,#ffffff 0%,#f4f5f9 100%);
+  box-shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 1px 2px rgba(15,23,42,.06); position:relative; overflow:hidden; }
+.tool-tab-btn:hover{ border-color:#c4b5fd; color:var(--p); }
+.tool-tab-btn.active{
+  background:linear-gradient(180deg,#8b5cf6 0%,#6d28d9 48%,#5b21b6 100%) !important;
+  border-color:transparent !important; color:#fff !important;
+  box-shadow:0 1px 0 rgba(255,255,255,.28) inset, 0 -1px 0 rgba(0,0,0,.16) inset,
+             0 5px 16px rgba(109,40,217,.36);
+}
+.tool-tab-btn.active::after{ content:''; position:absolute; inset:0 0 55% 0; pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0)); }
+
+/* Student Version / Teacher Rubrics switcher */
+.btn-variant{ border-radius:7px; position:relative; overflow:hidden; }
+.btn-variant.active{
+  background:linear-gradient(180deg,#8b5cf6 0%,#6d28d9 48%,#5b21b6 100%) !important; color:#fff !important;
+  box-shadow:0 1px 0 rgba(255,255,255,.26) inset, 0 -1px 0 rgba(0,0,0,.16) inset,
+             0 4px 12px rgba(109,40,217,.32);
+}
+.btn-variant.active::after{ content:''; position:absolute; inset:0 0 55% 0; pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,0)); }
+
+/* Toolbar buttons keep a raised look and glow on press/hover */
+.btn-doc-tool{ position:relative; overflow:hidden; }
+.btn-doc-tool.ppt-btn:hover{ border-color:#f59e0b; color:#b45309; }
+
+/* ── AMBIENT AI GLOW ──
+   A slow, very soft aurora behind the workspace. Purely decorative, sits under the
+   content and never intercepts clicks. Disabled for anyone who prefers reduced motion. */
+.workspace-wrapper{ position:relative; }
+.workspace-wrapper::before{
+  content:''; position:absolute; inset:-10% -5%; z-index:0; pointer-events:none; border-radius:50%;
+  background:
+    radial-gradient(38% 44% at 18% 22%, rgba(139,92,246,.16), transparent 65%),
+    radial-gradient(34% 40% at 82% 30%, rgba(56,189,248,.13), transparent 65%),
+    radial-gradient(40% 46% at 50% 88%, rgba(217,70,239,.11), transparent 65%);
+  filter:blur(38px);
+  animation:aiAurora 18s ease-in-out infinite alternate;
+}
+.workspace-wrapper > *{ position:relative; z-index:1; }
+@keyframes aiAurora{
+  0%   { transform:translate3d(0,0,0) scale(1);      opacity:.85; }
+  50%  { transform:translate3d(2%,-1.5%,0) scale(1.06); opacity:1; }
+  100% { transform:translate3d(-2%,1.5%,0) scale(1.03); opacity:.9; }
+}
+@media (prefers-reduced-motion: reduce){
+  .workspace-wrapper::before{ animation:none; }
+}
+
 .btn-generate::after{               /* soft sheen across the top half */
   content:''; position:absolute; inset:0 0 52% 0; pointer-events:none;
   background:linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0));
@@ -1508,11 +1561,6 @@ footer{
 .sl-quote blockquote{ font-size:4.4cqw; font-weight:700; color:var(--sl-ink); line-height:1.3; margin:1cqw 0 2.4cqw; }
 .sl-quote cite{ font-size:2.9cqw; color:var(--sl-sub); font-style:normal; font-weight:600; }
 
-/* AI Teacher nav accent — bold WHITE so it stands out as the flagship product without
-   looking like the "current page" state, which is the accent purple (.active). */
-.nav-links a.nav-ai{color:#fff;font-weight:700;}
-.nav-links a.nav-ai:hover{color:#fff;background:rgba(124,58,237,0.20);}
-.nav-links a.nav-ai.active{color:var(--accent);}   /* only on the AI Teacher page itself */
 
 /* Nav collapses to hamburger on tablets too (7 items don't fit under ~1024px) */
 @media(max-width:1024px){
@@ -1545,7 +1593,7 @@ footer{
         <a href="online-training.html#college"><strong>Online — College Students</strong><span>Bare metal &amp; C programming</span></a>
       </div>
     </li>
-    <li><a href="teachers.html" class="nav-ai active">AI Teacher</a></li>
+    <li><a href="teachers.html" class="active">AI Teacher</a></li>
     <li><a href="about.html">About</a></li>
     <li><a href="contact.html">Contact</a></li>
     <li><a href="verify.html">Verify Certificate</a></li>

@@ -263,11 +263,6 @@ footer{position:relative;z-index:1;background:var(--bg2);border-top:1px solid va
   .footer-bottom{flex-direction:column;gap:16px;text-align:center;}
 }
 
-/* AI Teacher nav accent — bold WHITE so it stands out as the flagship product without
-   looking like the "current page" state, which is the accent purple (.active). */
-.nav-links a.nav-ai{color:#fff;font-weight:700;}
-.nav-links a.nav-ai:hover{color:#fff;background:rgba(124,58,237,0.20);}
-.nav-links a.nav-ai.active{color:var(--accent);}   /* only on the AI Teacher page itself */
 
 /* Nav collapses to hamburger on tablets too (7 items don't fit under ~1024px) */
 @media(max-width:1024px){
@@ -305,7 +300,7 @@ footer{position:relative;z-index:1;background:var(--bg2);border-top:1px solid va
         <a href="online-training.html#college"><strong>Online — College Students</strong><span>Bare metal &amp; C programming</span></a>
       </div>
     </li>
-    <li><a href="teachers.html" class="nav-ai">AI Teacher</a></li>
+    <li><a href="teachers.html">AI Teacher</a></li>
     <li><a href="about.html">About</a></li>
     <li><a href="contact.html">Contact</a></li>
     <li><a href="verify.html">Verify Certificate</a></li>
