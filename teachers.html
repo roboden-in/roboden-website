@@ -5615,8 +5615,22 @@ function updatePricingUI(){
   if(window.lucide) lucide.createIcons();
 }
 
+/* Has the teacher's profile actually arrived from the database?
+   The badge used to be repainted ONLY from inside the profile listener below. If that read
+   was slow — or was denied and hit the (silently empty) error callback — updateAccessUI()
+   was never called, so a teacher who had just signed in with Google still saw "LOG IN" until
+   they refreshed the page. Exactly what happened on a real device. */
+let profileLoaded = false;
+
 auth.onAuthStateChanged(async (user) => {
   if(user){
+    // Repaint IMMEDIATELY, before any database round-trip, so the button can never keep
+    // saying "LOG IN" to somebody who is already logged in.
+    profileLoaded = false;
+    updateAccessUI();
+    // The login modal may still be open — after a mobile redirect nothing else closes it,
+    // which is why it kept "showing login" even though sign-in had succeeded.
+    try { if(typeof closeModals === 'function') closeModals(); } catch(e){}
     try {
       await db.ref('teacher_hub/' + user.uid + '/profile').update({
         email: user.email || '', name: user.displayName || '', lastLogin: firebase.database.ServerValue.TIMESTAMP
@@ -5636,11 +5650,28 @@ auth.onAuthStateChanged(async (user) => {
         GROQ_CONFIG.apiKey = currentTeacherProfile.customGroqKey;
         const el = document.getElementById('customGroqKey'); if(el) el.value = currentTeacherProfile.customGroqKey;
       }
+      profileLoaded = true;
       updateAccessUI();
-    }, () => {});
+    }, (err) => {
+      // A denied or failed read must NOT strand the teacher on "SIGNING IN…" forever.
+      console.warn('[auth] profile read failed:', err && err.message);
+      profileLoaded = true;
+      updateAccessUI();
+    });
+
+    // Last-resort net: if the database never answers at all (offline, blocked, rules
+    // misconfigured), stop waiting and show a real state rather than a stuck button.
+    setTimeout(() => {
+      if(!profileLoaded && auth.currentUser){
+        console.warn('[auth] profile read timed out — showing best-known state');
+        profileLoaded = true;
+        updateAccessUI();
+      }
+    }, 6000);
 
     checkPaymentReturn(user);
   } else {
+    profileLoaded = false;
     currentTeacherProfile = null; currentEntitlement = null; currentTrialStart = null;
     updateAccessUI();
   }
@@ -5847,6 +5878,9 @@ function applyPromoFromUrl(){
 function computeAccess(){
   if(!auth.currentUser) return { state: 'signedout' };
   if(isAdminUser()) return { state: 'admin' };          // no trial, no cap
+  // Signed in, but the profile read has not come back yet. Without this the code fell through
+  // to "expired" and told a teacher who had just signed up that their trial had ENDED.
+  if(!profileLoaded) return { state: 'loading' };
   const now = Date.now(), ent = currentEntitlement || {};
   if(ent.isPro && ent.proExpiry && ent.proExpiry > now)
     return { state: 'pro', daysLeft: Math.ceil((ent.proExpiry - now) / 86400000) };
@@ -5865,6 +5899,7 @@ function updateAccessUI(){
     const map = {
       signedout: { t: 'LOG IN', b: 'var(--p)', c: '#fff' },
       admin:     { t: 'ADMIN', b: '#ea580c', c: '#fff' },
+      loading:   { t: 'SIGNING IN…', b: '#475569', c: '#fff' },
       trial:     { t: `TRIAL · ${currentAccess.daysLeft}d LEFT`, b: '#0f766e', c: '#fff' },
       pro:       { t: 'PRO ACTIVE', b: '#FFC107', c: '#1e293b' },
       expired:   { t: 'UPGRADE NOW', b: '#dc2626', c: '#fff' }
@@ -5886,6 +5921,8 @@ function updateAccessUI(){
 function requireAccess(){
   const a = computeAccess();
   if(a.state === 'signedout'){ toast('Please log in to start your free trial.', 'err'); openProfileModal(); return false; }
+  // Never accuse a teacher whose profile is still loading of having an expired trial.
+  if(a.state === 'loading'){ toast('Just a moment — finishing sign-in…'); return false; }
   if(a.state === 'expired'){ toast('Your free trial has ended — upgrade to keep generating.', 'err'); openSubscriptionModal(); return false; }
   return true;
 }
