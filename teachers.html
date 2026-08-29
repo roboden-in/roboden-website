@@ -3894,11 +3894,25 @@ function auditPaperQuality(data){
 // KaTeX cannot render. Normalise currency back to a plain, printable rupee symbol.
 function fixCurrency(t){
   if(typeof t !== 'string') return t;
-  return t.replace(/\\+₹/g, '₹')
-          .replace(/\\(?:rupee|textrupee|rs)\b/gi, '₹')
-          .replace(/\$\s*₹\s*([\d,.]+)\s*\$/g, '₹$1')   // $₹800$  → ₹800
-          .replace(/₹\s*\$([\d,.]+)\$/g, '₹$1');          // ₹$800$  → ₹800
+  let x = t.replace(/\\+₹/g, '₹')
+           .replace(/\\(?:rupee|textrupee|rs)\b/gi, '₹')
+           .replace(/\$\s*₹\s*([\d,.]+)\s*\$/g, '₹$1')   // $₹800$  → ₹800
+           .replace(/₹\s*\$([\d,.]+)\$/g, '₹$1');          // ₹$800$  → ₹800
+
+  // Models sometimes put a literal "\n" inside a JSON string; it must not print as text.
+  x = x.replace(/\\n\s*/g, ' ');
+
+  // A single backslash before a LaTeX command is not a valid JSON escape, so parsing can
+  // strip it — "$20^\circ$" arrives as "$20^circ$" and KaTeX then prints "20°irc".
+  // Restore the backslash for known commands when they appear inside maths.
+  const CMDS = 'circ|frac|sqrt|times|div|pm|leq|geq|neq|approx|cdot|infty|alpha|beta|gamma|delta|theta|lambda|mu|pi|rho|sigma|phi|omega|Delta|Omega|Sigma|angle|perp|parallel|sum|int|rightarrow|leftarrow|Rightarrow|implies|ldots|dots|text|mathrm|le|ge';
+  x = x.replace(/\$([^$]*)\$/g, (m, inner) => {
+    const fixed = inner.replace(new RegExp('(^|[^\\\\A-Za-z])(' + CMDS + ')\\b', 'g'), '$1\\$2');
+    return '$' + fixed + '$';
+  });
+  return x;
 }
+
 function deepFixCurrency(o){
   if(Array.isArray(o)) return o.map(deepFixCurrency);
   if(o && typeof o === 'object'){ Object.keys(o).forEach(k => o[k] = deepFixCurrency(o[k])); return o; }
@@ -4309,8 +4323,7 @@ async function exportPaperPdf(){
     margin: [8, 8, 10, 8],                               // mm — real page margins
     filename: docFileName(window.lastPaperData, 'pdf'),
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
-                   width: 794, windowWidth: 794, scrollX: 0, scrollY: 0 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
     // mm + a4 gives jsPDF correct, predictable pagination. The previous 'px' units were the
     // reason "compact" produced many pages and "booklet" produced only the last page.
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
