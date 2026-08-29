@@ -1183,8 +1183,12 @@ footer{
 /* General instructions */
 .qp-gi{ margin:0 0 16px; }
 .qp-gi-title{ font-weight:700; font-size:13px; margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em; color:#000; }
-.qp-gi ol{ margin:0; padding-left:20px; }
+.qp-gi-lead{ font-size:12.5px; color:#000; margin-bottom:3px; }
+/* CBSE numbers these (i)(ii)(iii); ICSE and Cambridge print an unnumbered block. */
+.qp-gi ol{ margin:0; padding-left:26px; list-style:lower-roman; }
+.qp-gi ul.qp-gi-plain{ margin:0; padding-left:0; list-style:none; }
 .qp-gi li{ font-size:12.5px; color:#000; margin-bottom:2px; }
+.qp-gi ol li::marker{ font-size:12.5px; }
 
 /* Section bar */
 .qp-section{ margin-bottom:18px; }
@@ -3301,6 +3305,13 @@ async function executeGenerate(){
         if(hasPhotos)      data = await generatePaperFromPhotos(P, trace);        // photo → OCR → paper
         else if(pastedTxt) data = await generatePaperFromPastedText(P, pastedTxt, trace); // pasted → paper
         else throw new Error('Add your questions first — paste them in, or upload a photo.');
+        // A teacher's own questions still deserve board-correct instructions describing them.
+        const giC = buildGeneralInstructions(data, P);
+        if(giC.items.length){
+          data.generalInstructions = giC.items;
+          data.instructionPreamble = giC.preamble;
+          data.instructionStyle    = giC.style;
+        }
       } else {
         // A malformed reply is a MODEL slip, not a teacher mistake. Retry once, quietly and
         // at a lower temperature, instead of showing an error the teacher cannot act on.
@@ -3339,7 +3350,10 @@ async function executeGenerate(){
           data.meta.maxMarks = data.computedTotal;    // never print a self-contradictory paper
         }
         // State the instructions from the FINAL paper, replacing whatever the model imagined.
-        data.generalInstructions = buildGeneralInstructions(data, P);
+        const gi = buildGeneralInstructions(data, P);
+        data.generalInstructions = gi.items;
+        data.instructionPreamble = gi.preamble;   // CBSE prints a "read these carefully" line
+        data.instructionStyle    = gi.style;      // ICSE/IGCSE print an UNnumbered block
         Object.assign(trace, auditPaperQuality(data));   // difficulty/cognitive spread → AI Monitor
       }
       window.lastPaperData = data;
@@ -4102,49 +4116,212 @@ function fixDegenerateMcq(data){
   return data;
 }
 
-/* General Instructions are NOT a creative writing task — they are a factual description of
-   the paper the student is holding. Letting the model invent them produced filler like
-   "Time management is essential", and worse, statements that contradicted the real paper.
-   So we state them from the FINAL structure, after trimming: section count, the marks each
-   section carries, where internal choice actually exists, and the board's own conventions.
-   Deterministic, always true, and costs zero tokens. */
-function buildGeneralInstructions(data, P){
-  const secs  = (data.sections || []).filter(s => (s.questions || []).length);
-  if(!secs.length) return [];
-  const total = secs.reduce((t,s) => t + s.questions.length, 0);
-  const names = secs.map(s => (s.name || '').replace(/^Section\s*/i, '').trim()).filter(Boolean);
-  const list  = names.length > 1 ? names.slice(0,-1).join(', ') + ' and ' + names.slice(-1) : names[0];
-  const subj  = String(P.subject || '').toLowerCase();
-  const isMath    = /math/.test(subj);
-  const isScience = /science|physic|chem|bio/.test(subj);
+/* ─────────────────────────────────────────────────────────────────────────────
+   GENERAL INSTRUCTIONS — modelled on the real papers, not invented.
 
-  const out = [
-    `This question paper contains ${total} question${total===1?'':'s'} divided into ${secs.length} section${secs.length===1?'':'s'} — ${list}.`,
-    'All questions are compulsory.'
-  ];
+   Checked against the actual 2024 board papers:
+   • CBSE Class 10 Mathematics (Standard), Delhi Set 30/1/1 — a numbered list (i)…(x)
+     that gives QUESTION-NUMBER RANGES per section ("In Section B, Question numbers 21
+     to 25 are very short answer (VSA) type questions, carrying 2 marks each"), one
+     explicit "There is no overall choice. However, an internal choice has been provided
+     in 2 questions in Section B…" sentence, "Draw neat diagrams wherever required.
+     Take π = 22/7 wherever required, if not stated." and "Use of calculators is NOT allowed."
+   • CBSE Class 10 Science 31/x/1 — the same skeleton, but each section also carries a
+     WORD LIMIT ("Answers to these questions should be in the range of 30 to 50 words").
+   • ICSE Class 10 Mathematics 2024 — a completely different, UNNUMBERED block: answers on
+     separate paper, 15 minutes reading time in which you may not write, "Attempt all
+     questions from Section A and any four questions from Section B", all working must be
+     shown, "Omission of essential working will result in loss of marks", intended marks
+     in brackets [ ], and mathematical tables provided by the school.
 
-  // Describe each section by what it actually contains, in the paper's own words.
-  const perSection = secs.map(s => {
-    const n = s.questions.length;
-    const marks = [...new Set(s.questions.map(q => Number(q.marks) || 0))];
-    const mk = marks.length === 1 ? `${marks[0]} mark${marks[0]===1?'':'s'} each` : 'varying marks';
-    return `${s.name} has ${n} question${n===1?'':'s'} of ${mk}`;
+   So the instruction set is a function of BOARD first, then EXAM TYPE (reading time belongs
+   on a board exam, not on a Friday unit test), then SUBJECT (π and calculators for Maths,
+   labelled diagrams and word limits for Science, word limits for languages) — and finally of
+   the paper we actually built. Every clause below is derived from the finished paper, so it
+   can never contradict what the student is holding.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+// Walk the finished paper once and describe each section factually.
+function sectionFacts(data){
+  let n = 0;
+  return (data.sections || []).map(sec => {
+    const qs = sec.questions || [];
+    const from = n + 1, to = n + qs.length;
+    n = to;
+    const marks = [...new Set(qs.map(q => Number(q.marks) || 0))];
+    return {
+      name: sec.name || 'Section',
+      from, to, count: qs.length,
+      marksEach: marks.length === 1 ? marks[0] : null,
+      choiceCount: qs.filter(q => q.orChoice).length,
+      types: [...new Set(qs.map(q => q.type))],
+      typeSeq: qs.map(q => q.type)      // in order, so we can split sub-ranges
+    };
   });
-  out.push(perSection.join('; ') + '.');
+}
 
-  // Only claim internal choice if a question really carries an OR.
-  const choiceSecs = secs.filter(s => s.questions.some(q => q.orChoice)).map(s => s.name);
-  if(choiceSecs.length){
-    out.push(`Internal choice is provided in ${choiceSecs.join(' and ')}. Attempt any ONE of the two alternatives in such questions.`);
+// The names boards actually print for each mark band.
+function questionTypeLabel(f){
+  if(f.types.includes('case'))  return 'case-study based questions';
+  if(f.types.includes('match')) return 'matching type questions';
+  if(f.marksEach === 1){
+    const ar  = f.types.includes('assertion_reason');
+    const mcq = f.types.includes('mcq');
+    if(ar && mcq) return 'multiple choice questions (MCQs) and Assertion-Reason based questions';
+    if(ar)        return 'Assertion-Reason based questions';
+    if(mcq)       return 'multiple choice questions (MCQs)';
+    return 'objective type questions';
   }
+  if(f.marksEach === 2) return 'very short answer (VSA) type questions';
+  if(f.marksEach === 3) return 'short answer (SA) type questions';
+  if(f.marksEach >= 5)  return 'long answer (LA) type questions';
+  return 'questions';
+}
 
-  if(isMath || isScience) out.push('Draw neat, labelled figures wherever required.');
-  if(isMath)              out.push('Use of a calculator is NOT permitted.');
-  if(isMath || isScience) out.push('Show all steps of your working; marks are awarded for correct method.');
-  out.push('Write your name, roll number and section clearly on the answer booklet.');
+// CBSE prints an expected answer length for Science/Social; Maths never does.
+function wordLimitFor(marks){
+  if(marks === 2) return '30 to 50 words';
+  if(marks === 3) return '50 to 80 words';
+  if(marks >= 5)  return '80 to 120 words';
+  return null;
+}
+
+function joinList(items, word){
+  if(!items.length) return '';
+  if(items.length === 1) return items[0];
+  return items.slice(0, -1).join(', ') + ' ' + (word || 'and') + ' ' + items[items.length - 1];
+}
+
+// CBSE numbers its General Instructions (i), (ii), (iii)… not 1, 2, 3.
+function romanNumeral(n){
+  const map = [[10,'x'],[9,'ix'],[5,'v'],[4,'iv'],[1,'i']];
+  let out = '';
+  map.forEach(([v,s]) => { while(n >= v){ out += s; n -= v; } });
   return out;
 }
 
+function buildGeneralInstructions(data, P){
+  const facts = sectionFacts(data);
+  if(!facts.length) return { preamble:'', items:[], style:'numbered' };
+
+  const total   = facts.reduce((t, f) => t + f.count, 0);
+  const board   = String(P.board || 'CBSE');
+  const subject = String(P.subject || '').toLowerCase();
+  const grp     = P.subjectGroup || '';
+  const isMath    = /math/.test(subject) || grp === 'math';
+  const isScience = /science|physic|chem|bio/.test(subject) || grp === 'science';
+  const isSocial  = /social|history|civic|geograph|econom|political/.test(subject) || grp === 'social';
+  const isLang    = grp === 'language' || /english|hindi|telugu|sanskrit|tamil|kannada|marathi|urdu/.test(subject);
+  // Reading time is a BOARD-EXAM convention. Printing it on a 20-mark unit test is wrong.
+  const isFormal  = P.examSize === 'board';
+  const maxMarks  = (data.meta && data.meta.maxMarks) || P.marksNum;
+
+  const marksBracketLine = 'The intended marks for questions or parts of questions are given in brackets [ ].';
+
+  /* ── ICSE / ISC: an unnumbered block, quite unlike CBSE ── */
+  if(board.startsWith('ICSE')){
+    const items = ['Answers to this Paper must be written on the paper provided separately.'];
+    if(isFormal){
+      items.push('You will not be allowed to write during the first 15 minutes.');
+      items.push('This time is to be spent in reading the question paper.');
+    }
+    items.push('The time given at the head of this Paper is the time allowed for writing the answers.');
+    const choiceSec = facts.find(f => /B\b/.test(f.name));
+    items.push(facts.length > 1 && choiceSec
+      ? `Attempt all questions from ${facts[0].name} and any four questions from ${choiceSec.name}.`
+      : 'Attempt all questions.');
+    items.push('All working, including rough work, must be clearly shown, and must be done on the same sheet as the rest of the answer.');
+    items.push('Omission of essential working will result in loss of marks.');
+    items.push(marksBracketLine);
+    if(isMath) items.push('Mathematical tables and graph papers are to be provided by the school.');
+    return { preamble:'', items, style:'plain' };
+  }
+
+  /* ── IGCSE / Cambridge: split INSTRUCTIONS and INFORMATION ── */
+  if(board.startsWith('IGCSE')){
+    const items = [
+      'Answer all questions.',
+      'Write your name, centre number and candidate number in the boxes at the top of the page.',
+      'Use a black or dark blue pen. You may use an HB pencil for any diagrams or graphs.',
+      'Do not use an erasable pen or correction fluid.',
+      'You must show all necessary working clearly; marks may be given for a correct method.',
+      isMath ? 'You should use a calculator where appropriate.' : 'You may use a calculator where appropriate.',
+      `The total mark for this paper is ${maxMarks}.`,
+      'The number of marks for each question or part question is shown in brackets [ ].'
+    ];
+    return { preamble:'', items, style:'plain' };
+  }
+
+  /* ── CBSE and State Boards: the numbered, section-by-section format ── */
+  const items = [`This question paper contains ${total} question${total===1?'':'s'}. All questions are compulsory.`];
+
+  if(facts.length > 1){
+    const names = facts.map(f => f.name.replace(/^Section\s*/i, '').trim());
+    const WORDS = ['ONE','TWO','THREE','FOUR','FIVE','SIX','SEVEN','EIGHT'];
+    items.push(`This question paper is divided into ${WORDS[facts.length-1] || facts.length} sections – ${joinList(names)}.`);
+  }
+
+  // One line per section, with the question-number range — exactly as the boards print it.
+  facts.forEach(f => {
+    const range = f.count === 1 ? `Question number ${f.from} is` : `Question numbers ${f.from} to ${f.to} are`;
+    const each  = f.marksEach != null ? `, carrying ${f.marksEach} mark${f.marksEach===1?'':'s'} each` : '';
+    let line = `In ${f.name}, ${range} ${questionTypeLabel(f)}${each}.`;
+
+    // CBSE splits the objective section: "Question numbers 1 to 18 are multiple choice
+    // questions (MCQs) and question numbers 19 and 20 are Assertion-Reason based questions
+    // of 1 mark each." Reproduce that whenever the Assertion-Reason items sit at the end.
+    const arStart = f.typeSeq ? f.typeSeq.indexOf('assertion_reason') : -1;
+    if(arStart > 0 && f.typeSeq.slice(arStart).every(t => t === 'assertion_reason')
+       && f.typeSeq.slice(0, arStart).every(t => t === 'mcq')){
+      const mcqTo  = f.from + arStart - 1;
+      const arFrom = mcqTo + 1;
+      const arRange = arFrom === f.to ? `question number ${arFrom} is` : `question numbers ${arFrom} and ${f.to} are`;
+      line = `In ${f.name}, Question numbers ${f.from} to ${mcqTo} are multiple choice questions (MCQs) and ` +
+             `${arRange} Assertion-Reason based questions${each}.`;
+    }
+    const wl = (isScience || isSocial) && f.marksEach != null ? wordLimitFor(f.marksEach) : null;
+    if(wl) line += ` Answers to these questions should be in the range of ${wl}.`;
+    if(f.types.includes('case') && f.choiceCount) line += ' Internal choice is provided in each case-study.';
+    items.push(line);
+  });
+
+  // The choice sentence, with the REAL count of questions carrying an OR in each section.
+  const choiceBits = facts.filter(f => f.choiceCount && !f.types.includes('case'))
+    .map(f => `${f.choiceCount} question${f.choiceCount===1?'':'s'} in ${f.name}`);
+  const caseChoice = facts.some(f => f.types.includes('case') && f.choiceCount);
+  if(choiceBits.length || caseChoice){
+    let s = `There is no overall choice. However, an internal choice has been provided in ${joinList(choiceBits)}`;
+    if(caseChoice) s += (choiceBits.length ? ', and in ' : '') + 'the case-study questions';
+    items.push(s + '. You have to attempt only ONE of the alternatives in such questions.');
+  } else {
+    items.push('There is no overall choice in the question paper.');
+  }
+
+  items.push(marksBracketLine);
+
+  if(isMath){
+    items.push('Draw neat figures wherever required. Take $\\pi=\\frac{22}{7}$ wherever required, if not stated.');
+    items.push('Use of calculators is NOT allowed.');
+  } else if(isScience){
+    items.push('Draw neat, labelled diagrams wherever required.');
+    items.push('Use of calculators is NOT allowed.');
+  } else if(isSocial){
+    items.push('Answers should be brief and to the point. Attach the map, if any, inside your answer book.');
+  } else if(isLang){
+    items.push('Do not exceed the prescribed word limit while answering the questions.');
+  }
+
+  if(isFormal){
+    items.push('15 minutes reading time is allotted before the examination begins. During this time you may read the question paper only and must not write any answer.');
+  }
+  items.push('Write the serial number of the question in your answer book before attempting it.');
+
+  return {
+    preamble: 'Read the following instructions carefully and follow them:',
+    items,
+    style: 'numbered'
+  };
+}
 function enforceBlueprint(data, bp){
   balanceParts(data);
   if(!bp || !Array.isArray(bp.sections) || bp.approx) return data;
@@ -4284,9 +4461,15 @@ function renderQuestionPaper(data){
     </div>`;
 
   if(data.generalInstructions.length){
-    html += `<div class="qp-gi"><div class="qp-gi-title">General Instructions</div><ol>`;
+    // CBSE/State number their instructions (i)(ii)(iii); ICSE and Cambridge print an
+    // unnumbered block. Follow whichever convention the board actually uses.
+    const plain = data.instructionStyle === 'plain';
+    html += `<div class="qp-gi"><div class="qp-gi-title">General Instructions</div>`;
+    if(data.instructionPreamble) html += `<div class="qp-gi-lead">${esc(data.instructionPreamble)}</div>`;
+    html += plain ? `<ul class="qp-gi-plain">` : `<ol>`;
     html += data.generalInstructions.map(i => `<li>${esc(i)}</li>`).join('');
-    html += `</ol></div>`;
+    html += plain ? `</ul>` : `</ol>`;
+    html += `</div>`;
   }
 
   data.sections.forEach(sec => {
@@ -4478,9 +4661,13 @@ function docxPaper(data, variant){
 
   if((data.generalInstructions||[]).length){
     P.push(make({ spacing:{before:160,after:40}, children:[run('General Instructions:',{bold:true,size:20})] }));
+    if(data.instructionPreamble)
+      P.push(make({ spacing:{after:40}, children:[run(data.instructionPreamble,{size:19})] }));
+    // CBSE numbers its instructions (i)(ii)(iii); ICSE and Cambridge do not number theirs.
+    const plain = data.instructionStyle === 'plain';
     data.generalInstructions.forEach((gi,i)=> P.push(make({
       numbering:undefined, indent:{left:360,hanging:260}, spacing:{after:20},
-      children:[run(`${i+1}. `,{size:19}), run(gi,{size:19})]
+      children:[ run(plain ? '' : `(${romanNumeral(i+1)}) `,{size:19}), run(gi,{size:19}) ]
     })));
   }
 
