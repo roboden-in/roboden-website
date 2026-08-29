@@ -2048,25 +2048,25 @@ function providerFor(modelKey){
 const ROUTE_RULES = [
   // ── Handwriting OCR (vision) ──
   { when:{ tool:'ocr', indic:true },      chain:['SARVAM_OCR','GEMINI_FLASH','QWEN_VISION','QWEN_VISION_2'], reason:'Indic handwriting → Sarvam OCR (Indic script specialist)' },
-  { when:{ tool:'ocr' },                  chain:['QWEN_VISION','QWEN_VISION_2','GEMINI_FLASH'],              reason:'English handwriting → Qwen multimodal vision' },
+  { when:{ tool:'ocr' },                  chain:['QWEN_VISION','QWEN_VISION_2','GEMINI_FLASH'],   reason:'English handwriting → Qwen multimodal vision' },
 
   // ── Cheap/simple jobs (formatting an existing transcription or pasted text) ──
   { when:{ tier:'cheap' },                chain:['GPT_OSS_20B','QWEN_36','COMPOUND_MINI','GPT_OSS_120B'], reason:'Simple formatting job → cheap tier' },
 
   // ── Slides (English only for now) ──
-  { when:{ tool:'ppt_slides' },           chain:['GPT_OSS_120B','GEMINI_FLASH','QWEN_38'],    reason:'Slides → best English reasoning model' },
+  { when:{ tool:'ppt_slides' },           chain:['GPT_OSS_120B','GEMINI_FLASH','QWEN_38','GPT_OSS_20B','COMPOUND_MINI','COMPOUND'], reason:'Slides → best English reasoning model' },
 
   // ── Indic papers ──
-  { when:{ indic:true, group:'math' },    chain:['GEMINI_FLASH','SARVAM_105B','QWEN_38'],     reason:'Indic + maths → Gemini (maths + Indic strength)' },
-  { when:{ indic:true, group:'science' }, chain:['GEMINI_FLASH','SARVAM_105B','QWEN_38'],     reason:'Indic + science → Gemini' },
-  { when:{ indic:true },                  chain:['SARVAM_105B','GEMINI_FLASH','QWEN_38'],     reason:'Indic language/social → Sarvam (native-script specialist)' },
+  { when:{ indic:true, group:'math' },    chain:['GEMINI_FLASH','SARVAM_105B','QWEN_38','GPT_OSS_120B','COMPOUND_MINI'], reason:'Indic + maths → Gemini (maths + Indic strength)' },
+  { when:{ indic:true, group:'science' }, chain:['GEMINI_FLASH','SARVAM_105B','QWEN_38','GPT_OSS_120B','COMPOUND_MINI'], reason:'Indic + science → Gemini' },
+  { when:{ indic:true },                  chain:['SARVAM_105B','GEMINI_FLASH','QWEN_38','GPT_OSS_120B','COMPOUND_MINI'], reason:'Indic language/social → Sarvam (native-script specialist)' },
 
   // ── English papers ──
-  { when:{ group:'math', highReasoning:true },    chain:['GPT_OSS_120B','GEMINI_FLASH','QWEN_38'], reason:'English maths → gpt-oss-120b at HIGH reasoning' },
-  { when:{ group:'science', highReasoning:true }, chain:['GPT_OSS_120B','GEMINI_FLASH','QWEN_38'], reason:'English science → gpt-oss-120b at HIGH reasoning' },
+  { when:{ group:'math', highReasoning:true },    chain:['GPT_OSS_120B','GEMINI_FLASH','QWEN_38','GPT_OSS_20B','COMPOUND_MINI','COMPOUND'], reason:'English maths → gpt-oss-120b at HIGH reasoning' },
+  { when:{ group:'science', highReasoning:true }, chain:['GPT_OSS_120B','GEMINI_FLASH','QWEN_38','GPT_OSS_20B','COMPOUND_MINI','COMPOUND'], reason:'English science → gpt-oss-120b at HIGH reasoning' },
 
   // ── Default ──
-  { when:{},                              chain:['GPT_OSS_120B','GEMINI_FLASH','QWEN_38','GPT_OSS_20B'], reason:'Default → best English reasoning model' }
+  { when:{},                              chain:['GPT_OSS_120B','GEMINI_FLASH','QWEN_38','GPT_OSS_20B','COMPOUND_MINI','COMPOUND'], reason:'Default → best English reasoning model' }
 ];
 
 const INDIC_LANGS = ['te','kn','ta','ml','hi'];

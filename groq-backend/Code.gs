@@ -16,7 +16,8 @@ var GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 
 // Allowed models — a safety allowlist so a stolen proxy URL can't run arbitrary
 // (expensive) models on your key. Keep in sync with GROQ_CONFIG in teachers.html.
-// Keep in sync with GROQ_CONFIG.ladder in teachers.html.
+// SECURITY ALLOWLIST — a permission SET, not a priority order.
+// Actual model priority lives in ROUTE_RULES in teachers.html.
 // Verified against console.groq.com/docs/models for this account.
 var ALLOWED_MODELS = [
   // Production models
