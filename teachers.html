@@ -25,6 +25,10 @@
 <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<!-- pdfmake writes REAL TEXT into the PDF instead of a screenshot: selectable, searchable,
+     ~50KB instead of 2MB, and impossible to crop. html2pdf is kept as a fallback. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 
@@ -3565,7 +3569,9 @@ document.addEventListener('click', (e) => {
 
 // "Print / PDF" now downloads a real PDF that matches the preview (falls back to print).
 function printOrPdf() {
-  if(window.lastPaperData && typeof exportPaperPdf === 'function') exportPaperPdf();
+  // Vector PDF (real selectable text). Falls back to the screenshot exporter on error.
+  if(window.lastPaperData && typeof exportPaperPdfVector === 'function') exportPaperPdfVector();
+  else if(window.lastPaperData && typeof exportPaperPdf === 'function') exportPaperPdf();
   else window.print();
 }
 
@@ -5423,6 +5429,289 @@ function makePrintableMath(root){
       el.replaceWith(box.firstChild || box);
     } catch(e){ /* leave the original rather than lose the maths */ }
   });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   VECTOR PDF EXPORT  (pdfmake)
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   The old PDF was a SCREENSHOT. html2canvas rasterised the preview, which meant:
+     • text could not be selected, copied or searched
+     • a 4-page paper weighed 2.1 MB
+     • the radical sign silently vanished (KaTeX draws it as an SVG path)
+     • the right edge cropped, because html2pdf scales the canvas then offsets by the margin
+
+   This writes real text. Nothing can crop, text is selectable, and a paper is around 50 KB.
+
+   MATHS is the one thing a text PDF cannot get for free, since pdfmake has no LaTeX engine.
+   Rather than fall back to "(1)/(2)", fractions are drawn as a two-row stack with a rule
+   between them — real vector output that looks like a fraction. Roots, powers, subscripts and
+   Greek letters become their proper Unicode characters. See texToPdf().
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+
+const PDF_MARGIN_MM = 18;                       // board papers use generous margins, not 8mm
+const MM = 2.834645669;                         // mm -> pdf points
+
+/* ── LaTeX → pdfmake inline content ──────────────────────────────────────────────────────────
+   Returns an array of pdfmake inline objects. A fraction becomes a nested stack so it is drawn,
+   not approximated. Everything else resolves to Unicode via the existing convTex(). */
+function texToPdf(src, style){
+  const out = [];
+  const S = String(src == null ? '' : src);
+  // Split on $…$ so prose and maths are handled separately.
+  S.split(/(\$[^$]*\$)/).forEach(seg => {
+    if(!seg) return;
+    if(seg.charAt(0) !== '$'){ out.push(Object.assign({ text: seg }, style || {})); return; }
+    const tex = seg.slice(1, -1);
+    pushMath(out, tex, style);
+  });
+  return out.length ? out : [{ text:'' }];
+}
+
+// Walk a maths expression, lifting \frac out as a drawn stack and converting the rest.
+function pushMath(out, tex, style){
+  const FRAC = /\\d?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/;
+  let rest = tex, guard = 0;
+  while(guard++ < 40){
+    const m = FRAC.exec(rest);
+    if(!m) break;
+    const before = rest.slice(0, m.index);
+    if(before.trim()) out.push(Object.assign({ text: convTex(before) }, style || {}));
+    out.push(fractionStack(m[1], m[2], style));
+    rest = rest.slice(m.index + m[0].length);
+  }
+  if(rest.trim()) out.push(Object.assign({ text: convTex(rest) }, style || {}));
+}
+
+/* A real stacked fraction: numerator, a hairline, denominator — drawn inline. */
+function fractionStack(num, den, style){
+  const fs = ((style && style.fontSize) || 10) - 1.5;
+  const n = convTex(num), d = convTex(den);
+  const w = Math.max(n.length, d.length) * fs * 0.62 + 4;
+  return {
+    // A tiny table keeps the two lines locked together with a rule between them.
+    table: { widths:[w], body:[
+      [{ text:n, fontSize:fs, alignment:'center', margin:[0,0,0,0], border:[false,false,false,true] }],
+      [{ text:d, fontSize:fs, alignment:'center', margin:[0,0,0,0], border:[false,false,false,false] }]
+    ]},
+    layout: {
+      hLineWidth: (i) => i === 1 ? 0.6 : 0,
+      vLineWidth: () => 0,
+      hLineColor: () => '#000',
+      paddingLeft: () => 1, paddingRight: () => 1,
+      paddingTop: () => 0, paddingBottom: () => 0
+    },
+    // Keep it on the text baseline rather than starting a new block.
+    margin: [1, -2, 1, -2]
+  };
+}
+
+/* Plain-text version, for places that cannot take rich content (table cells we measure). */
+function texToPlain(src){ return latexToUnicode(String(src == null ? '' : src)); }
+
+/* ── The question paper ──────────────────────────────────────────────────────────────────── */
+function pdfPaperContent(data){
+  const m = data.meta, C = [];
+
+  if(m.school) C.push({ text: m.school.toUpperCase(), style:'school' });
+  if(m.location) C.push({ text: m.location, style:'sub' });
+  C.push({ text: `${m.examTitle}${m.session ? '  •  ' + m.session : ''}`, style:'exam' });
+
+  // Class + Subject left, Max. Marks above Time right — the layout Surya specified.
+  C.push({ columns:[
+    { width:'*', stack:[
+      { text:`Class: ${String(m.className).replace('Class ','')}`, style:'meta' },
+      { text:`Subject: ${m.subject}`, style:'meta' } ] },
+    { width:'auto', alignment:'right', stack:[
+      { text:`Max. Marks: ${m.maxMarks}`, style:'meta' },
+      { text:`Time: ${m.durationLabel}`, style:'meta' } ] }
+  ], columnGap:12, margin:[0,6,0,4] });
+  C.push({ canvas:[{ type:'line', x1:0, y1:0, x2:520, y2:0, lineWidth:0.9 }], margin:[0,0,0,10] });
+
+  if((data.generalInstructions||[]).length){
+    C.push({ text:'GENERAL INSTRUCTIONS', style:'giTitle' });
+    if(data.instructionPreamble) C.push({ text:data.instructionPreamble, style:'giLead' });
+    const roman = ['i','ii','iii','iv','v','vi','vii','viii','ix','x','xi','xii','xiii','xiv','xv'];
+    data.generalInstructions.forEach((gi, i) => C.push({
+      columns:[
+        { width:26, text: data.instructionStyle === 'plain' ? '' : `(${roman[i]||i+1})`,
+          style:'gi', alignment:'right' },
+        { width:'*', text: texToPdf(gi, { fontSize:8.5 }) }
+      ], columnGap:6, margin:[0,0,0,1.5]
+    }));
+  }
+
+  (data.sections||[]).forEach(sec => {
+    const secMarks = (sec.questions||[]).reduce((a,q)=>a+(Number(q.marks)||0),0);
+    C.push({ margin:[0,12,0,8], table:{ widths:['*'], body:[[{
+      border:[false,true,false,true],
+      text:[ { text:(sec.name||'').toUpperCase(), style:'secName' },
+             { text:`   ${sec.note||''}${secMarks?`  (${secMarks} marks)`:''}`, style:'secNote' } ],
+      alignment:'center', margin:[0,4,0,4]
+    }]]}, layout:{
+      hLineWidth: () => 0.7, vLineWidth: () => 0, hLineColor: () => '#000',
+      paddingLeft: () => 0, paddingRight: () => 0
+    }});
+    (sec.questions||[]).forEach(q => pdfQuestion(C, q));
+  });
+  return C;
+}
+
+function pdfQuestion(C, q){
+  const num = q.number != null ? q.number + '.' : '';
+  if(q.type === 'case' && q.caseIntro){
+    C.push({ columns:[{ width:22, text:'' },
+      { width:'*', text: texToPdf(q.caseIntro, { fontSize:8.8, italics:true }) }],
+      columnGap:4, margin:[0,4,0,3] });
+  }
+  // Question number · stem · marks, as three columns so the marks can never collide.
+  C.push({ columns:[
+    { width:22, text:num, style:'qnum' },
+    { width:'*', text: texToPdf(q.text || '', { fontSize:9.6 }) },
+    { width:26, text: q.marks != null ? `[${q.marks}]` : '', style:'qmarks', alignment:'right' }
+  ], columnGap:4, margin:[0,5,0,2] });
+
+  if(q.type === 'mcq' && Array.isArray(q.options)){
+    // Two options per row — the same layout as the preview, and it halves the page count.
+    for(let i = 0; i < q.options.length; i += 2){
+      const cell = (k) => q.options[k] == null ? { text:'' } : { columns:[
+        { width:16, text:`(${'abcd'[k]})`, style:'opt', bold:true },
+        { width:'*', text: texToPdf(q.options[k], { fontSize:9.2 }) }
+      ], columnGap:2 };
+      C.push({ columns:[ { width:26, text:'' }, cell(i), cell(i+1) ],
+               columnGap:10, margin:[0,1.5,0,1.5] });
+    }
+  } else if(q.type === 'assertion_reason'){
+    [['Assertion (A): ', q.assertion], ['Reason (R): ', q.reason]].forEach(([lbl, val]) => {
+      if(!val) return;
+      C.push({ columns:[{ width:30, text:'' }, { width:'*',
+        text:[{ text:lbl, bold:true, fontSize:9.2 }].concat(texToPdf(val, { fontSize:9.2 })) }],
+        columnGap:2, margin:[0,1,0,1] });
+    });
+    ['Both A and R are true and R is the correct explanation of A.',
+     'Both A and R are true but R is not the correct explanation of A.',
+     'A is true but R is false.', 'A is false but R is true.'].forEach((o,i) =>
+      C.push({ columns:[{ width:30, text:'' },
+        { width:16, text:`(${'abcd'[i]})`, style:'opt', bold:true },
+        { width:'*', text:o, fontSize:9.2 }], columnGap:2, margin:[0,1,0,1] }));
+  } else if(q.type === 'truefalse'){
+    C.push({ columns:[{ width:30, text:'' },
+      { width:'*', text:'( True / False )', fontSize:9, italics:true }], margin:[0,1,0,1] });
+  }
+
+  (q.parts||[]).forEach(pt => C.push({ columns:[
+    { width:30, text:'' },
+    { width:18, text: pt.label || '', bold:true, fontSize:9.2 },
+    { width:'*', text: texToPdf(pt.text || '', { fontSize:9.2 }) },
+    { width:24, text: pt.marks != null ? `[${pt.marks}]` : '', fontSize:8.6, alignment:'right' }
+  ], columnGap:3, margin:[0,1.5,0,1.5] }));
+
+  if(q.orChoice){
+    C.push({ text:'OR', bold:true, fontSize:9, alignment:'center', margin:[0,3,0,3] });
+    C.push({ columns:[
+      { width:22, text:'' },
+      { width:'*', text: texToPdf(q.orChoice.text || '', { fontSize:9.6 }) },
+      { width:26, text: q.orChoice.marks != null ? `[${q.orChoice.marks}]` : '',
+        style:'qmarks', alignment:'right' }
+    ], columnGap:4, margin:[0,0,0,2] });
+  }
+}
+
+/* ── The marking scheme ──────────────────────────────────────────────────────────────────── */
+function pdfKeyContent(data){
+  const m = data.meta, C = [];
+  C.push({ text:`${(m.school||'').toUpperCase()} — MARKING SCHEME`, style:'school' });
+  C.push({ text:`${m.examTitle}  •  ${m.subject}  •  ${m.className}`, style:'exam' });
+  C.push({ columns:[
+    { text:`Max. Marks: ${m.maxMarks}`, style:'meta' },
+    { text:'For teacher use — do not distribute to students', style:'meta',
+      alignment:'right', italics:true }
+  ], margin:[0,4,0,4] });
+  C.push({ canvas:[{ type:'line', x1:0, y1:0, x2:520, y2:0, lineWidth:0.9 }], margin:[0,0,0,10] });
+
+  (data.sections||[]).forEach(sec => {
+    C.push({ text:(sec.name||'Section').toUpperCase(), style:'keySec' });
+    const body = [[
+      { text:'Q.No', style:'keyTh' }, { text:'Answer & Value Points', style:'keyTh' },
+      { text:'Marks', style:'keyTh' }, { text:'Level', style:'keyTh' }
+    ]];
+    (sec.questions||[]).forEach(q => {
+      const stack = [];
+      if(q.answer)   stack.push({ text:[{ text:'Ans: ', bold:true }].concat(texToPdf(q.answer, { fontSize:8.6 })) });
+      if(q.solution) stack.push({ text: texToPdf(q.solution, { fontSize:8.4 }), margin:[0,1,0,0] });
+      (q.parts||[]).forEach(pt => {
+        const bits = [pt.answer, pt.solution].filter(Boolean).join(' — ');
+        if(!bits) return;
+        stack.push({ text:[{ text:`${pt.label||''} `, bold:true }]
+          .concat(texToPdf(bits, { fontSize:8.4 }))
+          .concat(pt.marks != null ? [{ text:`  [${pt.marks}]`, italics:true, fontSize:8 }] : []),
+          margin:[0,1,0,0] });
+      });
+      if(q.orChoice && (q.orChoice.answer || q.orChoice.solution))
+        stack.push({ text:[{ text:'OR — ', bold:true }]
+          .concat(texToPdf([q.orChoice.answer, q.orChoice.solution].filter(Boolean).join(' — '), { fontSize:8.4 })),
+          margin:[0,1,0,0] });
+      if(!stack.length) stack.push({ text:'—', color:'#94a3b8' });
+
+      body.push([
+        { text: q.number != null ? String(q.number) : '', alignment:'center', bold:true, fontSize:8.6 },
+        { stack },
+        { text: q.marks != null ? String(q.marks) : '', alignment:'center', bold:true, fontSize:8.6 },
+        { text:[ q.bloom ? { text:q.bloom + '\n', fontSize:7.6 } : { text:'' },
+                 q.difficulty ? { text:q.difficulty, fontSize:7.6, italics:true } : { text:'' } ] }
+      ]);
+    });
+    // The answer column gets the room — the old HTML table gave every column 25%.
+    C.push({ table:{ headerRows:1, widths:[26, '*', 30, 54], body }, style:'keyTable',
+      layout:{ hLineWidth: () => 0.4, vLineWidth: () => 0.4,
+               hLineColor: () => '#94a3b8', vLineColor: () => '#94a3b8',
+               paddingLeft: () => 4, paddingRight: () => 4,
+               paddingTop: () => 3, paddingBottom: () => 3 },
+      margin:[0,0,0,8] });
+  });
+  return C;
+}
+
+/* ── Export ──────────────────────────────────────────────────────────────────────────────── */
+async function exportPaperPdfVector(){
+  if(typeof pdfMake === 'undefined'){ toast('PDF library still loading — try again.','err'); return; }
+  const data = window.lastPaperData;
+  if(!data || data.kind !== 'paper'){ toast('Generate a question paper first.','err'); return; }
+  toast('Building PDF…');
+  try {
+    const teacher = currentVariant === 'teacher';
+    const doc = {
+      pageSize:'A4',
+      pageMargins:[PDF_MARGIN_MM*MM, PDF_MARGIN_MM*MM, PDF_MARGIN_MM*MM, (PDF_MARGIN_MM-4)*MM],
+      content: teacher ? pdfKeyContent(data) : pdfPaperContent(data),
+      defaultStyle:{ font:'Roboto', fontSize:9.6, lineHeight:1.15 },
+      styles:{
+        school:{ fontSize:15, bold:true, alignment:'center' },
+        sub:{ fontSize:9, alignment:'center', margin:[0,1,0,0] },
+        exam:{ fontSize:10.5, bold:true, alignment:'center', margin:[0,5,0,0] },
+        meta:{ fontSize:9.4, bold:true },
+        giTitle:{ fontSize:9.4, bold:true, margin:[0,0,0,3] },
+        giLead:{ fontSize:8.5, margin:[0,0,0,3] },
+        gi:{ fontSize:8.5 },
+        secName:{ fontSize:10, bold:true },
+        secNote:{ fontSize:8.6 },
+        qnum:{ fontSize:9.6, bold:true },
+        qmarks:{ fontSize:8.8, bold:true },
+        opt:{ fontSize:9.2 },
+        keySec:{ fontSize:10, bold:true, margin:[0,8,0,4] },
+        keyTh:{ fontSize:8.8, bold:true, fillColor:'#e8eaf6' },
+        keyTable:{ fontSize:8.6 }
+      },
+      footer: (page, total) => ({ text:`Page ${page} of ${total}`, alignment:'center',
+        fontSize:7.6, color:'#64748b', margin:[0,4,0,0] })
+    };
+    await new Promise(res => pdfMake.createPdf(doc).download(docFileName(data,'pdf'), res));
+    toast('PDF downloaded.','ok');
+  } catch(e){
+    console.error(e);
+    // Never leave the teacher without a file: fall back to the old screenshot exporter.
+    toast('Using the image exporter instead…');
+    return exportPaperPdf();
+  }
 }
 
 /* ═══════════════ PDF EXPORT (matches preview) ═══════════════ */
