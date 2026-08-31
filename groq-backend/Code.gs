@@ -36,8 +36,15 @@ var ALLOWED_MODELS = [
   'gemini-2.5-flash',
   'gemini-3.7-flash',
   // Sarvam — Indic-language specialist for Telugu/Hindi/Kannada papers.
+  // Sarvam's own API says these are the ONLY two chat models it has:
+  //   "Model 'sarvam-30b' has been deprecated. Please use one of the available models
+  //    instead: sarvam-105b, sarvam-105b-conversations."
+  // sarvam-105b is a reasoning model whose thinking expands to consume any budget given
+  // to it (tested at 1.2K/3K/4K/8K/16K tokens - answer field empty every time except one
+  // trivial 700-token request). -conversations is the conversational variant and is the
+  // remaining hope for Indic papers, so it must be reachable to be tested.
   'sarvam-105b',
-  'sarvam-30b',
+  'sarvam-105b-conversations',
   // ── EVALUATION ONLY (via OpenRouter) ─────────────────────────────────────────
   // Used by the admin model-comparison tool. NOT in any production routing chain.
   // ⚠️ stealth/ox-alpha is a preview alias for ZAI GLM-5.3-Flash whose provider RETAINS
