@@ -43,10 +43,19 @@ var ALLOWED_MODELS = [
   // ⚠️ stealth/ox-alpha is a preview alias for ZAI GLM-5.3-Flash whose provider RETAINS
   //    prompts and completions, so it must never see a real school's data. z-ai/glm-5.3 is
   //    the named, priced, stable equivalent if it ever earns a place in production.
-  'stealth/ox-alpha',
   'z-ai/glm-5.3',
+  'z-ai/glm-5.3-flash',             // what stealth/ox-alpha turned out to be, named
   'deepseek/deepseek-v4-pro-0813',
-  'x-ai/grok-4.6'
+  'x-ai/grok-4.6',
+  // ── CHEAP CANDIDATES under evaluation (OpenRouter prices per 1M in/out) ──
+  // The whole point: gpt-oss-120b costs ₹0.58 a paper. If one of these writes an equally
+  // good paper for ₹0.14 — or nothing at all — that is the difference between a viable
+  // product and a marginal one. Free models also let us keep testing on an empty balance.
+  'nvidia/nemotron-3.5-lightning:free',   // $0     / $0
+  'inclusionai/ling-3.0-flash',           // $0.021 / $0.063
+  'upstage/solar-pro4',                   // $0.03  / $0.12
+  'qwen/qwen3.7-flash',                   // $0.03  / $0.13
+  'deepseek/deepseek-v4-flash-0731'       // $0.065 / $0.18
 ];
 
 // Optional: cap max_tokens so a single request can't be abused to burn credits.
