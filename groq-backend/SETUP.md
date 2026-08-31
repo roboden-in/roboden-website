@@ -91,3 +91,24 @@ that host. Groq's is deliberately **6000**: asking for more on the free tier is 
 outright as *Request too large*, which is one reason gpt-oss-120b was being skipped. Hosts
 without an 8K/min cap are set far higher, which is also what lets a full 80-mark paper be
 generated in a single call instead of being truncated.
+
+---
+
+# Adding a model WITHOUT redeploying
+
+Every model test used to need a proxy redeploy, because the allowlist lived in the code.
+It no longer does.
+
+**Apps Script → ⚙️ Project Settings → Script Properties → Add:**
+
+| Property | Value |
+|---|---|
+| `EXTRA_MODELS` | `qwen/qwen3.7-flash, deepseek/deepseek-v4-flash-0731` |
+
+Comma-separated, spaces ignored. **Takes effect on the very next request — no redeploy.**
+
+To block something in the built-in list, add `BLOCKED_MODELS` in the same format.
+Blocking always wins, which is the safe way round.
+
+The built-in list in `Code.gs` stays as the safety net so a leaked proxy URL still cannot run
+arbitrary expensive models on your keys.

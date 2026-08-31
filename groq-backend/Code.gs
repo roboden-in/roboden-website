@@ -14,11 +14,46 @@
 
 var GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 
-// Allowed models — a safety allowlist so a stolen proxy URL can't run arbitrary
-// (expensive) models on your key. Keep in sync with GROQ_CONFIG in teachers.html.
-// SECURITY ALLOWLIST — a permission SET, not a priority order.
+/**
+ * ══════════════════════════════════════════════════════════════════════════════════════
+ * ADDING OR REMOVING A MODEL — NO REDEPLOY NEEDED
+ * ══════════════════════════════════════════════════════════════════════════════════════
+ * Project Settings ▸ Script Properties ▸ add a property named:
+ *
+ *     EXTRA_MODELS
+ *
+ * with a comma-separated list of model ids, e.g.
+ *
+ *     qwen/qwen3.7-flash, sarvam-105b-conversations, deepseek/deepseek-v4-flash-0731
+ *
+ * Script properties take effect on the very next request, so models can be added and
+ * removed at any time WITHOUT touching this file and without redeploying.
+ *
+ * To BLOCK a model that is in the built-in list below, add it to a property named
+ * BLOCKED_MODELS in the same comma-separated format. Blocking always wins.
+ * ══════════════════════════════════════════════════════════════════════════════════════
+ */
+
+// Reads a comma-separated Script Property into a trimmed array. Never throws.
+function propList_(name) {
+  try {
+    var raw = PropertiesService.getScriptProperties().getProperty(name);
+    if (!raw) return [];
+    return raw.split(',').map(function (s) { return s.trim(); })
+              .filter(function (s) { return s.length > 0; });
+  } catch (err) { return []; }
+}
+
+// The effective allowlist = built-in list + EXTRA_MODELS, minus BLOCKED_MODELS.
+function modelAllowed_(model) {
+  if (propList_('BLOCKED_MODELS').indexOf(model) !== -1) return false;
+  if (ALLOWED_MODELS.indexOf(model) !== -1) return true;
+  return propList_('EXTRA_MODELS').indexOf(model) !== -1;
+}
+
+// Built-in allowlist — a safety net so a stolen proxy URL can't run arbitrary (expensive)
+// models on your keys. SECURITY ALLOWLIST, a permission SET, not a priority order.
 // Actual model priority lives in ROUTE_RULES in teachers.html.
-// Verified against console.groq.com/docs/models for this account.
 var ALLOWED_MODELS = [
   // Production models
   'openai/gpt-oss-120b',
@@ -170,7 +205,7 @@ function doPost(e) {
 
     // Enforce the model allowlist BEFORE translating, so the list stays readable and a stolen
     // proxy URL still cannot run arbitrary (expensive) models on any of the keys.
-    if (payload.model && ALLOWED_MODELS.indexOf(payload.model) === -1) {
+    if (payload.model && !modelAllowed_(payload.model)) {
       return json_({ error: 'Model not allowed: ' + payload.model }, 400);
     }
     if (!payload.model) payload.model = 'openai/gpt-oss-120b';
