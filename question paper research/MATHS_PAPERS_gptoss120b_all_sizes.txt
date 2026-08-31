@@ -1,0 +1,780 @@
+
+
+==============================================================================
+10-MARK PAPER — 8 questions · 5065 tokens · score 94 · variety 88%
+==============================================================================
+
+--- Section A — Objective Type Questions (1 mark each) ---
+
+1. [1] In a right‑angled triangle, the sine of an acute angle $\theta$ is defined as
+    (a) ratio of the opposite side to the hypotenuse
+    (b) ratio of the adjacent side to the hypotenuse
+    (c) ratio of the opposite side to the adjacent side
+    (d) ratio of the hypotenuse to the opposite side
+    >> ANS: ratio of the opposite side to the hypotenuse | By definition, $\sin\theta = \dfrac{\text{opposite}}{\text{hypotenuse}}$. | Remembering/easy
+
+2. [1] What is the value of $\sin 30^{\circ}$?
+    (a) $\dfrac{1}{2}$
+    (b) $\dfrac{\sqrt{3}}{2}$
+    (c) $\dfrac{\sqrt{2}}{2}$
+    (d) $\dfrac{\sqrt{3}}{3}$
+    >> ANS: $\dfrac{1}{2}$ | $\sin 30^{\circ}=\dfrac{1}{2}$ from the standard trigonometric table. | Remembering/easy
+
+3. [1] If $\tan\theta = \dfrac{3}{4}$ for an acute angle $\theta$, then $\sin\theta$ equals
+    (a) $\dfrac{3}{5}$
+    (b) $\dfrac{4}{5}$
+    (c) $\dfrac{3}{7}$
+    (d) $\dfrac{5}{7}$
+    >> ANS: $\dfrac{3}{5}$ | Let opposite = 3, adjacent = 4, then hypotenuse $=\sqrt{3^{2}+4^{2}}=5$. So $\sin\theta=3/5$. | Applying/medium
+
+4. [1] A tree is $50\,\text{m}$ away from a point where the angle of elevation of its top is $30^{\circ}$. Approximate the height of the tree.
+    (a) $25\,\text{m}$
+    (b) $28.9\,\text{m}$
+    (c) $30\,\text{m}$
+    (d) $35\,\text{m}$
+    >> ANS: $28.9\,\text{m}$ | Height $=50\times\tan30^{\circ}=50\times\dfrac{1}{\sqrt3}\approx28.87\,\text{m}$. | Applying/medium
+
+5. [1] If $\sin A = 0.6$ and $A$ is acute, find $\cos A$.
+    (a) 0.8
+    (b) 0.6
+    (c) 0.4
+    (d) 0.2
+    >> ANS: 0.8 | $\cos A = \sqrt{1-\sin^{2}A}=\sqrt{1-0.36}=\sqrt{0.64}=0.8$. | Understanding/medium
+
+6. [1] In a school, 60% of students like Mathematics, 45% like Science and 30% like both. Percentage who like either Mathematics or Science is
+    (a) 75%
+    (b) 85%
+    (c) 90%
+    (d) 95%
+    >> ANS: 75% | Using inclusion–exclusion: $60+45-30=75\%$. | Analysing/medium
+
+--- Section B — Short Answer Questions (2 marks each) ---
+
+7. [2] State the value of $\cos 60^{\circ}$.
+    >> ANS: $\dfrac{1}{2}$ | $\cos 60^{\circ}=\dfrac{1}{2}$ from the standard table. | Remembering/easy
+
+8. [2] If $\tan\theta = 1$ and $\theta$ is acute, find $\theta$.
+    >> ANS: $45^{\circ}$ | $\tan\theta =1$ implies $\theta =45^{\circ}$ in the first quadrant. | Remembering/easy
+
+
+==============================================================================
+20-MARK PAPER — 13 questions · 6779 tokens · score 100 · variety 100%
+==============================================================================
+
+--- Section A — Objective Type Questions (1 mark each) ---
+
+1. [1] What is the value of $\sin 30^{\circ}$?
+    (a) $\frac{1}{2}$
+    (b) $\frac{\sqrt{3}}{2}$
+    (c) $\frac{\sqrt{2}}{2}$
+    (d) $1$
+    >> ANS: $\frac{1}{2}$ | Using the standard value, $\sin 30^{\circ}=\frac{1}{2}$. | Remembering/easy
+
+2. [1] Find $\tan 45^{\circ}$.
+    (a) $0$
+    (b) $1$
+    (c) $\sqrt{3}$
+    (d) $\frac{1}{\sqrt{3}}$
+    >> ANS: $1$ | $\tan 45^{\circ}=\frac{\text{opposite}}{\text{adjacent}}=1$. | Remembering/easy
+
+3. [1] In a right‑angled triangle, one acute angle is $60^{\circ}$. What is the ratio of the side opposite this angle to the hypotenuse?
+    (a) $\frac{\sqrt{3}}{2}$
+    (b) $\frac{1}{2}$
+    (c) $\frac{2}{\sqrt{3}}$
+    (d) $1$
+    >> ANS: $\frac{\sqrt{3}}{2}$ | Opposite/hypotenuse = $\sin 60^{\circ}=\frac{\sqrt{3}}{2}$. | Applying/easy
+
+4. [1] A flagpole is $20\text{ m}$ away from a point on the ground. The angle of elevation of its top is $30^{\circ}$. Find the height of the pole (approx).
+    (a) $10\text{ m}$
+    (b) $11.55\text{ m}$
+    (c) $12\text{ m}$
+    (d) $20\text{ m}$
+    >> ANS: $11.55\text{ m}$ | Height $=20\times\tan30^{\circ}=20\times\frac{1}{\sqrt{3}}\approx11.55\text{ m}$. | Applying/medium
+
+5. [1] What is $\cos 150^{\circ}$?
+    (a) $-\frac{\sqrt{3}}{2}$
+    (b) $-\frac{1}{2}$
+    (c) $\frac{\sqrt{3}}{2}$
+    (d) $\frac{1}{2}$
+    >> ANS: $-\frac{\sqrt{3}}{2}$ | $\cos150^{\circ}=\cos(180^{\circ}-30^{\circ})=-\cos30^{\circ}=-\frac{\sqrt{3}}{2}$. | Understanding/medium
+
+6. [1] In a right triangle, the side opposite $30^{\circ}$ is $5\text{ cm}$. What is the hypotenuse?
+    (a) $10\text{ cm}$
+    (b) $5\sqrt{3}\text{ cm}$
+    (c) $\frac{5}{2}\text{ cm}$
+    (d) $5\text{ cm}$
+    >> ANS: $10\text{ cm}$ | Opposite = $\frac{1}{2}\times$ hypotenuse $\Rightarrow$ hypotenuse $=2\times5=10\text{ cm}$. | Applying/medium
+
+7. [1] If $\sin\theta=\frac{3}{5}$ and $\theta$ is acute, find $\cos\theta$.
+    (a) $\frac{4}{5}$
+    (b) $-\frac{4}{5}$
+    (c) $\frac{5}{3}$
+    (d) $\frac{3}{4}$
+    >> ANS: $\frac{4}{5}$ | $\cos\theta=\sqrt{1-\sin^{2}\theta}=\sqrt{1-\left(\frac{3}{5}\right)^{2}}=\frac{4}{5}$. | Applying/medium
+
+8. [1] Two sides of a triangle are $7\text{ cm}$ and $9\text{ cm}$ with an included angle of $60^{\circ}$. Find the area (approx).
+    (a) $27.3\text{ cm}^{2}$
+    (b) $28.0\text{ cm}^{2}$
+    (c) $26.5\text{ cm}^{2}$
+    (d) $30\text{ cm}^{2}$
+    >> ANS: $27.3\text{ cm}^{2}$ | Area $=\frac{1}{2}\times7\times9\times\sin60^{\circ}=31.5\times\frac{\sqrt{3}}{2}\approx27.3\text{ cm}^{2}$. | Analysing/hard
+
+9. [1] From a point on the ground, the angle of elevation of a satellite directly above a point $500\text{ km}$ north is $45^{\circ}$. Find the altitude of the satellite.
+    (a) $500\text{ km}$
+    (b) $707\text{ km}$
+    (c) $1000\text{ km}$
+    (d) $350\text{ km}$
+    >> ANS: $500\text{ km}$ | For $45^{\circ}$, altitude = horizontal distance $=500\text{ km}$. | Evaluating/hard
+
+--- Section B — Short Answer Questions (2 marks each) ---
+
+10. [2] In a right‑angled triangle, the hypotenuse is $13\text{ cm}$. Find the length of the side opposite $30^{\circ}$.
+    >> ANS: $6.5\text{ cm}$ | $\sin30^{\circ}=\frac{1}{2}=\frac{\text{opposite}}{13}\Rightarrow\text{opposite}=13\times\frac{1}{2}=6.5\text{ cm}$. | Applying/medium
+
+11. [2] Express $\cos 75^{\circ}$ in its exact surd form.
+    >> ANS: $\frac{\sqrt{6}-\sqrt{2}}{4}$ | $\cos75^{\circ}=\cos(45^{\circ}+30^{\circ})=\cos45^{\circ}\cos30^{\circ}-\sin45^{\circ}\sin30^{\circ}=\frac{\sqrt2}{2}\cdot\frac{\sqrt3}{2}- | Understanding/hard
+
+12. [2] A lighthouse stands on a cliff $50\text{ m}$ high. From a boat the angle of elevation to the top is $30^{\circ}$. Find the horizontal distance of the boat from the base of the cliff (approx).
+    >> ANS: $86.6\text{ m}$ | Horizontal distance $=\frac{50}{\tan30^{\circ}}=\frac{50}{1/\sqrt3}=50\sqrt3\approx86.6\text{ m}$. | Applying/medium
+
+--- Section C — Long Answer Questions (5 marks each) ---
+
+13. [5] A surveyor measures the angle of elevation of a building from point $A$ as $38^{\circ}$. He then walks $20\text{ m}$ towards the building to point $B$ and measures the angle of elevation as $50^{\circ}$. Calculate the height of the building (give your answer in metres, correct to one decimal place).
+    >> ANS: $31.4\text{ m}$ | Let the height be $h$ and the distance from $A$ to the base be $x$ metres.
+From $A$: $\tan38^{\circ}=\frac{h}{x}\Rightarrow h=x\tan38^{\circ | Analysing/hard
+
+
+==============================================================================
+25-MARK PAPER — 16 questions · 8913 tokens · score 94 · variety 81%
+==============================================================================
+
+--- Section A — Objective Type Questions (1 mark each) ---
+
+1. [1] In a right‑angled triangle, the sine of an acute angle $\theta$ is defined as:
+    (a) Ratio of opposite side to hypotenuse
+    (b) Ratio of adjacent side to hypotenuse
+    (c) Ratio of opposite side to adjacent side
+    (d) Ratio of hypotenuse to opposite side
+    >> ANS: Ratio of opposite side to hypotenuse | By definition, $\sin\theta = \dfrac{\text{opposite}}{\text{hypotenuse}}$. | Remembering/easy
+
+2. [1] What is the value of $\sin 30^{\circ}$?
+    (a) $\frac{1}{2}$
+    (b) $\frac{\sqrt{3}}{2}$
+    (c) $\frac{\sqrt{2}}{2}$
+    (d) $1$
+    >> ANS: $\frac{1}{2}$ | $\sin 30^{\circ}=\frac{1}{2}$ from the standard trigonometric table. | Remembering/easy
+
+3. [1] If $\theta$ and $\phi$ are complementary angles, then $\sin \theta$ equals:
+    (a) $\cos \phi$
+    (b) $\tan \phi$
+    (c) $\sec \phi$
+    (d) $\csc \phi$
+    >> ANS: $\cos \phi$ | For complementary angles, $\sin \theta = \cos (90^{\circ}-\theta)=\cos \phi$. | Understanding/easy
+
+4. [1] Find $\tan 75^{\circ}$.
+    (a) $2+\sqrt{3}$
+    (b) $2-\sqrt{3}$
+    (c) $\sqrt{3}+1$
+    (d) $\sqrt{3}-1$
+    >> ANS: $2+\sqrt{3}$ | $\tan75^{\circ}=\tan(45^{\circ}+30^{\circ})=\dfrac{\tan45^{\circ}+\tan30^{\circ}}{1-\tan45^{\circ}\tan30^{\circ}}=\dfrac{1+\frac{1}{\sqrt3}} | Applying/medium
+
+5. [1] A tree 12 m tall is observed from a point 20 m away from its base. The angle of elevation of the top of the tree is:
+    (a) $30^{\circ}$
+    (b) $32^{\circ}$
+    (c) $35^{\circ}$
+    (d) $38^{\circ}$
+    >> ANS: $32^{\circ}$ | $\tan\theta=\dfrac{12}{20}=0.6\Rightarrow \theta=\tan^{-1}(0.6)\approx31.8^{\circ}$, nearest option $32^{\circ}$. | Applying/medium
+
+6. [1] In a right‑angled triangle, the hypotenuse is 13 cm and the side opposite an acute angle $\theta$ is 5 cm. Find $\sin \theta$.
+    (a) $\frac{5}{13}$
+    (b) $\frac{12}{13}$
+    (c) $\frac{13}{5}$
+    (d) $\frac{13}{12}$
+    >> ANS: $\frac{5}{13}$ | $\sin\theta=\dfrac{\text{opposite}}{\text{hypotenuse}}=\dfrac{5}{13}$. | Understanding/medium
+
+7. [1] What is the value of $\cos 45^{\circ}$?
+    (a) $\frac{\sqrt{2}}{2}$
+    (b) $\frac{1}{2}$
+    (c) $\frac{\sqrt{3}}{2}$
+    (d) $1$
+    >> ANS: $\frac{\sqrt{2}}{2}$ | $\cos45^{\circ}=\dfrac{\sqrt2}{2}$ from the standard table. | Remembering/easy
+
+8. [1] Find $\sin 15^{\circ}$.
+    (a) $\frac{\sqrt{6}-\sqrt{2}}{4}$
+    (b) $\frac{\sqrt{6}+\sqrt{2}}{4}$
+    (c) $\frac{\sqrt{3}-1}{2\sqrt{2}}$
+    (d) $\frac{\sqrt{3}+1}{2\sqrt{2}}$
+    >> ANS: $\frac{\sqrt{6}-\sqrt{2}}{4}$ | Using half‑angle: $\sin15^{\circ}=\sin\left(\frac{30^{\circ}}{2}\right)=\sqrt{\frac{1-\cos30^{\circ}}{2}}=\sqrt{\frac{1-\frac{\sqrt3}{2}}{2} | Analysing/hard
+
+9. [1] Simplify $\dfrac{\sin 2\theta}{1+\cos 2\theta}$.
+    (a) $\tan\theta$
+    (b) $\cot\theta$
+    (c) $\sin\theta$
+    (d) $\cos\theta$
+    >> ANS: $\tan\theta$ | $\sin2\theta=2\sin\theta\cos\theta$, $1+\cos2\theta=2\cos^{2}\theta$, so the ratio $=\dfrac{2\sin\theta\cos\theta}{2\cos^{2}\theta}=\tan\the | Analysing/hard
+
+10. [1] From a hilltop, the angle of depression to a point on the road is $20^{\circ}$. The hilltop is 45 m above the road. Find the horizontal distance to the point (nearest metre).
+    (a) $124\text{ m}$
+    (b) $130\text{ m}$
+    (c) $135\text{ m}$
+    (d) $140\text{ m}$
+    >> ANS: $124\text{ m}$ | tan$20^{\circ}=\dfrac{45}{d}\Rightarrow d=\dfrac{45}{\tan20^{\circ}}\approx\dfrac{45}{0.36397}=123.6\text{ m}\approx124\text{ m}$. | Applying/medium
+
+--- Section B — Short Answer Questions (2 marks each) ---
+
+11. [2] A lamp post is 15 m high. From a point 30 m away from its base, the angle of elevation of the top is measured. Find the angle of elevation (nearest degree).
+    >> ANS: $27^{\circ}$ (approximately) | tan$\theta=\dfrac{15}{30}=0.5\Rightarrow \theta=\tan^{-1}(0.5)\approx26.6^{\circ}\approx27^{\circ}$. | Applying/medium
+
+12. [2] In a right‑angled triangle, one acute angle is $35^{\circ}$ and the side opposite it is 7 cm. Find the length of the hypotenuse (nearest cm).
+    >> ANS: $12\text{ cm}$ (approximately) | hypotenuse $=\dfrac{7}{\sin35^{\circ}}\approx\dfrac{7}{0.574}=12.2\text{ cm}\approx12\text{ cm}$. | Applying/medium
+
+13. [2] Prove that $\sin^{2}\theta+\cos^{2}\theta=1$.
+    >> ANS: Using the definition of sine and cosine in a right‑angled triangle or the unit circle, $\sin^{2}\theta+\cos^{2}\theta=\frac{opp^{2}+adj^{2}}{hyp^{2}}=\frac{hyp^{2}}{hyp^{2}}=1$. | In a right‑angled triangle, $opp^{2}+adj^{2}=hyp^{2}$ (Pythagoras). Dividing by $hyp^{2}$ gives $\left(\frac{opp}{hyp}\right)^{2}+\left(\fra | Understanding/easy
+
+14. [2] Find the area of a triangle whose two sides are $a=8\text{ cm}$, $b=6\text{ cm}$ and the included angle $C=45^{\circ}$.
+    >> ANS: $12\sqrt{2}\text{ cm}^{2}$ (approximately $16.97\text{ cm}^{2}$) | Area $=\frac{1}{2}ab\sin C=\frac{1}{2}\times8\times6\times\sin45^{\circ}=24\times\frac{\sqrt2}{2}=12\sqrt2\text{ cm}^{2}$. | Applying/medium
+
+15. [2] A kite is flying at a height of 50 m. From a point on the ground 120 m horizontally from the point directly below the kite, the angle of elevation is measured. Find the angle of elevation (nearest degree).
+    >> ANS: $23^{\circ}$ (approximately) | tan$\theta=\dfrac{50}{120}=\frac{5}{12}=0.4167\Rightarrow \theta=\tan^{-1}(0.4167)\approx22.6^{\circ}\approx23^{\circ}$. | Applying/medium
+
+--- Section C — Long Answer Questions (5 marks each) ---
+
+16. [5] A building 48 m high is observed from a point on level ground 30 m away from its base.
+(i) Find the angle of elevation of the top of the building.
+(ii) Assuming the sun’s rays are parallel to the line of sight in part (i), find the length of the shadow cast by the building.
+    >> ANS: (i) $58^{\circ}$ (approximately) (ii) $30\text{ m}$ | (i) tan$\theta=\dfrac{48}{30}=1.6\Rightarrow \theta=\tan^{-1}(1.6)\approx58^{\circ}$. (ii) For parallel sun rays, the sun’s elevation angle  | Analysing/hard
+
+
+==============================================================================
+40-MARK PAPER — 23 questions · 10591 tokens · score 96 · variety 87%
+==============================================================================
+
+--- Section A — Objective Type Questions (1 mark each) ---
+
+1. [1] What is the value of $\sin 30^{\circ}$?
+    (a) $0.5$
+    (b) $\frac{\sqrt3}{2}$
+    (c) $1$
+    (d) $0$
+    >> ANS: $0.5$ | Using the standard value, $\sin 30^{\circ}=\frac{1}{2}=0.5$. | Remembering/easy
+
+2. [1] Find $\cos 60^{\circ}$.
+    (a) $0.5$
+    (b) $\frac{\sqrt3}{2}$
+    (c) $1$
+    (d) $0$
+    >> ANS: $0.5$ | $\cos 60^{\circ}=\frac{1}{2}=0.5$. | Remembering/easy
+
+3. [1] What is $\tan 45^{\circ}$?
+    (a) $1$
+    (b) $0$
+    (c) $\sqrt3$
+    (d) $\frac{1}{\sqrt3}$
+    >> ANS: $1$ | $\tan 45^{\circ}=1$. | Remembering/easy
+
+4. [1] If $\sin \theta = \frac{3}{5}$ and $\theta$ is acute, what is $\cos \theta$?
+    (a) $\frac{4}{5}$
+    (b) $\frac{3}{5}$
+    (c) $\frac{5}{3}$
+    (d) $\frac{2}{5}$
+    >> ANS: $\frac{4}{5}$ | $\cos \theta = \sqrt{1-\sin^{2}\theta}=\sqrt{1-\frac{9}{25}}=\frac{4}{5}$. | Applying/medium
+
+5. [1] From a point 50 m away from the base of a tower, the angle of elevation of its top is $30^{\circ}$. Height of the tower (in metres) is:
+    (a) $25\text{ m}$
+    (b) $28.9\text{ m}$
+    (c) $30\text{ m}$
+    (d) $35\text{ m}$
+    >> ANS: $28.9\text{ m}$ | Height = $50\times\tan30^{\circ}=50\times\frac{1}{\sqrt3}\approx28.9\text{ m}$. | Applying/medium
+
+6. [1] What is $\sec 60^{\circ}$?
+    (a) $2$
+    (b) $1$
+    (c) $\frac{2}{\sqrt3}$
+    (d) $\sqrt3$
+    >> ANS: $2$ | $\sec 60^{\circ}=\frac{1}{\cos60^{\circ}}=\frac{1}{0.5}=2$. | Remembering/easy
+
+7. [1] If $\tan \alpha = 2$ and $\alpha$ is acute, find $\sin \alpha$.
+    (a) $\frac{2}{\sqrt5}$
+    (b) $\frac{2}{5}$
+    (c) $\frac{\sqrt5}{2}$
+    (d) $\frac{5}{2}$
+    >> ANS: $\frac{2}{\sqrt5}$ | Let opposite =2k, adjacent =k, then $\sin\alpha=\frac{2k}{\sqrt{5}k}=\frac{2}{\sqrt5}$. | Applying/medium
+
+8. [1] Which of the following is a Pythagorean identity?
+    (a) $\sin^{2}\theta + \cos^{2}\theta = 1$
+    (b) $\sin\theta + \cos\theta = 1$
+    (c) $\tan\theta = \frac{\sin\theta}{\cos\theta}$
+    (d) $\sec\theta = \frac{1}{\cos\theta}$
+    >> ANS: $\sin^{2}\theta + \cos^{2}\theta = 1$ | The fundamental Pythagorean identity is $\sin^{2}\theta + \cos^{2}\theta = 1$. | Remembering/easy
+
+9. [1] If $\sin\theta = \frac{3}{5}$ (acute), what is $\tan\theta$?
+    (a) $\frac{3}{4}$
+    (b) $\frac{4}{3}$
+    (c) $\frac{3}{5}$
+    (d) $\frac{5}{3}$
+    >> ANS: $\frac{3}{4}$ | $\cos\theta=\frac{4}{5}$, so $\tan\theta=\frac{3/5}{4/5}=\frac{3}{4}$. | Applying/medium
+
+10. [1] What is $\cot 45^{\circ}$?
+    (a) $1$
+    (b) $0$
+    (c) $\sqrt3$
+    (d) $\frac{1}{\sqrt3}$
+    >> ANS: $1$ | $\cot45^{\circ}=\frac{1}{\tan45^{\circ}}=1$. | Remembering/easy
+
+11. [1] The angle of depression from the top of a lighthouse 40 m high to a boat is $15^{\circ}$. Distance of the boat from the base of the lighthouse (in metres) is:
+    (a) $150\text{ m}$
+    (b) $146\text{ m}$
+    (c) $140\text{ m}$
+    (d) $130\text{ m}$
+    >> ANS: $150\text{ m}$ | Distance = $\frac{40}{\tan15^{\circ}} \approx \frac{40}{0.2679}=149.3\approx150\text{ m}$. | Applying/medium
+
+12. [1] If $\sin A = \frac{5}{13}$ and $\cos B = \frac{12}{13}$ with $A,B$ acute, find $\sin(A+B)$.
+    (a) $\frac{119}{169}$
+    (b) $\frac{120}{169}$
+    (c) $\frac{121}{169}$
+    (d) $\frac{122}{169}$
+    >> ANS: $\frac{120}{169}$ | $\cos A=\frac{12}{13},\;\sin B=\frac{5}{13}$; $\sin(A+B)=\frac{5}{13}\cdot\frac{12}{13}+\frac{12}{13}\cdot\frac{5}{13}=\frac{120}{169}$. | Analyzing/hard
+
+13. [1] In a right triangle, the side opposite $\theta$ is 9 cm and the hypotenuse is 15 cm. Find $\sin\theta$.
+    (a) $0.6$
+    (b) $0.8$
+    (c) $0.9$
+    (d) $0.75$
+    >> ANS: $0.6$ | $\sin\theta = \frac{9}{15}=0.6$. | Remembering/easy
+
+14. [1] What is $\cos 0^{\circ}$?
+    (a) $0$
+    (b) $1$
+    (c) $-1$
+    (d) $\frac{1}{2}$
+    >> ANS: $1$ | $\cos0^{\circ}=1$. | Remembering/easy
+
+--- Section B — Short Answer Questions (2 marks each) ---
+
+15. [2] Define the term “angle of elevation”.
+    >> ANS: The angle between the horizontal line of sight and the line of sight upward to an object. | It is measured from the observer’s eye level to the line joining the eye and the object. | Understanding/easy
+
+16. [2] Find the exact value of $\sin 75^{\circ}$ using the sum formula.
+    >> ANS: $\frac{\sqrt6+\sqrt2}{4}$ | $\sin75^{\circ}=\sin(45^{\circ}+30^{\circ})=\sin45^{\circ}\cos30^{\circ}+\cos45^{\circ}\sin30^{\circ}=\frac{\sqrt2}{2}\cdot\frac{\sqrt3}{2}+ | Applying/medium
+
+17. [2] In a right triangle, one acute angle is $30^{\circ}$ and the side opposite it is 5 cm. Find the length of the hypotenuse.
+    >> ANS: $10\text{ cm}$ | $\sin30^{\circ}=\frac{\text{opp}}{\text{hyp}}\Rightarrow 0.5=\frac{5}{\text{hyp}}\Rightarrow \text{hyp}=10\text{ cm}$. | Applying/medium
+
+18. [2] Prove that $\tan\theta = \frac{\sin\theta}{\cos\theta}$ using right‑triangle definitions.
+    >> ANS: From a right triangle, $\tan\theta = \frac{\text{opposite}}{\text{adjacent}}$, $\sin\theta = \frac{\text{opposite}}{\text{hypotenuse}}$, $\cos\theta = \frac{\text{adjacent}}{\text{hypotenuse}}$. Dividing $\sin\theta$ by $\cos\theta$ gives $\frac{\text{opposite}/\text{hypotenuse}}{\text{adjacent}/\text{hypotenuse}} = \frac{\text{opposite}}{\text{adjacent}} = \tan\theta$. | Step‑1: Write definitions of $\sin$, $\cos$, $\tan$. Step‑2: Form the ratio $\frac{\sin\theta}{\cos\theta}$; the hypotenuse cancels, yieldin | Understanding/hard
+
+19. [2] A tree 15 m high is observed from a point 25 m away from its base. Calculate the angle of elevation to the top (nearest degree).
+    >> ANS: $31^{\circ}$ | $\tan\theta = \frac{15}{25}=0.6 \Rightarrow \theta = \tan^{-1}(0.6) \approx 30.96^{\circ} \approx 31^{\circ}$. | Applying/medium
+
+20. [2] State the value of $\csc 90^{\circ}$.
+    >> ANS: $1$ | $\csc 90^{\circ}=\frac{1}{\sin90^{\circ}}=\frac{1}{1}=1$. | Remembering/easy
+
+--- Section C — Long Answer Questions (5 marks each) ---
+
+21. [5] In a right‑angled triangle $\triangle ABC$ with $\angle C = 90^{\circ}$, $AC = 7\text{ cm}$ and $BC = 24\text{ cm}$:
+(i) Find the length of $AB$.
+(ii) Determine $\sin A$, $\cos A$, $\tan A$.
+(iii) Compute the area of the triangle.
+    >> ANS: AB = 25 cm; $\sin A = \frac{24}{25}$, $\cos A = \frac{7}{25}$, $\tan A = \frac{24}{7}$; Area = $\frac{1}{2}\times7\times24 = 84\text{ cm}^2$. | Using Pythagoras, $AB = \sqrt{7^2+24^2}=\sqrt{49+576}=\sqrt{625}=25\text{ cm}$. For $\angle A$, opposite side = BC =24, adjacent = AC =7, hy | Applying/medium
+
+22. [5] Prove the double‑angle identity $\sin 2\theta = 2\sin\theta\cos\theta$.
+    >> ANS: Starting from $\sin(\theta+\theta)$ and using the sum formula gives $\sin2\theta = \sin\theta\cos\theta + \cos\theta\sin\theta = 2\sin\theta\cos\theta$. | Using the sum formula: $\sin(\alpha+\beta)=\sin\alpha\cos\beta+\cos\alpha\sin\beta$. Set $\alpha=\beta=\theta$: $\sin2\theta = \sin\theta\co | Understanding/hard
+
+--- Section D — Case‑Study Based Questions (4 marks each) ---
+
+23. [4] undefined
+    CASE: During the International Kite Festival in Jaipur, a kite is observed from a point on the ground 120 m away from the kite‑flyer’s position. The string is held taut and the angle of elevation to the kite is $40^{\circ}$. After the kite rises further, the angle of elevation becomes $55^{\circ}$ while the horizontal distance remains the same.
+    (i) Find the initial height of the kite. [1]
+    (ii) Determine the increase in height of the kite after it rises. [1]
+    (iii) If the string length after the rise is 180 m, find the angle that the string makes with the ground. [2]
+    >> ANS: (none) | ?/?
+
+
+==============================================================================
+50-MARK PAPER — 30 questions · 12928 tokens · score 95 · variety 83%
+==============================================================================
+
+--- Section A — Objective Type Questions (1 mark each) ---
+
+1. [1] What is the value of $\sin 30^{\circ}$?
+    (a) $\frac{1}{2}$
+    (b) $\frac{\sqrt3}{2}$
+    (c) $\frac{\sqrt2}{2}$
+    (d) $0$
+    >> ANS: $\frac{1}{2}$ | From the unit‑circle, $\sin 30^{\circ}=\frac{1}{2}$. | Remembering/easy
+
+2. [1] Find $\cos 60^{\circ}$.
+    (a) $\frac{1}{2}$
+    (b) $\frac{\sqrt3}{2}$
+    (c) $0$
+    (d) $1$
+    >> ANS: $\frac{1}{2}$ | $\cos 60^{\circ}=\frac{1}{2}$. | Remembering/easy
+
+3. [1] The value of $\tan 45^{\circ}$ is:
+    (a) $1$
+    (b) $0$
+    (c) $\sqrt3$
+    (d) $\frac{1}{\sqrt3}$
+    >> ANS: $1$ | $\tan 45^{\circ}=1$. | Remembering/easy
+
+4. [1] If $\sin \theta =0.6$ and $\theta$ is acute, then $\cos \theta$ equals:
+    (a) $0.8$
+    (b) $0.6$
+    (c) $0.4$
+    (d) $0.5$
+    >> ANS: $0.8$ | $\cos \theta =\sqrt{1-\sin^{2}\theta}=\sqrt{1-0.36}=\sqrt{0.64}=0.8$. | Understanding/easy
+
+5. [1] In a right‑angled triangle, the side opposite $30^{\circ}$ is $5\,\text{cm}$. Find the hypotenuse.
+    (a) $10\,\text{cm}$
+    (b) $5\sqrt3\,\text{cm}$
+    (c) $\frac{5}{2}\,\text{cm}$
+    (d) $5\sqrt2\,\text{cm}$
+    >> ANS: $10\,\text{cm}$ | Opposite side $=\frac{1}{2}$ of hypotenuse, so hypotenuse $=2\times5=10\,\text{cm}$. | Applying/easy
+
+6. [1] Value of $\sin 75^{\circ}$ is:
+    (a) $\frac{\sqrt6+\sqrt2}{4}$
+    (b) $\frac{\sqrt6-\sqrt2}{4}$
+    (c) $\frac{\sqrt3}{2}$
+    (d) $\frac{1}{2}$
+    >> ANS: $\frac{\sqrt6+\sqrt2}{4}$ | $\sin 75^{\circ}=\sin(45^{\circ}+30^{\circ})=\frac{\sqrt6+\sqrt2}{4}$. | Remembering/medium
+
+7. [1] Value of $\cos 15^{\circ}$ is:
+    (a) $\frac{\sqrt6+\sqrt2}{4}$
+    (b) $\frac{\sqrt6-\sqrt2}{4}$
+    (c) $\frac{\sqrt3}{2}$
+    (d) $\frac{\sqrt2}{2}$
+    >> ANS: $\frac{\sqrt6-\sqrt2}{4}$ | $\cos 15^{\circ}=\cos(45^{\circ}-30^{\circ})=\frac{\sqrt6-\sqrt2}{4}$. | Remembering/medium
+
+8. [1] If $\tan \theta =\frac{3}{4}$ (acute), then $\sec \theta$ equals:
+    (a) $\frac{5}{4}$
+    (b) $\frac{5}{3}$
+    (c) $5$
+    (d) $\frac{4}{5}$
+    >> ANS: $\frac{5}{4}$ | For $\tan\theta=3/4$, opposite=3, adjacent=4, hypotenuse=5. $\sec\theta=\frac{5}{4}$. | Applying/medium
+
+9. [1] From a point 15 m away from a tree, the angle of elevation of its top is $45^{\circ}$. Find the height of the tree.
+    (a) $15\,\text{m}$
+    (b) $20\,\text{m}$
+    (c) $10\,\text{m}$
+    (d) $30\,\text{m}$
+    >> ANS: $15\,\text{m}$ | Height $=15\times\tan45^{\circ}=15\,\text{m}$. | Applying/medium
+
+10. [1] In a triangle, $a=7$, $b=9$, and the included angle $C=60^{\circ}$. The area is:
+    (a) $\frac{63\sqrt3}{4}$
+    (b) $\frac{63}{2}$
+    (c) $31.5$
+    (d) $27\sqrt3$
+    >> ANS: $\frac{63\sqrt3}{4}$ | Area $=\frac12 ab\sin C=\frac12\times7\times9\times\frac{\sqrt3}{2}=\frac{63\sqrt3}{4}$. | Applying/medium
+
+11. [1] If $\sin A=\frac{3}{5}$ (acute), then $\tan A$ equals:
+    (a) $\frac{3}{4}$
+    (b) $\frac{4}{3}$
+    (c) $\frac{5}{3}$
+    (d) $\frac{3}{5}$
+    >> ANS: $\frac{3}{4}$ | $\cos A=\sqrt{1-\frac{9}{25}}=\frac{4}{5}$, $\tan A=\frac{3/5}{4/5}=\frac{3}{4}$. | Applying/medium
+
+12. [1] A lighthouse is $200\,\text{m}$ from a boat. The angle of elevation of its top is $30^{\circ}$. Height of the lighthouse:
+    (a) $100\,\text{m}$
+    (b) $115.5\,\text{m}$
+    (c) $200\,\text{m}$
+    (d) $173.2\,\text{m}$
+    >> ANS: $115.5\,\text{m}$ | Height $=200\tan30^{\circ}=200\times\frac{1}{\sqrt3}\approx115.5\,\text{m}$. | Applying/medium
+
+13. [1] In a right triangle the legs are in the ratio $3:4$. $\sin$ of the angle opposite the shorter leg is:
+    (a) $\frac{3}{5}$
+    (b) $\frac{4}{5}$
+    (c) $\frac{5}{3}$
+    (d) $\frac{3}{4}$
+    >> ANS: $\frac{3}{5}$ | With sides $3k,4k,5k$, $\sin\theta=\frac{3k}{5k}=\frac{3}{5}$. | Understanding/medium
+
+14. [1] Solve $2\sin x =1$ for $0^{\circ}<x<180^{\circ}$.
+    (a) $30^{\circ}$
+    (b) $45^{\circ}$
+    (c) $60^{\circ}$
+    (d) $90^{\circ}$
+    >> ANS: $30^{\circ}$ | $\sin x=\frac12$, so $x=30^{\circ}$ or $150^{\circ}$. The only option is $30^{\circ}$. | Applying/medium
+
+15. [1] If $\cos\theta=-\frac12$ and $\theta$ lies in quadrant II, then $\sin\theta$ is:
+    (a) $\frac{\sqrt3}{2}$
+    (b) $-\frac{\sqrt3}{2}$
+    (c) $\frac12$
+    (d) $-\frac12$
+    >> ANS: $\frac{\sqrt3}{2}$ | In QII, $\sin\theta>0$. Using $\sin^2\theta+\cos^2\theta=1$, $\sin\theta=\sqrt{1-(1/4)}=\frac{\sqrt3}{2}$. | Understanding/medium
+
+16. [1] If $\sin\theta=\frac{3}{5}$ (acute), find $\sin2\theta$.
+    (a) $\frac{24}{25}$
+    (b) $\frac{6}{25}$
+    (c) $\frac{12}{25}$
+    (d) $\frac{9}{25}$
+    >> ANS: $\frac{24}{25}$ | $\cos\theta=\frac{4}{5}$, $\sin2\theta=2\sin\theta\cos\theta=2\times\frac{3}{5}\times\frac{4}{5}=\frac{24}{25}$. | Applying/medium
+
+17. [1] From the top of a 45 m building, the angle of depression to a point on the ground is $15^{\circ}$. Horizontal distance to the point is:
+    (a) $150\,\text{m}$
+    (b) $165\,\text{m}$
+    (c) $260\,\text{m}$
+    (d) $120\,\text{m}$
+    >> ANS: $165\,\text{m}$ | Horizontal distance $=\frac{45}{\tan15^{\circ}}\approx\frac{45}{0.2679}\approx165\,\text{m}$. | Applying/medium
+
+18. [1] Using the cosine rule, find side $c$ when $a=8$, $b=6$, $\angle C=120^{\circ}$.
+    (a) $\sqrt{148}$
+    (b) $12$
+    (c) $13$
+    (d) $14$
+    >> ANS: $\sqrt{148}$ | $c^{2}=8^{2}+6^{2}-2\cdot8\cdot6\cos120^{\circ}=64+36-96(-\frac12)=148$, so $c=\sqrt{148}$. | Applying/medium
+
+--- Section B — Short Answer Questions (2 marks each) ---
+
+19. [2] Define a trigonometric ratio.
+    >> ANS: A trigonometric ratio is the ratio of a pair of sides of a right‑angled triangle, e.g., $\sin\theta=\frac{\text{opposite}}{\text{hypotenuse}}$, $\cos\theta=\frac{\text{adjacent}}{\text{hypotenuse}}$, $\tan\theta=\frac{\text{opposite}}{\text{adjacent}}$. | State the definition as above. | Remembering/easy
+
+20. [2] State the value of $\cot 45^{\circ}$.
+    >> ANS: $1$ | $\cot45^{\circ}=\frac{1}{\tan45^{\circ}}=1$. | Remembering/easy
+
+21. [2] Find $\cos 135^{\circ}$.
+    >> ANS: $-\frac{\sqrt2}{2}$ | $135^{\circ}=180^{\circ}-45^{\circ}$, $\cos135^{\circ}=-\cos45^{\circ}=-\frac{\sqrt2}{2}$. | Applying/medium
+
+22. [2] If $\sin\theta=\frac{5}{13}$ (acute), find $\tan\theta$.
+    >> ANS: $\frac{5}{12}$ | $\cos\theta=\sqrt{1-\frac{25}{169}}=\frac{12}{13}$, $\tan\theta=\frac{5/13}{12/13}=\frac{5}{12}$. | Applying/medium
+
+23. [2] Calculate the height of a pole if the angle of elevation from a point $30\,\text{m}$ away is $30^{\circ}$.
+    >> ANS: $17.32\,\text{m}$ (approx) | Height $=30\tan30^{\circ}=30\times\frac{1}{\sqrt3}\approx17.32\,\text{m}$. | Applying/medium
+
+24. [2] Prove that $\tan(\theta+45^{\circ})=\frac{\tan\theta+1}{1-\tan\theta}$.
+    >> ANS: $\tan(\theta+45^{\circ})=\frac{\tan\theta+\tan45^{\circ}}{1-\tan\theta\tan45^{\circ}}=\frac{\tan\theta+1}{1-\tan\theta}$ | Use the tangent addition formula $\tan(A+B)=\frac{\tan A+\tan B}{1-\tan A\tan B}$ with $B=45^{\circ}$ and $\tan45^{\circ}=1$. | Understanding/medium
+
+25. [2] In a right triangle, the hypotenuse is $13\,\text{cm}$ and one side is $5\,\text{cm}$. Find the other side and $\sin$ of the angle opposite the $5\,\text{cm}$ side.
+    >> ANS: Other side $=12\,\text{cm}$, $\sin=\frac{5}{13}$ | Using Pythagoras: $\text{other}=\sqrt{13^{2}-5^{2}}=\sqrt{144}=12\,\text{cm}$. $\sin\theta=\frac{5}{13}$. | Applying/medium
+
+26. [2] Solve $\sin 2x=\frac{\sqrt3}{2}$ for $0^{\circ}\le x\le180^{\circ}$.
+    >> ANS: $x=30^{\circ},\;60^{\circ},\;120^{\circ},\;150^{\circ}$ | $\sin2x=\frac{\sqrt3}{2}$ gives $2x=60^{\circ},120^{\circ},240^{\circ},300^{\circ}$. Hence $x=30^{\circ},60^{\circ},120^{\circ},150^{\circ}$ | Analyzing/hard
+
+27. [2] Derive the identity $\cos2\theta=1-2\sin^{2}\theta$.
+    >> ANS: $\cos2\theta=\cos^{2}\theta-\sin^{2}\theta= (1-\sin^{2}\theta)-\sin^{2}\theta=1-2\sin^{2}\theta$ | Start from $\cos2\theta=\cos^{2}\theta-\sin^{2}\theta$, replace $\cos^{2}\theta$ by $1-\sin^{2}\theta$. | Understanding/hard
+
+--- Section C — Long Answer Questions (5 marks each) ---
+
+28. [5] Explain the concepts of angle of elevation and angle of depression. Illustrate each with a labelled diagram.
+    >> ANS: Angle of elevation is the angle between the horizontal line of sight and the line of sight upward to an object. Angle of depression is the angle between the horizontal line of sight and the line of sight downward to an object. Diagrams show a horizontal line from the observer’s eye, with the upward/downward line forming the respective angle. | Define each term, draw two separate diagrams (one for elevation, one for depression), label horizontal, line of sight, angle, and object. Ex | Understanding/easy
+
+29. [5] In right‑angled triangle $\triangle ABC$ with $\angle C=90^{\circ}$, $AC=7\,\text{cm}$ and $BC=24\,\text{cm}$. Find (i) the length of $AB$, (ii) $\sin A$, $\cos A$, $\tan A$.
+    >> ANS: (i) $AB=25\,\text{cm}$; (ii) $\sin A=\frac{7}{25}$, $\cos A=\frac{24}{25}$, $\tan A=\frac{7}{24}$ | By Pythagoras, $AB=\sqrt{7^{2}+24^{2}}=\sqrt{49+576}=\sqrt{625}=25\,\text{cm}$. $\sin A=\frac{\text{opposite}}{\text{hypotenuse}}=\frac{7}{2 | Applying/medium
+
+--- Section D — Case-Study Based Questions (4 marks each) ---
+
+30. [4] undefined
+    CASE: A farmer in Punjab wants to determine the height of a mango tree. From a point $P$ 15 m away from the tree, the angle of elevation to the top is $35^{\circ}$. He then moves 5 m closer to the tree (point $Q$) and the angle of elevation becomes $45^{\circ}$.
+    (i) Find the distance of point $P$ from the foot of the tree. [1]
+    (ii) Calculate the height of the mango tree. [1]
+    (iii) If a point $R$ is located 10 m beyond the tree on the opposite side of $P$, find the angle of elevation of the top of the tree from $R$. [2]
+    >> ANS: (none) | ?/?
+
+
+==============================================================================
+80-MARK PAPER — 39 questions · 12786 tokens · score 92 · variety 74%
+==============================================================================
+
+--- Section A — Objective Type Questions (1 mark each) ---
+
+1. [1] What is the value of $\sin 30^{\circ}$?
+    (a) $\frac{1}{2}$
+    (b) $\frac{\sqrt{3}}{2}$
+    (c) 1
+    (d) $\frac{\sqrt{2}}{2}$
+    >> ANS: $\frac{1}{2}$ | From the unit‑circle, $\sin 30^{\circ}=\frac{1}{2}$. | Remembering/easy
+
+2. [1] Find $\cos 60^{\circ}$.
+    (a) $\frac{1}{2}$
+    (b) $\frac{\sqrt{3}}{2}$
+    (c) 1
+    (d) $0$
+    >> ANS: $\frac{1}{2}$ | $\cos 60^{\circ}=\frac{1}{2}$. | Remembering/easy
+
+3. [1] Evaluate $\tan 45^{\circ}$.
+    (a) $1$
+    (b) $0$
+    (c) $\sqrt{3}$
+    (d) $\frac{1}{\sqrt{3}}$
+    >> ANS: $1$ | $\tan 45^{\circ}=\frac{\sin45^{\circ}}{\cos45^{\circ}}=1$. | Remembering/easy
+
+4. [1] If $\theta$ is acute and $\sin\theta = 0.6$, then $\cos\theta$ equals
+    (a) $0.8$
+    (b) $0.6$
+    (c) $0.4$
+    (d) $\sqrt{0.36}$
+    >> ANS: $0.8$ | $\cos\theta = \sqrt{1-\sin^{2}\theta}=\sqrt{1-0.36}=\sqrt{0.64}=0.8$. | Applying/easy
+
+5. [1] What is $\sec 30^{\circ}$?
+    (a) $\frac{2}{\sqrt{3}}$
+    (b) $\frac{\sqrt{3}}{2}$
+    (c) $2$
+    (d) $\sqrt{3}$
+    >> ANS: $\frac{2}{\sqrt{3}}$ | $\sec\theta = \frac{1}{\cos\theta}$; $\cos30^{\circ}=\frac{\sqrt{3}}{2}$, so $\sec30^{\circ}=\frac{2}{\sqrt{3}}$. | Remembering/medium
+
+6. [1] If $\tan\theta = 1$ and $\theta$ is acute, then $\theta$ is
+    (a) $45^{\circ}$
+    (b) $30^{\circ}$
+    (c) $60^{\circ}$
+    (d) $90^{\circ}$
+    >> ANS: $45^{\circ}$ | $\tan\theta =1$ for $\theta=45^{\circ}$ in the first quadrant. | Remembering/easy
+
+7. [1] In a right‑angled triangle, one acute angle is $30^{\circ}$. The ratio of the side opposite this angle to the hypotenuse is
+    (a) $\frac{1}{2}$
+    (b) $\frac{\sqrt{3}}{2}$
+    (c) $\frac{\sqrt{2}}{2}$
+    (d) $1$
+    >> ANS: $\frac{1}{2}$ | Opposite side $=\sin30^{\circ}=\frac{1}{2}$ of the hypotenuse. | Remembering/easy
+
+8. [1] Using the identity $\sin(\alpha+\beta)=\sin\alpha\cos\beta+\cos\alpha\sin\beta$, find $\sin75^{\circ}$.
+    (a) $\frac{\sqrt{6}+\sqrt{2}}{4}$
+    (b) $\frac{\sqrt{6}-\sqrt{2}}{4}$
+    (c) $\frac{\sqrt{3}}{2}$
+    (d) $\frac{1}{2}$
+    >> ANS: $\frac{\sqrt{6}+\sqrt{2}}{4}$ | $\sin75^{\circ}=\sin(45^{\circ}+30^{\circ})=\frac{\sqrt{2}}{2}\cdot\frac{\sqrt{3}}{2}+\frac{\sqrt{2}}{2}\cdot\frac{1}{2}=\frac{\sqrt{6}+\sqr | Applying/medium
+
+9. [1] Find $\cos15^{\circ}$.
+    (a) $\frac{\sqrt{6}+\sqrt{2}}{4}$
+    (b) $\frac{\sqrt{6}-\sqrt{2}}{4}$
+    (c) $\frac{\sqrt{3}}{2}$
+    (d) $\frac{1}{2}$
+    >> ANS: $\frac{\sqrt{6}+\sqrt{2}}{4}$ | $\cos15^{\circ}=\cos(45^{\circ}-30^{\circ})=\frac{\sqrt{6}+\sqrt{2}}{4}$. | Applying/medium
+
+10. [1] If $\sin A = \frac{3}{5}$ and $A$ is acute, then $\tan A$ equals
+    (a) $\frac{3}{4}$
+    (b) $\frac{4}{3}$
+    (c) $\frac{3}{5}$
+    (d) $\frac{5}{3}$
+    >> ANS: $\frac{3}{4}$ | $\cos A = \sqrt{1-\left(\frac{3}{5}\right)^2}=\frac{4}{5}$, so $\tan A = \frac{\sin A}{\cos A}=\frac{3/5}{4/5}=\frac{3}{4}$. | Applying/hard
+
+11. [1] A tower is 50 m away from a point on the ground. The angle of elevation of its top is $30^{\circ}$. Height of the tower (in metres) is
+    (a) 25
+    (b) 50
+    (c) 75
+    (d) 100
+    >> ANS: 25 | Height $= 50\times\tan30^{\circ}=50\times\frac{1}{\sqrt{3}}\approx25$ m (rounded to nearest integer). | Applying/hard
+
+12. [1] In $\triangle ABC$, $\angle B = 90^{\circ}$ and $\sin A = \frac{4}{5}$. Find $\cos C$.
+    (a) $\frac{3}{5}$
+    (b) $\frac{4}{5}$
+    (c) $\frac{5}{4}$
+    (d) $\frac{5}{3}$
+    >> ANS: $\frac{3}{5}$ | Since $\angle C = 90^{\circ}-A$, $\cos C = \sin A = \frac{4}{5}$? Wait correction: $\cos C = \sin A = \frac{4}{5}$. Actually $C = 90^{\circ} | Applying/hard
+
+13. [1] Which of the following identities is correct?
+    (a) $\sin(\alpha+\beta)=\sin\alpha\sin\beta+\cos\alpha\cos\beta$
+    (b) $\cos(\alpha-\beta)=\cos\alpha\cos\beta+\sin\alpha\sin\beta$
+    (c) $\tan(\alpha+\beta)=\frac{\tan\alpha+\tan\beta}{1+\tan\alpha\tan\beta}$
+    (d) $\sec^2\theta-\tan^2\theta=1$
+    >> ANS: $\cos(\alpha-\beta)=\cos\alpha\cos\beta+\sin\alpha\sin\beta$ | The cosine difference formula is $\cos(\alpha-\beta)=\cos\alpha\cos\beta+\sin\alpha\sin\beta$. | Understanding/medium
+
+14. [1] If $\sin\theta = \cos\phi$, then which relationship is always true?
+    (a) $\theta + \phi = 90^{\circ}$
+    (b) $\theta - \phi = 90^{\circ}$
+    (c) $\theta = \phi$
+    (d) $\theta = 180^{\circ} - \phi$
+    >> ANS: $\theta + \phi = 90^{\circ}$ | Since $\sin\theta = \cos\phi = \sin(90^{\circ}-\phi)$, we have $\theta = 90^{\circ}-\phi$, i.e., $\theta+\phi=90^{\circ}$. | Understanding/medium
+
+15. [1] Evaluate $\cot 45^{\circ}$.
+    (a) $1$
+    (b) $0$
+    (c) $\sqrt{3}$
+    (d) $\frac{1}{\sqrt{3}}$
+    >> ANS: $1$ | $\cot\theta = \frac{1}{\tan\theta}$; $\tan45^{\circ}=1$, so $\cot45^{\circ}=1$. | Remembering/easy
+
+16. [1] What is the period of the function $y=\sin\theta$ (in degrees)?
+    (a) $180^{\circ}$
+    (b) $360^{\circ}$
+    (c) $90^{\circ}$
+    (d) $720^{\circ}$
+    >> ANS: $360^{\circ}$ | The sine function repeats every $360^{\circ}$. | Remembering/easy
+
+17. [1] undefined
+    >> ANS: Both A and R are true, R is the correct explanation | For acute angles, the only angle whose sine is $\frac{1}{2}$ is $30^{\circ}$. Hence the reason correctly justifies the assertion. | Understanding/easy
+
+18. [1] undefined
+    >> ANS: Both A and R are true, R is the correct explanation | In a right triangle, side lengths are proportional to the sines of opposite angles; larger acute angle ⇒ larger sine ⇒ longer opposite side. | Understanding/easy
+
+19. [1] undefined
+    >> ANS: Both A and R are true, R is the correct explanation | Using $\sin(\alpha+\beta)$ and $\cos(\alpha+\beta)$ and dividing gives the stated tangent addition formula. | Understanding/medium
+
+20. [1] undefined
+    >> ANS: A is true but R is false | $\cos180^{\circ} = -1$ is correct. However, $180^{\circ}$ lies on the negative x‑axis, not in the second quadrant; the statement about the q | Analyzing/medium
+
+--- Section B — Very Short Answer (2 marks each) ---
+
+21. [2] State the value of $\sin 60^{\circ}$.
+    >> ANS: $\frac{\sqrt{3}}{2}$ | $\sin60^{\circ}=\frac{\sqrt{3}}{2}$. | Remembering/easy
+
+22. [2] Define the term “co‑function”.
+    >> ANS: Two trigonometric functions whose arguments add to $90^{\circ}$ (or $\frac{\pi}{2}$) are co‑functions, e.g., $\sin\theta = \cos(90^{\circ}-\theta)$. | A co‑function pair satisfies $f(\theta)=g(90^{\circ}-\theta)$. | Understanding/easy
+
+23. [2] List the three basic trigonometric ratios.
+    >> ANS: $\sin\theta = \frac{\text{opposite}}{\text{hypotenuse}}$, $\cos\theta = \frac{\text{adjacent}}{\text{hypotenuse}}$, $\tan\theta = \frac{\text{opposite}}{\text{adjacent}}$. | State sine, cosine and tangent as defined in a right triangle. | Remembering/easy
+
+24. [2] Write the value of $\sec 0^{\circ}$.
+    >> ANS: $1$ | $\sec\theta = \frac{1}{\cos\theta}$; $\cos0^{\circ}=1$, so $\sec0^{\circ}=1$. | Remembering/easy
+
+25. [2] If $\tan\theta = \frac{3}{4}$ and $\theta$ is acute, find $\sin\theta$.
+    >> ANS: $\frac{3}{5}$ | Construct a right triangle with opposite $3$, adjacent $4$, hypotenuse $5$. Hence $\sin\theta = \frac{3}{5}$. | Applying/medium
+
+26. [2] State the complementary‑angle identity for sine.
+    >> ANS: $\sin(90^{\circ}-\theta)=\cos\theta$ | Sine of the complement equals cosine of the angle. | Understanding/easy
+
+--- Section C — Short Answer (3 marks each) ---
+
+27. [3] Calculate $\sin75^{\circ}$ using the angle‑addition identity.
+    >> ANS: $\frac{\sqrt{6}+\sqrt{2}}{4}$ | $\sin75^{\circ}=\sin(45^{\circ}+30^{\circ})=\sin45^{\circ}\cos30^{\circ}+\cos45^{\circ}\sin30^{\circ}=\frac{\sqrt{2}}{2}\cdot\frac{\sqrt{3}} | Applying/medium
+
+28. [3] In a right‑angled triangle, one acute angle is $30^{\circ}$ and the side opposite it is $5\,\text{cm}$. Find the length of the hypotenuse.
+    >> ANS: $10\,\text{cm}$ | Using $\sin30^{\circ}=\frac{\text{opposite}}{\text{hypotenuse}}$, $\frac{1}{2}=\frac{5}{h}$, so $h=10\,\text{cm}$. | Applying/easy
+
+29. [3] Prove that $\sin^{2}\theta+\cos^{2}\theta=1$.
+    >> ANS: Proof as below. | Consider a right‑angled triangle with hypotenuse $1$. By definition, $\sin\theta=\frac{\text{opposite}}{1}$ and $\cos\theta=\frac{\text{adja | Understanding/easy
+
+30. [3] If $\cos\theta = \frac{5}{13}$ and $\theta$ is acute, find $\tan\theta$.
+    >> ANS: $\frac{12}{5}$ | First, $\sin\theta = \sqrt{1-\left(\frac{5}{13}\right)^{2}} = \sqrt{1-\frac{25}{169}} = \sqrt{\frac{144}{169}} = \frac{12}{13}$. Then $\tan\ | Applying/medium
+
+31. [3] A building casts a shadow of $12\,\text{m}$ when the sun’s elevation angle is $30^{\circ}$. Find the height of the building.
+    >> ANS: $6.93\,\text{m}$ (approx.) | Height $=12\times\tan30^{\circ}=12\times\frac{1}{\sqrt{3}}\approx6.93\,\text{m}$. | Applying/medium
+
+32. [3] Find the exact value of $\tan15^{\circ}$.
+    >> ANS: $2-\sqrt{3}$ | Using $\tan(45^{\circ}-30^{\circ})=\frac{\tan45^{\circ}-\tan30^{\circ}}{1+\tan45^{\circ}\tan30^{\circ}}=\frac{1-\frac{1}{\sqrt{3}}}{1+\frac{ | Applying/hard
+
+33. [3] Show that $\sec\theta-\tan\theta=\dfrac{1}{\sec\theta+\tan\theta}$.
+    >> ANS: Proof as below. | Multiply numerator and denominator of the right‑hand side by $(\sec\theta-\tan\theta)$: $\frac{1}{\sec\theta+\tan\theta}=\frac{\sec\theta-\t | Understanding/medium
+
+--- Section D — Long Answer (5 marks each) with internal OR choice ---
+
+34. [5] A lighthouse is situated on a small island off the coast of Mumbai. From a point on the mainland, the angle of elevation of its top is $25^{\circ}$ and the horizontal distance between the point and the island is $500\,\text{m}$. Find the height of the lighthouse.
+    OR: If the height of the lighthouse is $30\,\text{m}$, find the distance from the lighthouse to a boat when the angle of depression from the top to the boat is $15^{\circ}$. [5]
+    >> ANS: Height $=500\times\tan25^{\circ}\approx233.5\,\text{m}$ | Using $\tan\theta = \frac{\text{height}}{\text{distance}}$, height $=500\times\tan25^{\circ}$. $\tan25^{\circ}\approx0.467$, so height $\app | Applying/medium
+
+35. [5] In a right‑angled triangle, the two sides adjacent to the right angle are $7\,\text{cm}$ and $24\,\text{cm}$. Find the trigonometric ratios of the acute angles.
+    OR: Using the same triangle, find its area using trigonometric ratios. [5]
+    >> ANS: For the angle opposite 7 cm: $\sin=\frac{7}{25}$, $\cos=\frac{24}{25}$, $\tan=\frac{7}{24}$. For the other acute angle: $\sin=\frac{24}{25}$, $\cos=\frac{7}{25}$, $\tan=\frac{24}{7}$. | First compute hypotenuse $h=\sqrt{7^{2}+24^{2}}=\sqrt{49+576}=\sqrt{625}=25\,\text{cm}$. For $\theta$ opposite 7 cm: $\sin\theta=7/25$, $\co | Applying/easy
+
+36. [5] Prove the double‑angle identity $\sin2\theta = 2\sin\theta\cos\theta$.
+    OR: Given $\sin20^{\circ}=0.3420$, use the double‑angle identity to find $\sin40^{\circ}$ (approx). [5]
+    >> ANS: Starting from $\sin(\alpha+\beta)=\sin\alpha\cos\beta+\cos\alpha\sin\beta$, set $\alpha=\beta=\theta$ to obtain $\sin2\theta=2\sin\theta\cos\theta$. | Using the sine addition formula: $\sin(\theta+\theta)=\sin\theta\cos\theta+\cos\theta\sin\theta=2\sin\theta\cos\theta$. Hence $\sin2\theta=2 | Understanding/easy
+
+--- Section E — Case‑Study Based Questions (4 marks each) ---
+
+37. [4] undefined
+    CASE: Ravi, a farmer from Punjab, wants to install a solar panel on his field. The panel is to be tilted at an angle equal to the latitude of his village (13° N). The length of the panel is 2 m. He needs to know the height of the supporting pole and the angle of elevation from the ground to the top of the pole.
+    (i) Find the vertical height of the pole. [1]
+    (ii) Determine the angle of elevation from the ground to the top of the pole. [1]
+    (iii) If Ravi wants the panel to shade a rectangular area of $3\,\text{m}$ length on the ground, calculate the required length of the panel (keeping the same tilt). [2]
+    >> ANS: (none) | Applying/medium
+
+38. [4] undefined
+    CASE: During the International Kite Festival in Gujarat, a kite flyer named Meera observes that the string makes an angle of $55^{\circ}$ with the horizontal when the kite is at its highest point. The horizontal distance between Meera and the kite is $120\,\text{m}$.
+    (i) Find the height of the kite above the ground. [1]
+    (ii) If the string length is $200\,\text{m}$, calculate the angle of elevation of the kite from Meera’s position. [1]
+    (iii) Discuss how changing the angle of elevation would affect the required length of the string for the same horizontal distance. [2]
+    >> ANS: (none) | Analyzing/hard
+
+39. [4] undefined
+    CASE: A school in Delhi plans to build a triangular playground. The angles of the triangle are $45^{\circ}$, $60^{\circ}$ and $75^{\circ}$. One side opposite $45^{\circ}$ is known to be $30\,\text{m}$. The principal wants to know the length of the side opposite $75^{\circ}$ and the height of the triangle when the side opposite $60^{\circ}$ is taken as the base.
+    (i) Find the length of the side opposite $75^{\circ}$. [1]
+    (ii) Determine the height of the triangle when the side opposite $60^{\circ}$ is taken as the base. [1]
+    (iii) Explain why the sum of the three interior angles must be $180^{\circ}$ and how this property helps in solving the above problem. [2]
+    >> ANS: (none) | Understanding/medium
