@@ -5291,6 +5291,31 @@ function convTex(x){
 }
 function toScript(g, map){ return g.split('').map(ch=>map[ch]||('^'==map['+']? '^'+ch : ch)).join(''); }
 
+
+/* KaTeX draws a square root's hook as an SVG <path>; html2canvas renders only the horizontal
+   rule, so "√3" printed as "‾3" — which silently changes the meaning of the maths. \surd is a
+   plain CHARACTER with no SVG, so for the PDF we re-render any root using it. Verified: \sqrt
+   emits <svg width="400em"><path>, \surd emits none. */
+function texSqrtToSurd(tex){
+  return String(tex || '')
+    .replace(/\\sqrt\s*\{([^{}]*)\}/g, (m, g) =>
+      (g.length === 1 && !/[\\{}]/.test(g)) ? '\\surd ' + g : '\\surd(' + g + ')')
+    .replace(/\\sqrt\s*([0-9A-Za-z])/g, '\\surd $1');
+}
+function makePrintableMath(root){
+  if(typeof katex === 'undefined' || !root) return;
+  root.querySelectorAll('.katex').forEach(el => {
+    const ann = el.querySelector('annotation[encoding="application/x-tex"]');
+    const tex = ann && ann.textContent;
+    if(!tex || !/\\sqrt/.test(tex)) return;
+    const box = document.createElement('span');
+    try {
+      katex.render(texSqrtToSurd(tex), box, { throwOnError:false, displayMode:false });
+      el.replaceWith(box.firstChild || box);
+    } catch(e){ /* leave the original rather than lose the maths */ }
+  });
+}
+
 /* ═══════════════ PDF EXPORT (matches preview) ═══════════════ */
 async function exportPaperPdf(){
   if(typeof html2pdf === 'undefined'){ toast('PDF library still loading — try again.','err'); return; }
@@ -5306,24 +5331,32 @@ async function exportPaperPdf(){
   // Fix: the OUTER wrapper is out of flow and clipped (invisible to the user), while the
   // holder itself stays in NORMAL FLOW so it measures correctly.
   const wrap = document.createElement('div');
-  wrap.style.cssText = 'position:absolute;left:0;top:0;width:734px;height:0;overflow:hidden;opacity:0;pointer-events:none;';
+  wrap.style.cssText = 'position:absolute;left:0;top:0;width:794px;height:0;overflow:hidden;opacity:0;pointer-events:none;';
   // Carry the active page-density class across so the PDF honours the chosen page budget.
   const sheet = document.getElementById('renderedPaperSheet');
   const density = ['density-compact','density-standard','density-booklet']
     .find(c => sheet && sheet.classList.contains(c)) || 'density-standard';
   const holder = document.createElement('div');
   holder.className = 'pdf-render-holder ' + density;
-  holder.style.cssText = 'width:734px;background:#ffffff;padding:0;color:#000;box-sizing:border-box;overflow:hidden;';  // 734px = 194mm printable width // 794px = A4 @96dpi
+  // FULL A4 width (794px = 210mm) with the side margins as PADDING inside the canvas.
+  // html2pdf scales the canvas to the whole page and only then offsets by opt.margin, so a
+  // horizontal margin was being cropped off the right edge — that is why 'Max. Marks: 50'
+  // printed as 'Max. Marks: 5' and every [marks] tag lost its bracket. With margin 0 across
+  // and 30px of padding here, 794px maps to 210mm exactly and nothing can be cut.
+  holder.style.cssText = 'width:794px;padding:0 30px;background:#ffffff;color:#000;box-sizing:border-box;overflow:hidden;';
   holder.innerHTML = src.innerHTML;
   wrap.appendChild(holder);
   document.body.appendChild(wrap);
 
   // Fonts (Sora + KaTeX) must be ready or glyphs render blank//fallback in the canvas.
+  makePrintableMath(holder);   // square roots must print as √, not as an overline
   try { if(document.fonts && document.fonts.ready) await document.fonts.ready; } catch(e){}
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
   const opt = {
-    margin: [8, 8, 10, 8],                               // mm — real page margins
+    // Vertical margins only: the horizontal ones live inside the holder as padding (above),
+    // because html2pdf crops rather than insets them.
+    margin: [8, 0, 10, 0],
     filename: docFileName(window.lastPaperData, 'pdf'),
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
