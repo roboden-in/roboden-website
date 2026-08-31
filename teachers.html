@@ -2398,6 +2398,14 @@ async function groqChat(messages, opts = {}){
       messages, temperature,
       max_tokens: Math.min(wantTokens, providerMaxOutput(provider))
     };
+    /* SARVAM burns its ENTIRE budget on hidden thinking unless told not to.
+       Measured 2026-08-31: a 40-mark paper consumed all 16,000 tokens, wrote 16,000 tokens of
+       reasoning_content, and left "content" completely EMPTY — no paper at all, every time.
+       reasoning_effort:'none' is rejected (only low/medium/high allowed) and 'low' still
+       produced nothing. chat_template_kwargs.thinking=false is the switch that works: with it
+       the same request answers normally. Without this line Sarvam is unusable, which would
+       leave Indic-language papers with no model at all. */
+    if(provider === 'sarvam') body.chat_template_kwargs = { thinking: false };
     // Compound (agentic) systems reject response_format/reasoning_effort — omit them there.
     // extractJson() is tolerant of prose-wrapped JSON, so output still parses.
     const plain = GROQ_CONFIG.noJsonModeModels.includes(m);
