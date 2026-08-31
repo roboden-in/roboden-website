@@ -2129,7 +2129,12 @@ const PROVIDERS = {
   // only fail. Flip back to true after topping up.
   openrouter: { ready: false, maxOutput: 16000, label:'OpenRouter' },
   novita:     { ready: false, maxOutput: 16000, label:'Novita' },
-  google:     { ready: true , maxOutput: 8000,  label:'Gemini' },
+  // 16000 = the proxy's own MAX_TOKENS_CAP, which is now the binding limit rather than
+  // Gemini. Probed 2026-08-31: gemini-3.5-flash-lite accepted max_tokens of 8,000, 16,000,
+  // 32,000 AND 65,536 without error. My earlier 8,000 was a guess based on a 16,000 request
+  // being refused — but that refusal was the intermittent 503 "high demand", not a size
+  // limit. That wrong guess is what made large papers look impossible in a single request.
+  google:     { ready: true , maxOutput: 16000, label:'Gemini' },
   // 8192 — Sarvam's own limit, quoted by their API: "max_tokens (16000) exceeds the
   // maximum output length of 8192 tokens for sarvam-105b-conversations". I briefly raised
   // this to 16000 after seeing a 16,000-token completion, but that came from the OTHER
