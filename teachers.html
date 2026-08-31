@@ -2230,10 +2230,28 @@ function estimateOutputTokens(ctx){
   if(tool === 'ocr')         return 1500;
   if(tool === 'ppt_slides')  return 4500;
   if(tool === 'lesson_plan' || tool === 'teaching_aid') return 3500;
-  if(ctx.tier === 'cheap')   return 2500;   // reformatting the teacher's own questions
-  // Papers and worksheets scale with the mark total.
-  const marks = Number(ctx.marks) || 40;
-  return Math.round(600 + marks * 105);     // 10→1650, 20→2700, 40→4800, 80→9000
+  if(ctx.tier === 'cheap')   return 2500;
+
+  /* MEASURED, not guessed. A live run of gpt-oss-120b produced 13 complete questions in 4,800
+     completion tokens — 369 tokens per question once options, answer, solution, bloom and
+     difficulty are included. The old formula (600 + marks*105) gave 4,800 for a 40-mark paper
+     that actually needs 23 questions plus spares, i.e. ~11,000. Under-asking by half is why
+     EVERY model truncated: OpenRouter salvaged 13 of 23 questions, and Groq's JSON mode
+     returned nothing at all because it rejects a cut-off document outright. */
+  const PER_QUESTION = 380;
+  let count = 0;
+  try {
+    const bp = getBlueprint({ board: ctx.board || 'CBSE', subjectGroup: ctx.subjectGroup || 'math',
+      marksNum: Number(ctx.marks) || 40, examSize: ctx.examSize ||
+        ((Number(ctx.marks)||40) >= 70 ? 'board' : (Number(ctx.marks)||40) >= 40 ? 'medium'
+          : (Number(ctx.marks)||40) <= 10 ? 'quiz' : 'small'),
+      choicePolicy: '' });
+    const spares = (bp.total >= 70 ? 1 : 2) * bp.sections.length;
+    count = bp.sections.reduce((t,x) => t + (x.count || 0), 0) + spares;
+  } catch(e){
+    count = Math.round((Number(ctx.marks) || 40) * 0.6) + 6;   // fallback if the blueprint fails
+  }
+  return Math.round(count * PER_QUESTION + 400);   // + a little for meta and section headers
 }
 
 function planRoute(ctx = {}){
