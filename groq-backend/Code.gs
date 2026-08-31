@@ -31,7 +31,22 @@ var ALLOWED_MODELS = [
   // Preview models — ALSO the only multimodal/vision models on Groq (handwriting OCR).
   // ⚠️ Groq marks these "preview: may be discontinued at short notice".
   'qwen/qwen3.8-27b',
-  'qwen/qwen3.6-27b'
+  'qwen/qwen3.6-27b',
+  // Gemini (Google) — vision, and our only non-Groq handwriting path.
+  'gemini-2.5-flash',
+  'gemini-3.7-flash',
+  // Sarvam — Indic-language specialist for Telugu/Hindi/Kannada papers.
+  'sarvam-105b',
+  'sarvam-30b',
+  // ── EVALUATION ONLY (via OpenRouter) ─────────────────────────────────────────
+  // Used by the admin model-comparison tool. NOT in any production routing chain.
+  // ⚠️ stealth/ox-alpha is a preview alias for ZAI GLM-5.3-Flash whose provider RETAINS
+  //    prompts and completions, so it must never see a real school's data. z-ai/glm-5.3 is
+  //    the named, priced, stable equivalent if it ever earns a place in production.
+  'stealth/ox-alpha',
+  'z-ai/glm-5.3',
+  'deepseek/deepseek-v4-pro-0813',
+  'x-ai/grok-4.6'
 ];
 
 // Optional: cap max_tokens so a single request can't be abused to burn credits.
@@ -94,6 +109,22 @@ var PROVIDER_CONFIG = {
   novita: {
     url: 'https://api.novita.ai/v3/openai/chat/completions',
     keyProp: 'NOVITA_API_KEY',
+    models: {}
+  },
+  // Gemini speaks OpenAI on its compatibility endpoint, so it needs no special handling.
+  // This is our only NON-Groq vision path — handwriting OCR currently depends entirely on
+  // Groq "Preview" models that may be withdrawn at short notice.
+  google: {
+    url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+    keyProp: 'GOOGLE_API_KEY',
+    models: {}
+  },
+  // Sarvam — the Indic-language specialist, for Telugu/Hindi/Kannada papers.
+  // Their chat models sit on /v1 and accept a normal Bearer token.
+  // NOTE: sarvam-m (24B) is deprecated; sarvam-105b and sarvam-30b are the current models.
+  sarvam: {
+    url: 'https://api.sarvam.ai/v1/chat/completions',
+    keyProp: 'SARVAM_API_KEY',
     models: {}
   }
 };

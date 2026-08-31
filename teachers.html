@@ -1899,6 +1899,7 @@ footer{
 
     <div class="aim-actions">
       <button class="btn-doc-tool" onclick="runHealthCheck()"><i data-lucide="stethoscope"></i> Test all models</button>
+      <button class="btn-doc-tool" onclick="openModelCompare()"><i data-lucide="git-compare"></i> Compare models</button>
       <button class="btn-doc-tool" onclick="loadAiLogs()"><i data-lucide="refresh-cw"></i> Refresh</button>
       <select class="field-select aim-range" id="aimRange" onchange="loadAiLogs()">
         <option value="1">Today</option>
@@ -1908,6 +1909,7 @@ footer{
       <button class="btn-doc-tool aim-prune" onclick="pruneAiLogs()" title="Delete logs older than 60 days"><i data-lucide="trash-2"></i> Prune</button>
     </div>
 
+    <div id="aimCompare" class="aim-health"></div>
     <div id="aimHealth" class="aim-health"></div>
     <div id="aimStats" class="aim-stats"></div>
     <div id="aimTable" class="aim-table-wrap"></div>
@@ -2119,10 +2121,10 @@ const PROVIDERS = {
   deepinfra:  { ready: false, maxOutput: 16000, label:'DeepInfra' },
   together:   { ready: false, maxOutput: 16000, label:'Together' },
   fireworks:  { ready: false, maxOutput: 16000, label:'Fireworks' },
-  openrouter: { ready: false, maxOutput: 16000, label:'OpenRouter' },
+  openrouter: { ready: true , maxOutput: 16000, label:'OpenRouter' },
   novita:     { ready: false, maxOutput: 16000, label:'Novita' },
-  google:     { ready: false, maxOutput: 8000,  label:'Gemini' },
-  sarvam:     { ready: false, maxOutput: 8000,  label:'Sarvam' }
+  google:     { ready: true , maxOutput: 8000,  label:'Gemini' },
+  sarvam:     { ready: true , maxOutput: 8000,  label:'Sarvam' }
 };
 
 // Largest completion we may request from a given host.
@@ -2142,6 +2144,13 @@ const MODELS = {
   LLAMA_33_70B:  { id:'llama-3.3-70b-versatile', providers:['groq'] },
   GEMMA_4_31B:   { id:'gemma-4-31b',         providers:['cerebras'] },
   QWEN_38:       { id:'qwen/qwen3.8-27b',    providers:['groq','openrouter'] },
+  // ── EVALUATION ONLY — reachable by the admin comparison tool, never by ROUTE_RULES. ──
+  // ⚠️ OX_ALPHA is a stealth alias for ZAI GLM-5.3-Flash and its provider RETAINS prompts,
+  //    so it must only ever see test data with a fake school name.
+  OX_ALPHA:      { id:'stealth/ox-alpha',    providers:['openrouter'], evalOnly:true },
+  GLM_53:        { id:'z-ai/glm-5.3',        providers:['openrouter'], evalOnly:true },
+  DEEPSEEK_V4:   { id:'deepseek/deepseek-v4-pro-0813', providers:['openrouter'], evalOnly:true },
+  GROK_46:       { id:'x-ai/grok-4.6',       providers:['openrouter'], evalOnly:true },
   QWEN_36:       { id:'qwen/qwen3.6-27b',    providers:['groq','openrouter'] },
   COMPOUND_MINI: { id:'groq/compound-mini',  providers:['groq'] },
   COMPOUND:      { id:'groq/compound',       providers:['groq'] },
@@ -2159,7 +2168,7 @@ function providerFor(modelKey){
 }
 // EVERY host that can serve this model today, in preference order.
 function providersFor(modelKey){
-  const m = MODELS[modelKey]; if(!m) return [];
+  const m = MODELS[modelKey]; if(!m || m.evalOnly) return [];   // evalOnly never enters routing
   return m.providers.filter(p => PROVIDERS[p] && PROVIDERS[p].ready);
 }
 
@@ -4690,6 +4699,195 @@ function auditPaperQuality(data){
     qUntagged: qs.filter(q=>!q.difficulty).length,
     qForeignRefs: qs.filter(q=>foreign.test(stripMath(q.text))).length
   };
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   MODEL COMPARISON (admin only)
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   Answers ONE question with evidence instead of opinion: for this subject, which model writes
+   the best paper, and what does it cost?
+
+   It generates the SAME paper from the SAME prompt on every selected model, then scores each
+   result on the things that actually made papers unusable in testing:
+
+     repetition    fifteen variants of "The value of sin 30° is" is the failure we hit for real
+     answer key    a paper whose key has gaps cannot be handed to a class
+     marks exact   the blueprint total must be met
+     Indian ctx    ₹ not $, Indian names and places
+     sub-parts     case studies need a passage and 1+1+2 parts, not a one-liner
+
+   Scores are a FILTER, not a verdict. They catch the objective failures cheaply so a human
+   only has to read the papers that survive. Surya still picks the winner by reading them.
+
+   ⚠️ Uses a fake school name. stealth/ox-alpha's provider retains prompts, so no real school
+      data may pass through this tool.
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+
+// Published OpenRouter prices, USD per 1M tokens [prompt, completion]. Used for the cost
+// column so "is the expensive model worth it?" is answerable in rupees.
+const MODEL_PRICE_USD = {
+  'openai/gpt-oss-120b':          [0.15, 0.60],
+  'openai/gpt-oss-20b':           [0.07, 0.30],
+  'llama-3.3-70b-versatile':      [0.59, 0.79],
+  'gemma-4-31b':                  [0.10, 0.40],
+  'gemini-2.5-flash':             [0.30, 2.50],
+  'gemini-3.7-flash':             [0.75, 3.75],
+  'sarvam-105b':                  [0.50, 1.50],
+  'sarvam-30b':                   [0.20, 0.60],
+  'stealth/ox-alpha':             [0.00, 0.00],   // free during preview
+  'z-ai/glm-5.3':                 [1.40, 4.40],
+  'deepseek/deepseek-v4-pro-0813':[0.66, 1.98],
+  'x-ai/grok-4.6':                [2.00, 6.00]
+};
+const USD_TO_INR = 88;
+
+/* Score a generated paper on the objective failures. 0-100, higher is better. */
+function scorePaper(data, P){
+  const qs = (data.sections || []).flatMap(s => s.questions || []);
+  if(!qs.length) return { total: 0, questions: 0, note: 'no questions' };
+
+  // Repetition — the fifteen-identical-questions problem. Compare the first six meaningful
+  // words of each stem with the maths stripped out, so "value of sin 30" and "value of cos 60"
+  // collapse to the same shape.
+  const shape = t => String(t || '').toLowerCase()
+    .replace(/\$[^$]*\$/g, ' ').replace(/[^a-z ]/g, ' ')
+    .split(/\s+/).filter(Boolean).slice(0, 6).join(' ');
+  const shapes = qs.map(q => shape(q.text));
+  const distinct = new Set(shapes).size;
+  const variety = Math.round(distinct / qs.length * 100);
+
+  // Answer key completeness — sub-parts count, since case studies carry answers on parts.
+  const answered = qs.filter(q =>
+    q.answer || q.solution || (q.parts || []).some(p => p.answer || p.solution)).length;
+  const keyPct = Math.round(answered / qs.length * 100);
+
+  // Marks exactness against what the teacher asked for.
+  const total = qs.reduce((a, q) => a + (Number(q.marks) || 0), 0);
+  const marksExact = Math.abs(total - (P.marksNum || total)) < 0.5;
+
+  // Indian context — a dollar sign outside maths, or a foreign unit, is a hard fail.
+  const stripMath = t => String(t || '').replace(/\$[^$]*\$/g, '');
+  const foreign = /USD|dollar|£|€|\bmiles?\b|\bpounds?\b/i;
+  const foreignRefs = qs.filter(q => foreign.test(stripMath(q.text))).length;
+
+  // Case studies must have a passage and sub-parts, not be a one-line question.
+  const cases = qs.filter(q => q.type === 'case');
+  const properCases = cases.filter(q => q.caseIntro && (q.parts || []).length >= 2).length;
+  const casePct = cases.length ? Math.round(properCases / cases.length * 100) : 100;
+
+  // Difficulty spread — a paper that is all "easy" is not an exam.
+  const tagged = qs.filter(q => q.difficulty).length;
+  const spread = new Set(qs.map(q => q.difficulty).filter(Boolean)).size;
+
+  const score = Math.round(
+    variety * 0.30 +            // repetition was the worst real-world failure
+    keyPct  * 0.25 +            // a gapped answer key is unusable
+    (marksExact ? 100 : 40) * 0.15 +
+    casePct * 0.10 +
+    (foreignRefs ? 0 : 100) * 0.10 +
+    Math.min(100, spread * 40) * 0.10
+  );
+
+  return { total: score, questions: qs.length, variety, keyPct, marksExact,
+           marks: total, foreignRefs, casePct, tagged, spread };
+}
+
+/* Run the SAME paper on every selected model, sequentially so we never trip a rate limit. */
+async function runModelComparison(refs, P){
+  const out = [];
+  for(const ref of refs){
+    const { model, provider } = splitRef(ref);
+    const trace = newTrace({ tool:'compare', subject:P.subject, subjectGroup:P.subjectGroup,
+                             language:'en', marks:P.marksNum }, null);
+    const t0 = Date.now();
+    const row = { ref, model, provider, ms:0, tokensIn:0, tokensOut:0, score:null, error:null };
+    try {
+      const raw = await groqChat(buildPaperPrompt(P), {
+        temperature: 0.22, max_tokens: estimateOutputTokens({ tool:'question_paper', marks:P.marksNum }),
+        jsonMode: true, model: ref, trace
+      });
+      const data = normalizePaperData(extractJson(raw), P);
+      const bp = getBlueprint(P);
+      fixDegenerateMcq(data); ensureBlueprintSections(data, bp); enforceBlueprint(data, bp);
+      pruneEmptySections(data); renumberQuestions(data);
+      row.score = scorePaper(data, P);
+      row.paper = data;                                   // kept so the admin can read it
+    } catch(e){
+      row.error = String(e.message || e).slice(0, 120);
+    }
+    row.ms = Date.now() - t0;
+    row.tokensIn = trace.tokensIn; row.tokensOut = trace.tokensOut;
+    const price = MODEL_PRICE_USD[model];
+    row.costINR = price
+      ? ((row.tokensIn / 1e6) * price[0] + (row.tokensOut / 1e6) * price[1]) * USD_TO_INR
+      : null;
+    out.push(row);
+    renderComparison(out, refs.length);                   // stream results as they land
+  }
+  return out;
+}
+
+const COMPARE_SET = [
+  'openai/gpt-oss-120b@cerebras',
+  'openai/gpt-oss-120b@groq',
+  'llama-3.3-70b-versatile@groq',
+  'gemma-4-31b@cerebras',
+  'gemini-2.5-flash@google',
+  'stealth/ox-alpha@openrouter',
+  'z-ai/glm-5.3@openrouter',
+  'deepseek/deepseek-v4-pro-0813@openrouter'
+];
+
+function renderComparison(rows, expected){
+  const el = document.getElementById('aimCompare');
+  if(!el) return;
+  const cell = (r) => {
+    if(r.error) return `<td colspan="6" style="color:#b91c1c">${esc(r.error)}</td>`;
+    const s = r.score || {};
+    const cost = r.costINR == null ? '—' : '₹' + r.costINR.toFixed(3);
+    return `<td><b>${s.total}</b></td>
+            <td>${s.questions}q · ${s.marks}m ${s.marksExact ? '✅' : '❌'}</td>
+            <td>${s.variety}%</td><td>${s.keyPct}%</td>
+            <td>${(r.ms/1000).toFixed(1)}s</td><td>${cost}</td>`;
+  };
+  el.innerHTML = `
+    <div style="font-weight:700;margin:6px 0">Model comparison — same paper, same prompt
+      <span style="font-weight:400;color:#64748b">(${rows.length}/${expected})</span></div>
+    <div style="overflow-x:auto"><table class="aim-table" style="width:100%">
+      <thead><tr>
+        <th>Model</th><th>Host</th><th>Score</th><th>Marks</th>
+        <th title="How many question stems are distinct — low means repetition">Variety</th>
+        <th title="Questions with an answer in the key">Key</th><th>Time</th><th>Cost</th>
+      </tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td style="font-family:monospace;font-size:12px">${esc(r.model)}</td>
+        <td>${esc(r.provider)}</td>${cell(r)}</tr>`).join('')}</tbody>
+    </table></div>
+    <div style="font-size:12px;color:#64748b;margin-top:6px">
+      Score = variety 30% · answer key 25% · marks 15% · case studies 10% · Indian context 10%
+      · difficulty spread 10%. It filters out objective failures — read the winners yourself
+      before deciding.
+    </div>`;
+}
+
+async function openModelCompare(){
+  if(!isAdminUser()) return;
+  const el = document.getElementById('aimCompare');
+  const P = collectPaperParams ? null : null;
+  // Fixed, repeatable test case. FAKE school name — ox-alpha's provider retains prompts.
+  const testP = {
+    tab:'question_paper', board:'CBSE', grade:'Class 10', subject:'Mathematics',
+    subjectGroup:'math', topic:'Trigonometry', marksNum:40, duration:'1.5 Hours',
+    examTitle:'Mid-Term Examination', examKey:'midterm',
+    examType: EXAM_TYPES.midterm, examSize:'medium',
+    school:'Test School', location:'Hyderabad', choicePolicy:'', language:'en'
+  };
+  const ready = COMPARE_SET.filter(r => PROVIDERS[splitRef(r).provider] &&
+                                        PROVIDERS[splitRef(r).provider].ready);
+  el.innerHTML = `<div style="padding:8px">Running ${ready.length} models on the same
+    Class 10 Maths (Trigonometry) 40-mark paper… this takes a minute.</div>`;
+  try { await runModelComparison(ready, testP); }
+  catch(e){ el.innerHTML = `<div style="color:#b91c1c">Comparison failed: ${esc(e.message)}</div>`; }
 }
 
 /* ═══════════════ RENDER: STUDENT QUESTION PAPER ═══════════════ */
