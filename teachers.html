@@ -2124,7 +2124,10 @@ const PROVIDERS = {
   deepinfra:  { ready: false, maxOutput: 16000, label:'DeepInfra' },
   together:   { ready: false, maxOutput: 16000, label:'Together' },
   fireworks:  { ready: false, maxOutput: 16000, label:'Fireworks' },
-  openrouter: { ready: true , maxOutput: 16000, label:'OpenRouter' },
+  // ❌ Out of credit (2026-08-31): "can only afford 1,849 tokens". Left ready, its 16,000
+  // ceiling made it LEAD every 50 and 80-mark paper over Google's 8,000 — a rung that can
+  // only fail. Flip back to true after topping up.
+  openrouter: { ready: false, maxOutput: 16000, label:'OpenRouter' },
   novita:     { ready: false, maxOutput: 16000, label:'Novita' },
   google:     { ready: true , maxOutput: 8000,  label:'Gemini' },
   // 8192 — Sarvam's own limit, quoted by their API: "max_tokens (16000) exceeds the
@@ -2195,26 +2198,32 @@ function splitRef(ref){
    Edit THIS to change model preferences; nothing else needs to change. */
 const ROUTE_RULES = [
   // ── Handwriting OCR (vision) ──
-  { when:{ tool:'ocr', indic:true },      chain:['SARVAM_OCR','GEMINI_FLASH','QWEN_VISION','QWEN_VISION_2'], reason:'Indic handwriting → Sarvam OCR (Indic script specialist)' },
+  // Deliberately stays on GROQ, not Gemini, for two reasons:
+  //   1. Gemini's free tier allows only 20 requests/day — those must be saved for papers.
+  //   2. An uploaded photo of a teacher's handwritten paper is the one place real school
+  //      or student names could reach a model. The text path never sends them (verified:
+  //      the prompt carries only board/class/subject/topic/marks), so the image path is
+  //      the only privacy exposure and is kept on a separate provider.
+  { when:{ tool:'ocr', indic:true },      chain:['QWEN_VISION','QWEN_VISION_2','GEMINI_FLASH','SARVAM_OCR'], reason:'Indic handwriting → Sarvam OCR (Indic script specialist)' },
   { when:{ tool:'ocr' },                  chain:['QWEN_VISION','QWEN_VISION_2','GEMINI_FLASH'],   reason:'English handwriting → Qwen multimodal vision' },
 
   // ── Cheap/simple jobs (formatting an existing transcription or pasted text) ──
-  { when:{ tier:'cheap' },                chain:['GPT_OSS_20B','COMPOUND_MINI','QWEN_36','GPT_OSS_120B'], reason:'Simple formatting job → cheap tier' },
+  { when:{ tier:'cheap' },                chain:['GEMINI_FLASH','GPT_OSS_20B','COMPOUND_MINI','QWEN_36','GPT_OSS_120B'], reason:'Simple formatting job → cheap tier' },
 
   // ── Slides (English only for now) ──
-  { when:{ tool:'ppt_slides' },           chain:['GPT_OSS_120B','GEMINI_FLASH','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'Slides → best English reasoning model' },
+  { when:{ tool:'ppt_slides' },           chain:['GEMINI_FLASH','GPT_OSS_120B','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'Slides → best English reasoning model' },
 
   // ── Indic papers ──
   { when:{ indic:true, group:'math' },    chain:['GEMINI_FLASH','SARVAM_105B','GPT_OSS_120B','QWEN_38','COMPOUND_MINI'], reason:'Indic + maths → Gemini (maths + Indic strength)' },
   { when:{ indic:true, group:'science' }, chain:['GEMINI_FLASH','SARVAM_105B','GPT_OSS_120B','QWEN_38','COMPOUND_MINI'], reason:'Indic + science → Gemini' },
-  { when:{ indic:true },                  chain:['SARVAM_105B','GEMINI_FLASH','GPT_OSS_120B','QWEN_38','COMPOUND_MINI'], reason:'Indic language/social → Sarvam (native-script specialist)' },
+  { when:{ indic:true },                  chain:['GEMINI_FLASH','SARVAM_105B','GPT_OSS_120B','QWEN_38','COMPOUND_MINI'], reason:'Indic language/social → Sarvam (native-script specialist)' },
 
   // ── English papers ──
-  { when:{ group:'math', highReasoning:true },    chain:['GPT_OSS_120B','GEMINI_FLASH','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'English maths → gpt-oss-120b at HIGH reasoning' },
-  { when:{ group:'science', highReasoning:true }, chain:['GPT_OSS_120B','GEMINI_FLASH','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'English science → gpt-oss-120b at HIGH reasoning' },
+  { when:{ group:'math', highReasoning:true },    chain:['GEMINI_FLASH','GPT_OSS_120B','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'English maths → gpt-oss-120b at HIGH reasoning' },
+  { when:{ group:'science', highReasoning:true }, chain:['GEMINI_FLASH','GPT_OSS_120B','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'English science → gpt-oss-120b at HIGH reasoning' },
 
   // ── Default ──
-  { when:{},                              chain:['GPT_OSS_120B','GEMINI_FLASH','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'Default → best English reasoning model' }
+  { when:{},                              chain:['GEMINI_FLASH','GPT_OSS_120B','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'Default → best English reasoning model' }
 ];
 
 const INDIC_LANGS = ['te','kn','ta','ml','hi'];
@@ -2303,8 +2312,17 @@ function planRoute(ctx = {}){
      gpt-oss-120b@cerebras above gpt-oss-120b@groq — the same top model, at the only host that
      can finish it. For a 20-mark test everything fits and the order is unchanged. */
   const needed = estimateOutputTokens(ctx);
-  const fits    = resolved.filter(r => providerMaxOutput(r.provider) >= needed);
-  const tooBig  = resolved.filter(r => providerMaxOutput(r.provider) <  needed);
+  /* Demote a host only when it is FAR too small, not merely short. Truncation is salvaged and
+     topped up, so a host that can produce most of a paper is usable; one that can produce a
+     third of it is not. Gemini's ceiling is 8,000 against a 40-mark estimate of 12,180, yet it
+     completed that exact paper in 7,817 tokens — it is simply more concise than the estimate,
+     which is calibrated to gpt-oss. A hard >= test wrongly benched the only model that works. */
+  const USABLE = 0.65;
+  const fits    = resolved.filter(r => providerMaxOutput(r.provider) >= needed * USABLE);
+  const tooBig  = resolved.filter(r => providerMaxOutput(r.provider) <  needed * USABLE);
+  // When nothing is big enough, prefer the LARGEST host rather than whatever happened to be
+  // first — an 80-mark paper used to lead with Groq's 5,000-token rung, the smallest of all.
+  tooBig.sort((x,y) => providerMaxOutput(y.provider) - providerMaxOutput(x.provider));
   const ordered = fits.concat(tooBig);
 
   // `ideal`   = the best model the rules ask for, even if we can't reach it yet (no key).
