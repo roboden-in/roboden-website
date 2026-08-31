@@ -116,3 +116,23 @@ revenue — Gemini loses money at the current price. Three ways out, in order of
    If it is also 0% off-syllabus, it wins outright. Untested.
 2. Gemini for question papers, a cheap model for worksheets/lesson plans/slides.
 3. Raise the price.
+
+## gemini-3.5-flash-lite — cheaper, but not good enough (2026-08-31)
+
+Tested as the possible best-of-both: Gemini's syllabus knowledge at near-gpt-oss pricing.
+
+| | gemini-3.7-flash | gemini-3.5-flash-lite |
+|---|---|---|
+| Score | **95** | 80 |
+| Variety | **83%** | 64% |
+| Off-syllabus | **0%** | 5% |
+| Marks | **40/40** | 36/40 (truncated) |
+| Output tokens | 7,817 | 7,996 |
+| Time | 26s | 23s |
+| Cost/paper (paid) | ₹2.69 | ~₹0.92 |
+
+It used MORE tokens for FEWER questions, and 36% of its question stems repeat — which is not a
+truncation artefact, since variety was measured on the 22 questions it did produce. It also
+lost the perfect syllabus record.
+
+**Verdict: not worth the saving.** gemini-3.7-flash stays the quality choice.
