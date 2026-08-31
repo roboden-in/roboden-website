@@ -1243,9 +1243,14 @@ footer{
 .qp-key-table th, .qp-key-table td{ border:1px solid #cbd5e1; padding:7px 10px; vertical-align:top;
   overflow-wrap:anywhere; word-break:break-word; }
 .qp-key-table th{ background:#3730a3; color:#fff; font-weight:700; text-align:left; }
-.qp-key-table td.qp-k-no{ width:52px; font-weight:700; text-align:center; }
-.qp-key-table td.qp-k-mk{ width:64px; text-align:center; font-weight:700; }
-.qp-key-table td.qp-k-bl{ width:104px; }
+/* table-layout:fixed takes its column widths from the FIRST row — the header. Setting them
+   only on td did nothing, so every column got 25% and the answer column was crushed while
+   Marks and Level sat nearly empty. Width the th cells and the answers get the room. */
+.qp-key-table th:nth-child(1), .qp-key-table td.qp-k-no{ width:44px; }
+.qp-key-table th:nth-child(3), .qp-key-table td.qp-k-mk{ width:52px; }
+.qp-key-table th:nth-child(4), .qp-key-table td.qp-k-bl{ width:96px; }
+.qp-key-table td.qp-k-no{ font-weight:700; text-align:center; }
+.qp-key-table td.qp-k-mk{ text-align:center; font-weight:700; }
 .qp-bloom-pill{ display:inline-block; background:#eef2ff; color:#3730a3; border-radius:999px;
   padding:1px 9px; font-size:11.5px; font-weight:700; }
 .qp-diff-pill{ display:inline-block; border-radius:999px; padding:1px 9px; font-size:11px; font-weight:700;
@@ -4723,9 +4728,16 @@ function buildGeneralInstructions(data, P){
        && f.typeSeq.slice(0, arStart).every(t => t === 'mcq')){
       const mcqTo  = f.from + arStart - 1;
       const arFrom = mcqTo + 1;
-      const arRange = arFrom === f.to ? `question number ${arFrom} is` : `question numbers ${arFrom} and ${f.to} are`;
+      // "17 and 20" is wrong for a run of four — that reads as two questions. "and" is correct
+      // only for an adjacent pair (19 and 20); anything longer needs "to".
+      const arRange = arFrom === f.to    ? `question number ${arFrom} is`
+                    : arFrom + 1 === f.to ? `question numbers ${arFrom} and ${f.to} are`
+                                          : `question numbers ${arFrom} to ${f.to} are`;
+      // Singular when there is only one, or it reads "question number 20 is ... questions".
+      const arNoun = arFrom === f.to ? 'an Assertion-Reason based question'
+                                     : 'Assertion-Reason based questions';
       line = `In ${f.name}, Question numbers ${f.from} to ${mcqTo} are multiple choice questions (MCQs) and ` +
-             `${arRange} Assertion-Reason based questions${each}.`;
+             `${arRange} ${arNoun}${each}.`;
     }
     const wl = (isScience || isSocial) && f.marksEach != null ? wordLimitFor(f.marksEach) : null;
     if(wl) line += ` Answers to these questions should be in the range of ${wl}.`;
