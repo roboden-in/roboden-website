@@ -4505,15 +4505,95 @@ function ensureBlueprintSections(data, bp){
   return data;
 }
 
+/* ── REPETITION FILTER ───────────────────────────────────────────────────────────────────────
+   The one defect the rule engine and the syllabus database cannot fix is a model repeating
+   itself: gpt-oss-20b once produced fifteen variants of "The value of sin 30° is", and even
+   good runs measured only 83-87% distinct stems.
+
+   This costs NOTHING to fix, because we already ask each section for spare questions and then
+   throw some away. enforceBlueprint used to trim a section from 8 questions to 6 by dropping
+   the LAST two. It now drops the two most REPETITIVE ones instead — same paper length, same
+   marks, better variety, no extra AI call.
+
+   Two questions count as repeats when their stems reduce to the same shape. The reduction
+   strips maths, numbers and short filler words, so
+       "The value of $\sin 30^\circ$ is"   and   "The value of $\cos 60^\circ$ is"
+   both reduce to "value" and are correctly seen as the same question asked twice. That is the
+   exact failure we hit, and it is invisible to a plain string comparison. */
+
+// Reduce a stem to its shape: no maths, no digits, no filler, first few meaningful words.
+function stemShape(text){
+  /* Deliberately does NOT strip stopwords. My first attempt filtered out "the", "value", "of"
+     and "is" as filler — which are exactly the words that identify the pattern being hunted,
+     so "The value of $\sin 30^\circ$ is" reduced to an EMPTY shape and could never match its
+     own duplicates. Keeping them, both "The value of $\sin 30^\circ$ is" and
+     "The value of $\cos 60^\circ$ is" reduce to "the value of is" and match correctly. */
+  return String(text || '')
+    .replace(/\$[^$]*\$/g, ' ')          // drop the maths — it is what differs between repeats
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, ' ')          // digits and punctuation differ between repeats too
+    .split(/\s+/)
+    .filter(Boolean)
+    /* The WHOLE remaining sequence, not just the opening. Taking only the first six words
+       flagged genuinely different questions that happen to share an opening — "In a
+       right-angled triangle ABC, right-angled at B, if tan A = 4/3..." and "...find sin A..."
+       begin identically. Using the full de-mathed text is what makes this discriminating:
+       repetitive questions differ ONLY in their maths, so stripping the maths leaves them
+       identical, while real questions keep different prose. */
+    .join(' ');
+}
+
+/* Are these the same question wearing different numbers? */
+function looksRepeated(a, b){
+  const sa = stemShape(a.text), sb = stemShape(b.text);
+  if(sa && sa === sb) return true;                       // identical shape
+  // Identical option sets is the other giveaway ("Correct/Incorrect" style, or copy-paste).
+  const oa = (a.options||[]).join('|'), ob = (b.options||[]).join('|');
+  if(oa && oa === ob) return true;
+  // Same answer AND a near-identical stem length is suspicious for short recall questions.
+  if(a.answer && a.answer === b.answer && sa && sb && (sa.startsWith(sb) || sb.startsWith(sa)))
+    return true;
+  return false;
+}
+
+/* Rank a section's questions so the repeats sink to the bottom, then the caller trims the tail.
+   Order is otherwise PRESERVED, because the blueprint asks for easiest-first within a section. */
+function rankByOriginality(questions, seenShapes){
+  const keep = [], repeats = [];
+  questions.forEach(q => {
+    const shape = stemShape(q.text);
+    const dupOfEarlierSection = shape && seenShapes.has(shape);
+    const dupWithinSection = keep.some(k => looksRepeated(k, q));
+    if(dupOfEarlierSection || dupWithinSection) repeats.push(q);
+    else { keep.push(q); if(shape) seenShapes.add(shape); }
+  });
+  return { keep, repeats };
+}
+
 function enforceBlueprint(data, bp){
   balanceParts(data);
   if(!bp || !Array.isArray(bp.sections) || bp.approx) return data;
+  // Shapes already used, so a later section cannot repeat an earlier one.
+  const seenShapes = new Set();
+  let dropped = 0;
   bp.sections.forEach((spec, i) => {
     const sec = data.sections[i];
     if(!sec || !spec.count || !spec.marksEach) return;
-    if(sec.questions.length > spec.count) sec.questions = sec.questions.slice(0, spec.count);
+    /* Trim the REPETITIVE questions rather than the last ones. We asked for spares, so this is
+       free: same count, same marks, better variety. Only fall back to dropping the tail if
+       de-duplication alone cannot get the section down to size. */
+    if(sec.questions.length > spec.count){
+      const { keep, repeats } = rankByOriginality(sec.questions, seenShapes);
+      const ordered = keep.concat(repeats);              // repeats sink to the bottom
+      dropped += Math.min(repeats.length, sec.questions.length - spec.count);
+      sec.questions = ordered.slice(0, spec.count);
+    } else {
+      // Nothing to trim, but still record shapes so later sections avoid them.
+      rankByOriginality(sec.questions, seenShapes);
+    }
     sec.questions.forEach(q => { q.marks = spec.marksEach; if(q.orChoice) q.orChoice.marks = spec.marksEach; });
   });
+  data.repeatsDropped = dropped;
   // Drop any extra sections the model invented.
   if(data.sections.length > bp.sections.length) data.sections = data.sections.slice(0, bp.sections.length);
   let n = 0;
