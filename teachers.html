@@ -2117,7 +2117,10 @@ const PROVIDERS = {
   // headroom, so normal tokeniser variance tipped it over and Groq answered 413 "Request
   // Entity Too Large" — no output at all, and a silent drop to a weaker model.
   groq:       { ready: true,  maxOutput: 5000,  label:'Groq' },
-  cerebras:   { ready: true,  maxOutput: 16000, label:'Cerebras' },
+  // ❌ 2026-08-30: every call returns "Payment required to access this resource. Visit your
+  // billing tab." The free tier is not active on this account, so Cerebras cannot serve
+  // anything. Flip back to true once billing is added — the ladder picks it up instantly.
+  cerebras:   { ready: false, maxOutput: 16000, label:'Cerebras' },
   deepinfra:  { ready: false, maxOutput: 16000, label:'DeepInfra' },
   together:   { ready: false, maxOutput: 16000, label:'Together' },
   fireworks:  { ready: false, maxOutput: 16000, label:'Fireworks' },
@@ -2138,16 +2141,10 @@ const MODELS = {
   // ⚠️ NOT on Cerebras. Their public endpoints serve only gpt-oss-120b and gemma-4-31b, so
   // listing cerebras here produced a rung that could only ever fail with "model not found".
   GPT_OSS_20B:   { id:'openai/gpt-oss-20b',  providers:['groq','deepinfra','openrouter'] },
-  // Production-grade fallback on Groq. Preferred over the qwen models below because those are
-  // Groq "Preview" — explicitly discontinuable at short notice, which is not a foundation for
-  // a product people pay for.
-  LLAMA_33_70B:  { id:'llama-3.3-70b-versatile', providers:['groq'] },
-  GEMMA_4_31B:   { id:'gemma-4-31b',         providers:['cerebras'] },
   QWEN_38:       { id:'qwen/qwen3.8-27b',    providers:['groq','openrouter'] },
   // ── EVALUATION ONLY — reachable by the admin comparison tool, never by ROUTE_RULES. ──
   // ⚠️ OX_ALPHA is a stealth alias for ZAI GLM-5.3-Flash and its provider RETAINS prompts,
   //    so it must only ever see test data with a fake school name.
-  OX_ALPHA:      { id:'stealth/ox-alpha',    providers:['openrouter'], evalOnly:true },
   GLM_53:        { id:'z-ai/glm-5.3',        providers:['openrouter'], evalOnly:true },
   DEEPSEEK_V4:   { id:'deepseek/deepseek-v4-pro-0813', providers:['openrouter'], evalOnly:true },
   GROK_46:       { id:'x-ai/grok-4.6',       providers:['openrouter'], evalOnly:true },
@@ -2157,7 +2154,7 @@ const MODELS = {
   // Vision — on Groq the multimodal models are the qwen ones (5 and 3 images per request).
   QWEN_VISION:   { id:'qwen/qwen3.6-27b',    providers:['groq'], vision:true },
   QWEN_VISION_2: { id:'qwen/qwen3.8-27b',    providers:['groq'], vision:true },
-  GEMINI_FLASH:  { id:'gemini-2.5-flash',    providers:['google','openrouter'], vision:true },
+  GEMINI_FLASH:  { id:'gemini-3.7-flash',    providers:['google','openrouter'], vision:true },
   SARVAM_105B:   { id:'sarvam-105b',         providers:['sarvam'] },
   SARVAM_OCR:    { id:'sarvam-ocr',          providers:['sarvam'] }
 };
@@ -2190,22 +2187,22 @@ const ROUTE_RULES = [
   { when:{ tool:'ocr' },                  chain:['QWEN_VISION','QWEN_VISION_2','GEMINI_FLASH'],   reason:'English handwriting → Qwen multimodal vision' },
 
   // ── Cheap/simple jobs (formatting an existing transcription or pasted text) ──
-  { when:{ tier:'cheap' },                chain:['GPT_OSS_20B','GEMMA_4_31B','COMPOUND_MINI','QWEN_36','GPT_OSS_120B'], reason:'Simple formatting job → cheap tier' },
+  { when:{ tier:'cheap' },                chain:['GPT_OSS_20B','COMPOUND_MINI','QWEN_36','GPT_OSS_120B'], reason:'Simple formatting job → cheap tier' },
 
   // ── Slides (English only for now) ──
-  { when:{ tool:'ppt_slides' },           chain:['GPT_OSS_120B','GEMINI_FLASH','LLAMA_33_70B','GPT_OSS_20B','GEMMA_4_31B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'Slides → best English reasoning model' },
+  { when:{ tool:'ppt_slides' },           chain:['GPT_OSS_120B','GEMINI_FLASH','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'Slides → best English reasoning model' },
 
   // ── Indic papers ──
-  { when:{ indic:true, group:'math' },    chain:['GEMINI_FLASH','SARVAM_105B','GPT_OSS_120B','LLAMA_33_70B','QWEN_38','COMPOUND_MINI'], reason:'Indic + maths → Gemini (maths + Indic strength)' },
-  { when:{ indic:true, group:'science' }, chain:['GEMINI_FLASH','SARVAM_105B','GPT_OSS_120B','LLAMA_33_70B','QWEN_38','COMPOUND_MINI'], reason:'Indic + science → Gemini' },
-  { when:{ indic:true },                  chain:['SARVAM_105B','GEMINI_FLASH','GPT_OSS_120B','LLAMA_33_70B','QWEN_38','COMPOUND_MINI'], reason:'Indic language/social → Sarvam (native-script specialist)' },
+  { when:{ indic:true, group:'math' },    chain:['GEMINI_FLASH','SARVAM_105B','GPT_OSS_120B','QWEN_38','COMPOUND_MINI'], reason:'Indic + maths → Gemini (maths + Indic strength)' },
+  { when:{ indic:true, group:'science' }, chain:['GEMINI_FLASH','SARVAM_105B','GPT_OSS_120B','QWEN_38','COMPOUND_MINI'], reason:'Indic + science → Gemini' },
+  { when:{ indic:true },                  chain:['SARVAM_105B','GEMINI_FLASH','GPT_OSS_120B','QWEN_38','COMPOUND_MINI'], reason:'Indic language/social → Sarvam (native-script specialist)' },
 
   // ── English papers ──
-  { when:{ group:'math', highReasoning:true },    chain:['GPT_OSS_120B','GEMINI_FLASH','LLAMA_33_70B','GPT_OSS_20B','GEMMA_4_31B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'English maths → gpt-oss-120b at HIGH reasoning' },
-  { when:{ group:'science', highReasoning:true }, chain:['GPT_OSS_120B','GEMINI_FLASH','LLAMA_33_70B','GPT_OSS_20B','GEMMA_4_31B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'English science → gpt-oss-120b at HIGH reasoning' },
+  { when:{ group:'math', highReasoning:true },    chain:['GPT_OSS_120B','GEMINI_FLASH','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'English maths → gpt-oss-120b at HIGH reasoning' },
+  { when:{ group:'science', highReasoning:true }, chain:['GPT_OSS_120B','GEMINI_FLASH','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'English science → gpt-oss-120b at HIGH reasoning' },
 
   // ── Default ──
-  { when:{},                              chain:['GPT_OSS_120B','GEMINI_FLASH','LLAMA_33_70B','GPT_OSS_20B','GEMMA_4_31B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'Default → best English reasoning model' }
+  { when:{},                              chain:['GPT_OSS_120B','GEMINI_FLASH','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'Default → best English reasoning model' }
 ];
 
 const INDIC_LANGS = ['te','kn','ta','ml','hi'];
@@ -4836,14 +4833,15 @@ async function runModelComparison(refs, P){
 }
 
 const COMPARE_SET = [
-  'openai/gpt-oss-120b@cerebras',
+  // Verified reachable on 2026-08-30 by probing the live proxy. Cerebras is absent because it
+  // returns "Payment required", and llama-3.3-70b because it does not exist on this account.
   'openai/gpt-oss-120b@groq',
-  'llama-3.3-70b-versatile@groq',
-  'gemma-4-31b@cerebras',
-  'gemini-2.5-flash@google',
-  'stealth/ox-alpha@openrouter',
+  'openai/gpt-oss-120b@openrouter',
+  'openai/gpt-oss-20b@groq',
+  'gemini-3.7-flash@google',
   'z-ai/glm-5.3@openrouter',
-  'deepseek/deepseek-v4-pro-0813@openrouter'
+  'deepseek/deepseek-v4-pro-0813@openrouter',
+  'x-ai/grok-4.6@openrouter'
 ];
 
 function renderComparison(rows, expected){
