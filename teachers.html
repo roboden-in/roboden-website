@@ -2127,7 +2127,11 @@ const PROVIDERS = {
   openrouter: { ready: true , maxOutput: 16000, label:'OpenRouter' },
   novita:     { ready: false, maxOutput: 16000, label:'Novita' },
   google:     { ready: true , maxOutput: 8000,  label:'Gemini' },
-  sarvam:     { ready: true , maxOutput: 8000,  label:'Sarvam' }
+  // 16000, not the 8000 I guessed. Sarvam accepted and consumed a full 16,000-token
+  // completion in testing, and the 8000 figure was silently DEMOTING Sarvam out of the
+  // Indic ladders — capacity ordering saw 8000 < the 12,180 a 40-mark paper needs, so the
+  // only Indic model we have never led a Telugu or Hindi paper.
+  sarvam:     { ready: true , maxOutput: 16000, label:'Sarvam' }
 };
 
 // Largest completion we may request from a given host.
@@ -2155,7 +2159,13 @@ const MODELS = {
   QWEN_VISION:   { id:'qwen/qwen3.6-27b',    providers:['groq'], vision:true },
   QWEN_VISION_2: { id:'qwen/qwen3.8-27b',    providers:['groq'], vision:true },
   GEMINI_FLASH:  { id:'gemini-3.7-flash',    providers:['google','openrouter'], vision:true },
-  SARVAM_105B:   { id:'sarvam-105b',         providers:['sarvam'] },
+  // 'sarvam-105b' is the REASONING variant and is unusable for us: its thinking expands to
+  // fill any budget and the answer field stays empty (tested at 1.2K/3K/4K/8K/16K tokens).
+  // '-conversations' is the non-reasoning variant. Same task, measured 2026-08-31:
+  //     sarvam-105b               226s, 16,000 tokens, EMPTY answer
+  //     sarvam-105b-conversations   9s,    124 tokens, valid JSON
+  // 130x fewer tokens and it actually answers. This is what Indic papers must use.
+  SARVAM_105B:   { id:'sarvam-105b-conversations', providers:['sarvam'] },
   SARVAM_OCR:    { id:'sarvam-ocr',          providers:['sarvam'] }
 };
 
