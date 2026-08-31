@@ -112,3 +112,25 @@ Blocking always wins, which is the safe way round.
 
 The built-in list in `Code.gs` stays as the safety net so a leaked proxy URL still cannot run
 arbitrary expensive models on your keys.
+
+---
+
+# Changing the output ceiling WITHOUT redeploying
+
+A ceiling that is too low is what breaks papers — the reply gets cut mid-question and the
+teacher receives half an exam. The default is deliberately high (**60,000**).
+
+To change it: **Project Settings → Script Properties → Add**
+
+| Property | Value |
+|---|---|
+| `MAX_TOKENS` | `60000` |
+
+Takes effect on the next request. Garbage, zero or negative values fall back to the default.
+
+**This is not a cost control.** You pay for what the model actually writes — an 80-mark paper
+uses ~11,000 tokens whether the ceiling is 16,000 or 60,000. The ceiling exists only so a
+stolen proxy URL cannot request an absurd generation.
+
+Gemini was probed at 8,000 / 16,000 / 32,000 / 65,536 and accepted all of them, so there is no
+upstream reason to clamp it.

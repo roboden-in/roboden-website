@@ -100,8 +100,24 @@ var ALLOWED_MODELS = [
   'deepseek/deepseek-v4-flash-0731'       // $0.065 / $0.18
 ];
 
-// Optional: cap max_tokens so a single request can't be abused to burn credits.
-var MAX_TOKENS_CAP = 16000;
+/**
+ * Output ceiling. Raise or lower it WITHOUT redeploying by adding a Script Property:
+ *
+ *     MAX_TOKENS      e.g.  60000
+ *
+ * Default is 60000 because a truncated paper is a BROKEN paper — the teacher gets a half exam
+ * or a parse failure. Gemini was probed at 8,000 / 16,000 / 32,000 / 65,536 and accepted every
+ * one, so there is no upstream reason to clamp it. The ceiling exists only so a stolen proxy
+ * URL cannot request an absurd generation; it is not a quality trade-off and must never be set
+ * low enough to cut a paper short.
+ *
+ * Cost is bounded by what the model actually WRITES, not by this number: an 80-mark paper uses
+ * about 11,000 tokens regardless of whether the ceiling is 16,000 or 60,000.
+ */
+function maxTokensCap_() {
+  var v = parseInt(propList_('MAX_TOKENS')[0], 10);
+  return (v && v > 0) ? v : 60000;
+}
 
 /**
  * MULTI-PROVIDER ROUTING
@@ -215,8 +231,9 @@ function doPost(e) {
     if (cfg.models && cfg.models[payload.model]) payload.model = cfg.models[payload.model];
 
     // Cap token usage
-    if (!payload.max_tokens || payload.max_tokens > MAX_TOKENS_CAP) {
-      payload.max_tokens = MAX_TOKENS_CAP;
+    var cap = maxTokensCap_();
+    if (!payload.max_tokens || payload.max_tokens > cap) {
+      payload.max_tokens = cap;
     }
 
     var headers = { 'Authorization': 'Bearer ' + key };
