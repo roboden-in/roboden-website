@@ -3977,10 +3977,18 @@ function blueprintToText(bp){
     const ch = s.choice==='section' ? ` — student attempts any ${s.attemptCount} of ${cnt}` : s.choice==='internal' ? ' — with internal OR choice' : '';
     return ` • ${s.name}: ${cnt} question${cnt===1?'':'s'}${mk}${ch}. ${s.note}${s.note2 ? ' ('+s.note2+')' : ''}${s.caseParts ? ' Each has '+s.caseParts+'.' : ''}`;
   });
+  const spares = bp.total >= 70 ? 1 : 2;
   const header = bp.approx
     ? `Use approximately this structure:`
     : `Follow this EXACT blueprint — do NOT add or drop sections:`;
-  return `${header}\n${lines.join('\n')}\n` +
+  // The counts above deliberately include spares. Saying so removes a contradiction the model
+  // used to be handed: "write 74 marks of questions" AND "make the total exactly 50".
+  const spareNote = bp.approx ? '' :
+    `\nIMPORTANT: the counts above include ${spares} SPARE question(s) per section on purpose. ` +
+    `Write every one of them. The application selects the best and trims the rest to reach the ` +
+    `final paper total of ${bp.total} marks — so do NOT try to make the marks add up yourself, ` +
+    `and do NOT drop questions to hit a total.`;
+  return `${header}\n${lines.join('\n')}${spareNote}\n` +
     `Every question in a section must carry exactly the marks stated for that section.\n${bp.choiceNote}`;
 }
 
@@ -4037,7 +4045,7 @@ Never write \\₹ and never place ₹ inside $...$.`;
   const rules = `REQUIREMENTS:
 • Chapter(s)/topic: "${P.topic}" — spread questions across ALL listed chapters. Subject: ${P.subject}. Board: ${P.board}. Class: ${P.grade}. Exam: ${P.examType.label}.
 • ${blueprintToText(bp)}
-• The SUM of all question marks (counting each internal OR-group or attempt-any group once) MUST equal exactly ${P.marksNum}.
+• Write EVERY question listed in the blueprint above, including the spares. The final paper will total ${P.marksNum} marks after the application trims the extras — that is handled for you.
 • Do NOT output "generalInstructions" — the application writes them from the final paper.
 • MCQ RULES (a paper full of lazy MCQs is worthless to a teacher):
   – The "text" must be a QUESTION or an incomplete statement to be completed — never a
