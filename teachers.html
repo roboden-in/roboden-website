@@ -4259,6 +4259,15 @@ function preserveLatexBackslashes(json){
 function extractJson(raw){
   if (!raw) throw new Error('Empty AI response');
   let s = raw.replace(/```(?:json|html)?/gi, '').trim();
+  /* Some models narrate their reasoning INSIDE the content field before answering:
+       gemma-4-31b-it  ->  <thought>… my plan …</thought>{"meta":…}
+       nemotron        ->  "Here's a thinking process: 1. Analyze…" then the answer
+     That prose usually contains braces of its own, so the balanced-brace scan below would
+     lock onto a brace in the commentary and parse nothing. Strip the wrappers first. */
+  s = s.replace(/<thought>[\s\S]*?<\/thought>/gi, '')
+       .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
+       .replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '')
+       .trim();
   // Find first { or [ and match to its balanced close
   const startObj = s.indexOf('{');
   const startArr = s.indexOf('[');
