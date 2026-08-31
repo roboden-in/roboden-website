@@ -3451,6 +3451,15 @@ async function executeGenerate(){
         renumberQuestions(data);
         if(Math.abs((data.computedTotal||0) - P.marksNum) > 0.5){
           trace.marksShort = data.computedTotal;      // recorded for the AI Monitor only
+          /* A teacher who asked for 80 marks must NOT be handed an 18-mark paper. That is what
+             happened when Gemini was down and a 5,000-token Groq rung answered a 17,000-token
+             job: it produced 10 of 39 questions and we relabelled the header to 18/18, so the
+             paper looked internally consistent while being nothing like what was requested.
+             Below 70% of the requested marks the attempt is a failure, not a short paper —
+             better to say "tap Generate again" than to deliver the wrong exam. */
+          if((data.computedTotal||0) < P.marksNum * 0.7){
+            throw new Error('PAPER_TOO_SHORT: got ' + data.computedTotal + ' of ' + P.marksNum);
+          }
           data.meta.maxMarks = data.computedTotal;    // never print a self-contradictory paper
         }
         // State the instructions from the FINAL paper, replacing whatever the model imagined.
@@ -3598,6 +3607,8 @@ function teacherFacingError(err){
   ];
   if(OURS.some(re => re.test(raw))) return raw;
 
+  if(/PAPER_TOO_SHORT/.test(raw))
+    return 'The AI could not finish a paper this size just now. Tap Generate again, or choose a smaller total.';
   if(/AI_BAD_JSON|JSON|Unexpected token|position \d+/i.test(raw))
     return 'That draft came back garbled. Tap Generate once more — it usually works the second time.';
   if(/rate.?limit|429|quota|capacity/i.test(raw))
