@@ -2164,6 +2164,12 @@ const MODELS = {
   QWEN_VISION:   { id:'qwen/qwen3.6-27b',    providers:['groq'], vision:true },
   QWEN_VISION_2: { id:'qwen/qwen3.8-27b',    providers:['groq'], vision:true },
   GEMINI_FLASH:  { id:'gemini-3.7-flash',    providers:['google','openrouter'], vision:true },
+  // Sibling fallback. gemini-3.7-flash returns 503 "high demand" intermittently on the free
+  // tier — it did so for a 40-token request while flash-lite answered instantly. Its quota is
+  // far larger too: 15 req/min and 500/day against 3.7's 5 and 20. Quality is lower (scored
+  // 80 vs 95) but vastly better than dropping to qwen, which produced 10 questions for a
+  // paper that should have had 23.
+  GEMINI_LITE:   { id:'gemini-3.5-flash-lite', providers:['google','openrouter'], vision:true },
   // 'sarvam-105b' is the REASONING variant and is unusable for us: its thinking expands to
   // fill any budget and the answer field stays empty (tested at 1.2K/3K/4K/8K/16K tokens).
   // '-conversations' is the non-reasoning variant. Same task, measured 2026-08-31:
@@ -2204,26 +2210,26 @@ const ROUTE_RULES = [
   //      or student names could reach a model. The text path never sends them (verified:
   //      the prompt carries only board/class/subject/topic/marks), so the image path is
   //      the only privacy exposure and is kept on a separate provider.
-  { when:{ tool:'ocr', indic:true },      chain:['QWEN_VISION','QWEN_VISION_2','GEMINI_FLASH','SARVAM_OCR'], reason:'Indic handwriting → Sarvam OCR (Indic script specialist)' },
-  { when:{ tool:'ocr' },                  chain:['QWEN_VISION','QWEN_VISION_2','GEMINI_FLASH'],   reason:'Handwriting → Groq vision (keeps Gemini quota for papers)' },
+  { when:{ tool:'ocr', indic:true },      chain:['QWEN_VISION','QWEN_VISION_2','GEMINI_FLASH','GEMINI_LITE','SARVAM_OCR'], reason:'Indic handwriting → Sarvam OCR (Indic script specialist)' },
+  { when:{ tool:'ocr' },                  chain:['QWEN_VISION','QWEN_VISION_2','GEMINI_FLASH','GEMINI_LITE'],   reason:'Handwriting → Groq vision (keeps Gemini quota for papers)' },
 
   // ── Cheap/simple jobs (formatting an existing transcription or pasted text) ──
-  { when:{ tier:'cheap' },                chain:['GEMINI_FLASH','GPT_OSS_20B','COMPOUND_MINI','QWEN_36','GPT_OSS_120B'], reason:'Simple formatting job → Gemini, cheap tier' },
+  { when:{ tier:'cheap' },                chain:['GEMINI_FLASH','GEMINI_LITE','GPT_OSS_20B','COMPOUND_MINI','QWEN_36','GPT_OSS_120B'], reason:'Simple formatting job → Gemini, cheap tier' },
 
   // ── Slides (English only for now) ──
-  { when:{ tool:'ppt_slides' },           chain:['GEMINI_FLASH','GPT_OSS_120B','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'Slides → Gemini (primary)' },
+  { when:{ tool:'ppt_slides' },           chain:['GEMINI_FLASH','GEMINI_LITE','GPT_OSS_120B','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'Slides → Gemini (primary)' },
 
   // ── Indic papers ──
-  { when:{ indic:true, group:'math' },    chain:['GEMINI_FLASH','SARVAM_105B','GPT_OSS_120B','QWEN_38','COMPOUND_MINI'], reason:'Indic + maths → Gemini, Sarvam second' },
-  { when:{ indic:true, group:'science' }, chain:['GEMINI_FLASH','SARVAM_105B','GPT_OSS_120B','QWEN_38','COMPOUND_MINI'], reason:'Indic + science → Gemini, Sarvam second' },
-  { when:{ indic:true },                  chain:['GEMINI_FLASH','SARVAM_105B','GPT_OSS_120B','QWEN_38','COMPOUND_MINI'], reason:'Indic language/social → Gemini, Sarvam second' },
+  { when:{ indic:true, group:'math' },    chain:['GEMINI_FLASH','GEMINI_LITE','SARVAM_105B','GPT_OSS_120B','QWEN_38','COMPOUND_MINI'], reason:'Indic + maths → Gemini, Sarvam second' },
+  { when:{ indic:true, group:'science' }, chain:['GEMINI_FLASH','GEMINI_LITE','SARVAM_105B','GPT_OSS_120B','QWEN_38','COMPOUND_MINI'], reason:'Indic + science → Gemini, Sarvam second' },
+  { when:{ indic:true },                  chain:['GEMINI_FLASH','GEMINI_LITE','SARVAM_105B','GPT_OSS_120B','QWEN_38','COMPOUND_MINI'], reason:'Indic language/social → Gemini, Sarvam second' },
 
   // ── English papers ──
-  { when:{ group:'math', highReasoning:true },    chain:['GEMINI_FLASH','GPT_OSS_120B','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'English maths → Gemini (0% off-syllabus in testing)' },
-  { when:{ group:'science', highReasoning:true }, chain:['GEMINI_FLASH','GPT_OSS_120B','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'English science → Gemini (0% off-syllabus in testing)' },
+  { when:{ group:'math', highReasoning:true },    chain:['GEMINI_FLASH','GEMINI_LITE','GPT_OSS_120B','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'English maths → Gemini (0% off-syllabus in testing)' },
+  { when:{ group:'science', highReasoning:true }, chain:['GEMINI_FLASH','GEMINI_LITE','GPT_OSS_120B','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'English science → Gemini (0% off-syllabus in testing)' },
 
   // ── Default ──
-  { when:{},                              chain:['GEMINI_FLASH','GPT_OSS_120B','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'Default → Gemini (primary for every paper)' }
+  { when:{},                              chain:['GEMINI_FLASH','GEMINI_LITE','GPT_OSS_120B','GPT_OSS_20B','QWEN_38','COMPOUND_MINI','COMPOUND'], reason:'Default → Gemini (primary for every paper)' }
 ];
 
 const INDIC_LANGS = ['te','kn','ta','ml','hi'];
