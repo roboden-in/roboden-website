@@ -2127,11 +2127,13 @@ const PROVIDERS = {
   openrouter: { ready: true , maxOutput: 16000, label:'OpenRouter' },
   novita:     { ready: false, maxOutput: 16000, label:'Novita' },
   google:     { ready: true , maxOutput: 8000,  label:'Gemini' },
-  // 16000, not the 8000 I guessed. Sarvam accepted and consumed a full 16,000-token
-  // completion in testing, and the 8000 figure was silently DEMOTING Sarvam out of the
-  // Indic ladders — capacity ordering saw 8000 < the 12,180 a 40-mark paper needs, so the
-  // only Indic model we have never led a Telugu or Hindi paper.
-  sarvam:     { ready: true , maxOutput: 16000, label:'Sarvam' }
+  // 8192 — Sarvam's own limit, quoted by their API: "max_tokens (16000) exceeds the
+  // maximum output length of 8192 tokens for sarvam-105b-conversations". I briefly raised
+  // this to 16000 after seeing a 16,000-token completion, but that came from the OTHER
+  // model (sarvam-105b, the reasoning variant) — wrong evidence for this one.
+  // 8192 is BELOW the ~10,600 a 40-mark paper needs, so capacity routing correctly keeps
+  // Sarvam off large papers. It leads only where it fits: papers up to about 25 marks.
+  sarvam:     { ready: true , maxOutput: 8192,  label:'Sarvam' }
 };
 
 // Largest completion we may request from a given host.
